@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>마이페이지 | Study Cafe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    }
+
+    body {
+      background: #f7f8fc;
+      color: #222;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 0;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      color: #4a6cf7;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .nav-menu a {
+      font-size: 15px;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    .nav-menu a:hover {
+      color: #4a6cf7;
+    }
+
+    .nav-btn {
+      background: #4a6cf7;
+      color: #fff !important;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .nav-btn:hover {
+      background: #3655d6;
+    }
+
+    .mypage-hero {
+      padding: 50px 0 30px;
+      background: linear-gradient(135deg, #eef2ff, #f8fbff);
+    }
+
+    .hero-box {
+      background: #fff;
+      border-radius: 24px;
+      padding: 35px;
+      box-shadow: 0 10px 30px rgba(74, 108, 247, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero-left h1 {
+      font-size: 34px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .hero-left p {
+      color: #666;
+      font-size: 16px;
+    }
+
+    .profile-summary {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .summary-card {
+      min-width: 140px;
+      background: #f7f9ff;
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .summary-card h3 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .summary-card p {
+      font-size: 20px;
+      font-weight: 800;
+      color: #4a6cf7;
+    }
+
+    .mypage-section {
+      padding: 40px 0 80px;
+    }
+
+    .mypage-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .sidebar {
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 100px;
+    }
+
+    .sidebar-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      width: 100%;
+      border: none;
+      background: #f6f7fb;
+      color: #333;
+      padding: 14px 16px;
+      border-radius: 12px;
+      text-align: left;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: 0.2s;
+    }
+
+    .tab-btn:hover {
+      background: #edf1ff;
+      color: #4a6cf7;
+    }
+
+    .tab-btn.active {
+      background: #4a6cf7;
+      color: #fff;
+    }
+
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .panel h2 {
+      font-size: 26px;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+
+    .panel-desc {
+      color: #666;
+      margin-bottom: 24px;
+      font-size: 15px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      background: #f8faff;
+      border: 1px solid #eef2ff;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .info-item h4 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .info-item p {
+      font-size: 18px;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .verified {
+      color: #1db954 !important;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .form-group input {
+      padding: 14px;
+      border: 1px solid #d8def7;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: #4a6cf7;
+    }
+
+    .submit-btn {
+      border: none;
+      background: #4a6cf7;
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .submit-btn:hover {
+      background: #3655d6;
+    }
+
+    .sub-btn {
+      border: none;
+      background: #eef2ff;
+      color: #4a6cf7;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .sub-btn:hover {
+      background: #dfe7ff;
+    }
+
+    .danger-btn {
+      border: none;
+      background: #ffe9e9;
+      color: #e54848;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .card-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .list-card {
+      border: 1px solid #eef1f8;
+      border-radius: 18px;
+      padding: 20px;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .list-card h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .tag.blue {
+      background: #eef2ff;
+      color: #4a6cf7;
+    }
+
+    .tag.green {
+      background: #eafaf0;
+      color: #1e9d57;
+    }
+
+    .tag.orange {
+      background: #fff4e7;
+      color: #f39a28;
+    }
+
+    .tag.red {
+      background: #ffeaea;
+      color: #e54848;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid #edf0f7;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      min-width: 760px;
+    }
+
+    thead {
+      background: #f7f9ff;
+    }
+
+    th, td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid #eef1f5;
+      font-size: 14px;
+    }
+
+    th {
+      font-weight: 800;
+      color: #444;
+    }
+
+    td {
+      color: #555;
+    }
+
+    .status-done {
+      color: #1db954;
+      font-weight: 700;
+    }
+
+    .status-wait {
+      color: #f5a623;
+      font-weight: 700;
+    }
+
+    .status-cancel {
+      color: #ff4d4f;
+      font-weight: 700;
+    }
+
+    footer {
+      background: #1f2430;
+      color: #ddd;
+      padding: 26px 0;
+      margin-top: 30px;
+    }
+
+    .footer-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .footer-wrap p {
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .mypage-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .hero-left h1 {
+        font-size: 28px;
+      }
+
+      .panel h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container navbar">
+      <div class="logo">Study Cafe</div>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html">홈</a></li>
+          <li><a href="index.html#features">주요기능</a></li>
+          <li><a href="index.html#seats">좌석현황</a></li>
+          <li><a href="index.html#groups">스터디그룹</a></li>
+          <li><a href="mypage.html" class="nav-btn">마이페이지</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="mypage-hero">
+    <div class="container">
+      <div class="hero-box">
+        <div class="hero-left">
+          <h1>마이페이지</h1>
+          <p>내 정보, 활동 내역, 예약 및 결제 내역을 한눈에 관리하세요.</p>
+        </div>
+
+        <div class="profile-summary">
+          <div class="summary-card">
+            <h3>내 게시글</h3>
+            <p>3</p>
+          </div>
+          <div class="summary-card">
+            <h3>예약 내역</h3>
+            <p>2</p>
+          </div>
+          <div class="summary-card">
+            <h3>결제 내역</h3>
+            <p>2</p>
+          </div>
+          <div class="summary-card">
+            <h3>스터디 그룹</h3>
+            <p>2</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mypage-section">
+    <div class="container mypage-layout">
+      <aside class="sidebar">
+        <div class="sidebar-title">마이페이지 메뉴</div>
+        <button class="tab-btn active" onclick="showTab('profile')">내 정보</button>
+        <button class="tab-btn" onclick="showTab('password')">비밀번호 변경</button>
+        <button class="tab-btn" onclick="showTab('posts')">내가 쓴 게시글</button>
+        <button class="tab-btn" onclick="showTab('reservations')">좌석 예약 내역</button>
+        <button class="tab-btn" onclick="showTab('payments')">결제 내역</button>
+        <button class="tab-btn" onclick="showTab('groups')">참여 스터디 그룹</button>
+      </aside>
+
+      <div class="content-area">
+        <!-- 내 정보 -->
+        <div id="profile" class="tab-content active">
+          <div class="panel">
+            <h2>내 정보</h2>
+            <p class="panel-desc">회원 기본 정보를 확인할 수 있습니다.</p>
+
+            <div class="info-grid">
+              <div class="info-item">
+                <h4>이름</h4>
+                <p>윤석</p>
+              </div>
+              <div class="info-item">
+                <h4>이메일</h4>
+                <p>yunsuk123@gmail.com</p>
+              </div>
+              <div class="info-item">
+                <h4>가입일</h4>
+                <p>2026-03-18</p>
+              </div>
+              <div class="info-item">
+                <h4>이메일 인증 상태</h4>
+                <p class="verified">인증 완료</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 비밀번호 변경 -->
+        <div id="password" class="tab-content">
+          <div class="panel">
+            <h2>비밀번호 변경</h2>
+            <p class="panel-desc">보안을 위해 현재 비밀번호 확인 후 새 비밀번호로 변경하세요.</p>
+
+            <form onsubmit="changePassword(event)">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="currentPassword">현재 비밀번호</label>
+                  <input type="password" id="currentPassword" placeholder="현재 비밀번호를 입력하세요">
+                </div>
+
+                <div class="form-group">
+                  <label for="newPassword">새 비밀번호</label>
+                  <input type="password" id="newPassword" placeholder="새 비밀번호를 입력하세요">
+                </div>
+
+                <div class="form-group">
+                  <label for="confirmPassword">새 비밀번호 확인</label>
+                  <input type="password" id="confirmPassword" placeholder="새 비밀번호를 다시 입력하세요">
+                </div>
+              </div>
+
+              <button type="submit" class="submit-btn">비밀번호 변경</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 내가 쓴 게시글 -->
+        <div id="posts" class="tab-content">
+          <div class="panel">
+            <h2>내가 쓴 게시글</h2>
+            <p class="panel-desc">커뮤니티에 작성한 게시글 목록입니다.</p>
+
+            <div class="card-list">
+              <div class="list-card">
+                <div>
+                  <span class="tag blue">자유게시판</span>
+                  <h3>강남점 스터디카페 후기</h3>
+                  <div class="meta">
+                    <span>작성일: 2026-03-18</span>
+                    <span>댓글 3개</span>
+                    <span>조회수 25</span>
+                  </div>
+                  <p>조용하고 좌석 간격이 넓어서 공부하기 좋았습니다.</p>
+                </div>
+                <div class="actions">
+                  <button class="sub-btn">상세보기</button>
+                  <button class="sub-btn">수정</button>
+                  <button class="danger-btn">삭제</button>
+                </div>
+              </div>
+
+              <div class="list-card">
+                <div>
+                  <span class="tag blue">후기게시판</span>
+                  <h3>노원점 와이파이 속도 괜찮네요</h3>
+                  <div class="meta">
+                    <span>작성일: 2026-03-15</span>
+                    <span>댓글 1개</span>
+                    <span>조회수 14</span>
+                  </div>
+                  <p>영상 강의 들을 때도 끊김이 없어서 만족스러웠습니다.</p>
+                </div>
+                <div class="actions">
+                  <button class="sub-btn">상세보기</button>
+                  <button class="sub-btn">수정</button>
+                  <button class="danger-btn">삭제</button>
+                </div>
+              </div>
+
+              <div class="list-card">
+                <div>
+                  <span class="tag blue">스터디모집</span>
+                  <h3>정보처리기사 스터디 모집합니다</h3>
+                  <div class="meta">
+                    <span>작성일: 2026-03-12</span>
+                    <span>댓글 5개</span>
+                    <span>조회수 41</span>
+                  </div>
+                  <p>주 2회 모여서 문제 풀이 중심으로 진행할 분 구합니다.</p>
+                </div>
+                <div class="actions">
+                  <button class="sub-btn">상세보기</button>
+                  <button class="sub-btn">수정</button>
+                  <button class="danger-btn">삭제</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 좌석 예약 내역 -->
+        <div id="reservations" class="tab-content">
+          <div class="panel">
+            <h2>좌석 예약 내역</h2>
+            <p class="panel-desc">예약한 좌석과 이용 시간, 예약 상태를 확인할 수 있습니다.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>지점</th>
+                    <th>좌석</th>
+                    <th>예약일</th>
+                    <th>이용 시간</th>
+                    <th>결제 상태</th>
+                    <th>예약 상태</th>
+                    <th>관리</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>강남점</td>
+                    <td>A-03</td>
+                    <td>2026-03-20</td>
+                    <td>14:00 ~ 18:00</td>
+                    <td class="status-done">결제 완료</td>
+                    <td class="status-done">예약 확정</td>
+                    <td><button class="danger-btn">예약 취소</button></td>
+                  </tr>
+                  <tr>
+                    <td>노원점</td>
+                    <td>Room 2</td>
+                    <td>2026-03-23</td>
+                    <td>10:00 ~ 12:00</td>
+                    <td class="status-done">결제 완료</td>
+                    <td class="status-wait">이용 예정</td>
+                    <td><button class="sub-btn">상세 보기</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 결제 내역 -->
+        <div id="payments" class="tab-content">
+          <div class="panel">
+            <h2>결제 내역</h2>
+            <p class="panel-desc">좌석 예약 및 스터디룸 결제 내역을 확인할 수 있습니다.</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>결제일</th>
+                    <th>지점</th>
+                    <th>상품</th>
+                    <th>결제 금액</th>
+                    <th>결제 수단</th>
+                    <th>상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>2026-03-18</td>
+                    <td>강남점</td>
+                    <td>1인 좌석 4시간</td>
+                    <td>12,000원</td>
+                    <td>토스페이</td>
+                    <td class="status-done">결제 완료</td>
+                  </tr>
+                  <tr>
+                    <td>2026-03-16</td>
+                    <td>노원점</td>
+                    <td>스터디룸 2시간</td>
+                    <td>20,000원</td>
+                    <td>카드 결제</td>
+                    <td class="status-done">결제 완료</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 참여 스터디 그룹 -->
+        <div id="groups" class="tab-content">
+          <div class="panel">
+            <h2>참여 스터디 그룹</h2>
+            <p class="panel-desc">현재 참여 중인 스터디 그룹과 채팅방 이동 기능을 제공합니다.</p>
+
+            <div class="card-list">
+              <div class="list-card">
+                <div>
+                  <span class="tag green">참여중</span>
+                  <h3>토익 850+ 목표 스터디</h3>
+                  <div class="meta">
+                    <span>참여일: 2026-03-11</span>
+                    <span>장소: 강남점</span>
+                    <span>인원: 4 / 6명</span>
+                  </div>
+                  <p>매주 화, 목 오후 7시 진행. 문제 풀이와 단어 테스트 중심.</p>
+                </div>
+                <div class="actions">
+                  <button class="sub-btn">채팅방 이동</button>
+                  <button class="danger-btn">나가기</button>
+                </div>
+              </div>
+
+              <div class="list-card">
+                <div>
+                  <span class="tag green">참여중</span>
+                  <h3>웹 개발 취업 준비 스터디</h3>
+                  <div class="meta">
+                    <span>참여일: 2026-03-13</span>
+                    <span>장소: 의정부점</span>
+                    <span>인원: 5 / 6명</span>
+                  </div>
+                  <p>HTML, CSS, JS 포트폴리오 제작 및 면접 대비 중심 스터디.</p>
+                </div>
+                <div class="actions">
+                  <button class="sub-btn">채팅방 이동</button>
+                  <button class="danger-btn">나가기</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-wrap">
+      <p>Study Spot. All Rights Reserved.</p>
+      <p>문의: studycafe@email.com | 전화: 010-1234-5678</p>
+    </div>
+  </footer>
+
+  <script>
+    function showTab(tabId) {
+      const tabs = document.querySelectorAll(".tab-content");
+      const buttons = document.querySelectorAll(".tab-btn");
+
+      tabs.forEach(tab => tab.classList.remove("active"));
+      buttons.forEach(button => button.classList.remove("active"));
+
+      document.getElementById(tabId).classList.add("active");
+
+      const clickedButton = Array.from(buttons).find(button =>
+        button.getAttribute("onclick").includes(tabId)
+      );
+
+      if (clickedButton) {
+        clickedButton.classList.add("active");
+      }
+    }
+
+    function changePassword(event) {
+      event.preventDefault();
+
+      const currentPassword = document.getElementById("currentPassword").value;
+      const newPassword = document.getElementById("newPassword").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        alert("모든 항목을 입력해주세요.");
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        alert("새 비밀번호는 6자 이상이어야 합니다.");
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        alert("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+        return;
+      }
+
+      alert("비밀번호 변경 기능은 Firebase 연동 후 실제 적용할 수 있습니다.");
+    }
+  </script>
+</body>
+</html>
