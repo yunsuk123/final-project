@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>글쓰기 | Study Spot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    }
+
+    body {
+      background: #f7f8fc;
+      color: #222;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 0;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      color: #4a6cf7;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-menu a {
+      font-size: 15px;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    .nav-menu a:hover {
+      color: #4a6cf7;
+    }
+
+    .nav-btn {
+      background: #4a6cf7;
+      color: #fff !important;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .nav-btn:hover {
+      background: #3655d6;
+    }
+
+    .write-section {
+      padding: 60px 0 80px;
+    }
+
+    .write-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px;
+      box-shadow: 0 10px 30px rgba(74, 108, 247, 0.08);
+    }
+
+    .write-header {
+      margin-bottom: 28px;
+    }
+
+    .write-header h1 {
+      font-size: 34px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .write-header p {
+      color: #666;
+      font-size: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #d8def7;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      background: #fff;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: #4a6cf7;
+    }
+
+    .form-group textarea {
+      min-height: 220px;
+      resize: vertical;
+    }
+
+    .extra-study-fields {
+      display: none;
+      padding: 22px;
+      margin-bottom: 22px;
+      border-radius: 18px;
+      background: #f8faff;
+      border: 1px solid #e6ecff;
+    }
+
+    .extra-study-fields h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: #4a6cf7;
+    }
+
+    .study-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .submit-btn {
+      background: #4a6cf7;
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .submit-btn:hover {
+      background: #3655d6;
+    }
+
+    .sub-btn {
+      background: #eef2ff;
+      color: #4a6cf7;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .sub-btn:hover {
+      background: #dfe7ff;
+    }
+
+    .message-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 12px;
+      display: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .message-box.success {
+      display: block;
+      background: #eafaf0;
+      color: #1a9a55;
+    }
+
+    .message-box.error {
+      display: block;
+      background: #ffeaea;
+      color: #e64d4d;
+    }
+
+    footer {
+      background: #1f2430;
+      color: #ddd;
+      padding: 28px 0;
+      margin-top: 20px;
+    }
+
+    .footer-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .footer-wrap p {
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .write-card {
+        padding: 24px;
+      }
+
+      .write-header h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container navbar">
+      <div class="logo">Study Spot</div>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html">홈</a></li>
+          <li><a href="mypage.html">마이페이지</a></li>
+          <li><a href="community.html">커뮤니티</a></li>
+          <li><a href="index.html#seats">좌석현황</a></li>
+          <li><a href="index.html#groups">스터디그룹</a></li>
+          <li><a href="login.html" class="nav-btn">로그인</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="write-section">
+    <div class="container">
+      <div class="write-card">
+        <div class="write-header">
+          <h1>글쓰기</h1>
+          <p>커뮤니티에 자유롭게 글을 작성해보세요. 스터디 모집 글은 추가 정보를 입력할 수 있습니다.</p>
+        </div>
+
+        <form id="writeForm">
+          <div class="form-group">
+            <label for="category">카테고리</label>
+            <select id="category" onchange="toggleStudyFields()">
+              <option value="">카테고리를 선택하세요</option>
+              <option value="free">자유게시판</option>
+              <option value="study">스터디 모집</option>
+              <option value="review">후기 게시판</option>
+              <option value="notice">공지사항</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="author">작성자</label>
+            <input type="text" id="author" placeholder="작성자 이름을 입력하세요">
+          </div>
+
+          <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" id="title" placeholder="제목을 입력하세요">
+          </div>
+
+          <div class="form-group">
+            <label for="content">내용</label>
+            <textarea id="content" placeholder="내용을 입력하세요"></textarea>
+          </div>
+
+          <div class="extra-study-fields" id="studyFields">
+            <h3>스터디 모집 정보</h3>
+            <div class="study-grid">
+              <div class="form-group">
+                <label for="place">지점</label>
+                <input type="text" id="place" placeholder="예: 강남점">
+              </div>
+
+              <div class="form-group">
+                <label for="schedule">일정</label>
+                <input type="text" id="schedule" placeholder="예: 화/목 19:00">
+              </div>
+
+              <div class="form-group">
+                <label for="maxMembers">모집 인원</label>
+                <input type="number" id="maxMembers" placeholder="예: 4" min="1">
+              </div>
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button type="submit" class="submit-btn">등록하기</button>
+            <a href="community.html" class="sub-btn">커뮤니티로 돌아가기</a>
+            <a href="index.html" class="sub-btn">메인으로 가기</a>
+          </div>
+
+          <div id="messageBox" class="message-box"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-wrap">
+      <p>© 2026 Study Spot. All Rights Reserved.</p>
+      <p>문의: studycafe@email.com | 전화: 010-1234-5678</p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleStudyFields() {
+      const category = document.getElementById("category").value;
+      const studyFields = document.getElementById("studyFields");
+
+      if (category === "study") {
+        studyFields.style.display = "block";
+      } else {
+        studyFields.style.display = "none";
+      }
+    }
+
+    document.getElementById("writeForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const category = document.getElementById("category").value;
+      const author = document.getElementById("author").value.trim();
+      const title = document.getElementById("title").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const place = document.getElementById("place").value.trim();
+      const schedule = document.getElementById("schedule").value.trim();
+      const maxMembers = document.getElementById("maxMembers").value.trim();
+      const messageBox = document.getElementById("messageBox");
+
+      messageBox.className = "message-box";
+      messageBox.style.display = "none";
+
+      if (!category || !author || !title || !content) {
+        messageBox.textContent = "카테고리, 작성자, 제목, 내용을 모두 입력해주세요.";
+        messageBox.classList.add("error");
+        return;
+      }
+
+      if (category === "study") {
+        if (!place || !schedule || !maxMembers) {
+          messageBox.textContent = "스터디 모집 글은 지점, 일정, 모집 인원을 모두 입력해야 합니다.";
+          messageBox.classList.add("error");
+          return;
+        }
+      }
+
+      messageBox.textContent = "글이 등록되었습니다. Firebase 연동 후 실제 저장되도록 연결할 수 있습니다.";
+      messageBox.classList.add("success");
+
+      document.getElementById("writeForm").reset();
+      document.getElementById("studyFields").style.display = "none";
+    });
+  </script>
+</body>
+</html>
