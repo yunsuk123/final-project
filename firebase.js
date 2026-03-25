@@ -3,12 +3,12 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-aut
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "여기에 apiKey",
-  authDomain: "여기에 authDomain",
-  projectId: "여기에 projectId",
-  storageBucket: "여기에 storageBucket",
-  messagingSenderId: "여기에 messagingSenderId",
-  appId: "여기에 appId"
+  apiKey: "AIzaSyDbKxl2V628QvKZRSnCGuyrUUkexHOrlz0",
+  authDomain: "final-project-17108.firebaseapp.com",
+  projectId: "final-project-17108",
+  storageBucket: "final-project-17108.firebasestorage.app",
+  messagingSenderId: "443501302569",
+  appId: "1:443501302569:web:10e9acf11c7a9125895d38",
 };
 
 const app = initializeApp(firebaseConfig);
