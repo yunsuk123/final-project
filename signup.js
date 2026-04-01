@@ -16,7 +16,7 @@ signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
+  const email = document.getElementById("email").value.trim().toLowerCase();
   const password = document.getElementById("password").value;
   const confirmPassword = document.getElementById("confirmPassword").value;
 
@@ -25,6 +25,20 @@ signupForm.addEventListener("submit", async (e) => {
 
   if (!name || !email || !password || !confirmPassword) {
     message.textContent = "모든 항목을 입력해주세요.";
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  if (!emailRegex.test(email)) {
+    message.textContent = "올바른 이메일 형식이 아닙니다.";
+    return;
+  }
+
+  const allowedDomains = ["gmail.com", "naver.com", "daum.net", "kakao.com"];
+  const domain = email.split("@")[1];
+
+  if (!allowedDomains.includes(domain)) {
+    message.textContent = "올바른 이메일 형식이 아닙니다.";
     return;
   }
 
@@ -42,28 +56,31 @@ signupForm.addEventListener("submit", async (e) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    await sendEmailVerification(user);
+
     await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
       name: name,
       email: email,
       createdAt: serverTimestamp(),
-      emailVerified: false
+      emailVerified: false,
+      role: "user"
     });
-
-    await sendEmailVerification(user);
 
     message.style.color = "green";
     message.textContent = "회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.";
-
     signupForm.reset();
+
   } catch (error) {
-    console.error("회원가입 오류:", error);
+    console.error("회원가입 에러 코드:", error.code);
+    console.error("회원가입 에러 메시지:", error.message);
 
     if (error.code === "auth/email-already-in-use") {
-      message.textContent = "이미 사용 중인 이메일입니다.";
+      message.textContent = "이미 사용중인 이메일입니다.";
     } else if (error.code === "auth/invalid-email") {
       message.textContent = "올바른 이메일 형식이 아닙니다.";
     } else if (error.code === "auth/weak-password") {
-      message.textContent = "비밀번호가 너무 약합니다. 6자 이상 입력해주세요.";
+      message.textContent = "비밀번호는 6자 이상이어야 합니다.";
     } else {
       message.textContent = "회원가입 중 오류가 발생했습니다.";
     }

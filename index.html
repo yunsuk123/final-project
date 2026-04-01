@@ -433,7 +433,8 @@
           <li><a href="#seats">좌석현황</a></li>
           <li><a href="#groups">스터디그룹</a></li>
           <li><a href="#info">매장정보</a></li>
-          <li><a href="login.html" class="nav-btn">로그인</a></li>
+          <li><a href="login.html" class="nav-btn" id="authBtn">로그인</a></li>
+          <li><span id="welcomeText" style="font-weight:600; color:#4a6cf7;"></span></li>
         </ul>
       </nav>
     </div>
@@ -638,10 +639,41 @@
 
   
 
-  <script>
-    function joinGroup(groupName) {
+  <script type="module">
+    import { auth } from "./firebase.js";
+    import {
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    window.joinGroup = function (groupName) {
       alert(groupName + "에 참여 신청되었습니다.");
+    };
+
+  const authBtn = document.getElementById("authBtn");
+  const welcomeText = document.getElementById("welcomeText");
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const displayName = user.email ? user.email.split("@")[0] : "사용자";
+      welcomeText.textContent = displayName + "님";
+
+      authBtn.textContent = "로그아웃";
+      authBtn.href = "#";
+
+      authBtn.onclick = async (e) => {
+        e.preventDefault();
+        await signOut(auth);
+        alert("로그아웃 되었습니다.");
+        location.reload();
+      };
+    } else {
+      welcomeText.textContent = "";
+      authBtn.textContent = "로그인";
+      authBtn.href = "login.html";
+      authBtn.onclick = null;
     }
-  </script>
+  });
+</script>
 </body>
 </html>

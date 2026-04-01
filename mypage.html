@@ -551,24 +551,23 @@
           <div class="panel">
             <h2>내 정보</h2>
             <p class="panel-desc">회원 기본 정보를 확인할 수 있습니다.</p>
-
             <div class="info-grid">
               <div class="info-item">
                 <h4>이름</h4>
-                <p>윤석</p>
+                <p id="userName">로딩 중...</p>
               </div>
               <div class="info-item">
                 <h4>이메일</h4>
-                <p>yunsuk123@gmail.com</p>
+                <p id="userEmail">로딩 중...</p>
               </div>
               <div class="info-item">
                 <h4>가입일</h4>
-                <p>2026-03-18</p>
+                <p id="userCreatedAt">로딩 중...</p>
               </div>
               <div class="info-item">
-                <h4>이메일 인증 상태</h4>
-                <p class="verified">인증 완료</p>
-              </div>
+              <h4>이메일 인증 상태</h4>
+              <p id="userVerified" class="verified">확인 중...</p>
+            </div>
             </div>
           </div>
         </div>
@@ -806,48 +805,25 @@
   </footer>
 
   <script>
-    function showTab(tabId) {
-      const tabs = document.querySelectorAll(".tab-content");
-      const buttons = document.querySelectorAll(".tab-btn");
+  function showTab(tabId) {
+    const tabs = document.querySelectorAll(".tab-content");
+    const buttons = document.querySelectorAll(".tab-btn");
 
-      tabs.forEach(tab => tab.classList.remove("active"));
-      buttons.forEach(button => button.classList.remove("active"));
+    tabs.forEach(tab => tab.classList.remove("active"));
+    buttons.forEach(button => button.classList.remove("active"));
 
-      document.getElementById(tabId).classList.add("active");
+    document.getElementById(tabId).classList.add("active");
 
-      const clickedButton = Array.from(buttons).find(button =>
-        button.getAttribute("onclick").includes(tabId)
-      );
+    const clickedButton = Array.from(buttons).find(button =>
+      button.getAttribute("onclick").includes(tabId)
+    );
 
-      if (clickedButton) {
-        clickedButton.classList.add("active");
-      }
+    if (clickedButton) {
+      clickedButton.classList.add("active");
     }
+  }
+</script>
 
-    function changePassword(event) {
-      event.preventDefault();
-
-      const currentPassword = document.getElementById("currentPassword").value;
-      const newPassword = document.getElementById("newPassword").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
-
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        alert("모든 항목을 입력해주세요.");
-        return;
-      }
-
-      if (newPassword.length < 6) {
-        alert("새 비밀번호는 6자 이상이어야 합니다.");
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        alert("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
-        return;
-      }
-
-      alert("비밀번호 변경 기능은 Firebase 연동 후 실제 적용할 수 있습니다.");
-    }
-  </script>
+<script type="module" src="./mypage.js"></script>
 </body>
 </html>

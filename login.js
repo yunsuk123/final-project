@@ -27,12 +27,14 @@ let loginMode = "user";
 
 function setUserMode() {
   loginMode = "user";
+
   userTab.classList.add("active");
   adminTab.classList.remove("active");
 
   loginTitle.textContent = "스터디카페 일반 회원 로그인";
   idLabel.textContent = "이메일";
   emailInput.placeholder = "이메일을 입력하세요";
+  emailInput.type = "text";
   emailInput.value = "";
   passwordInput.value = "";
 
@@ -46,12 +48,14 @@ function setUserMode() {
 
 function setAdminMode() {
   loginMode = "admin";
+
   adminTab.classList.add("active");
   userTab.classList.remove("active");
 
   loginTitle.textContent = "스터디카페 관리자 로그인";
   idLabel.textContent = "아이디";
   emailInput.placeholder = "아이디를 입력하세요";
+  emailInput.type = "text";
   emailInput.value = "";
   passwordInput.value = "";
 
@@ -81,6 +85,7 @@ loginForm.addEventListener("submit", async (e) => {
     return;
   }
 
+  // 관리자 로그인
   if (loginMode === "admin") {
     if (idOrEmail === "admin" && password === "1234") {
       sessionStorage.setItem("isAdmin", "true");
@@ -94,6 +99,7 @@ loginForm.addEventListener("submit", async (e) => {
     return;
   }
 
+  // 일반 회원 로그인
   try {
     const userCredential = await signInWithEmailAndPassword(auth, idOrEmail, password);
     const user = userCredential.user;
@@ -164,3 +170,6 @@ resendBtn.addEventListener("click", async () => {
     }
   }
 });
+
+// 페이지 처음 열릴 때 기본값
+setUserMode();
