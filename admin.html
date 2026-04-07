@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>관리자 페이지 | Study Cafe</title>
+  <title>관리자 페이지 | Study Spot</title>
   <style>
     * {
       margin: 0;
@@ -55,6 +55,11 @@
       gap: 12px;
     }
 
+    .menu a {
+      display: block;
+      width: 100%;
+    }
+
     .menu button {
       width: 100%;
       border: none;
@@ -66,6 +71,11 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .menu button:hover {
+      background: #3a4258;
     }
 
     .menu button.active {
@@ -114,88 +124,28 @@
       color: #4a6cf7;
     }
 
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-bottom: 28px;
-    }
-
-    .card {
-      background: #fff;
-      padding: 24px;
-      border-radius: 18px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    .card h3 {
-      font-size: 15px;
-      color: #666;
-      margin-bottom: 10px;
-    }
-
-    .card p {
-      font-size: 30px;
-      font-weight: 800;
-      color: #4a6cf7;
-    }
-
-    .panel {
+    .welcome-box {
       background: #fff;
       border-radius: 20px;
-      padding: 28px;
+      padding: 80px 40px;
+      min-height: 520px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
-    .panel h3 {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-
-    .panel p {
-      color: #666;
+    .welcome-box h3 {
+      font-size: 42px;
       margin-bottom: 18px;
+      color: #1f2430;
     }
 
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 14px;
-      border: 1px solid #eef1f5;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      min-width: 700px;
-    }
-
-    th, td {
-      padding: 14px;
-      border-bottom: 1px solid #eef1f5;
-      text-align: left;
-      font-size: 14px;
-    }
-
-    th {
-      background: #f7f9ff;
-      font-weight: 800;
-      color: #444;
-    }
-
-    td {
-      color: #555;
-    }
-
-    .status-active {
-      color: #1db954;
-      font-weight: 700;
-    }
-
-    .status-stop {
-      color: #ff4d4f;
-      font-weight: 700;
+    .welcome-box p {
+      color: #666;
+      font-size: 20px;
+      line-height: 1.8;
     }
 
     @media (max-width: 900px) {
@@ -205,6 +155,19 @@
 
       .sidebar {
         width: 100%;
+      }
+
+      .welcome-box {
+        padding: 60px 24px;
+        min-height: 400px;
+      }
+
+      .welcome-box h3 {
+        font-size: 32px;
+      }
+
+      .welcome-box p {
+        font-size: 17px;
       }
     }
   </style>
@@ -220,12 +183,12 @@
       </div>
 
       <div class="menu">
-        <button type="button">회원 관리</button>
-        <button type="button">좌석 관리</button>
-        <button type="button">예약 관리</button>
-        <button type="button">결제 관리</button>
-        <button type="button">커뮤니티 관리</button>
-        <button type="button">스터디 그룹 관리</button>
+        <a href="admin-users.html"><button type="button">회원 관리</button></a>
+        <a href="admin-seats.html"><button type="button">좌석 관리</button></a>
+        <a href="admin-reserve.html"><button type="button">예약 관리</button></a>
+        <a href="admin-pay.html"><button type="button">결제 관리</button></a>
+        <a href="admin-community.html"><button type="button">커뮤니티 관리</button></a>
+        <a href="admin-study.html"><button type="button">스터디 그룹 관리</button></a>
       </div>
     </aside>
 
@@ -238,129 +201,22 @@
         </div>
       </div>
 
-      <div class="dashboard-grid">
-        <div class="card">
-          <h3>전체 회원 수</h3>
-          <p id="totalUsers">불러오는 중...</p>
-        </div>
-        <div class="card">
-          <h3>인증 완료 회원 수</h3>
-          <p id="verifiedUsers">불러오는 중...</p>
-        </div>
-        <div class="card">
-          <h3>미인증 회원 수</h3>
-          <p id="unverifiedUsers">불러오는 중...</p>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h3>최근 회원 목록</h3>
-        <p>Firestore의 users 컬렉션 기준으로 표시됩니다.</p>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>이름</th>
-                <th>이메일</th>
-                <th>가입일</th>
-                <th>인증 상태</th>
-              </tr>
-            </thead>
-            <tbody id="userTableBody">
-              <tr>
-                <td colspan="4">불러오는 중...</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="welcome-box">
+        <div>
+          <h3>관리자 페이지입니다</h3>
+          <p>
+            Study Spot 관리자 페이지에 오신 것을 환영합니다.<br>
+            왼쪽 메뉴를 눌러 회원, 좌석, 예약, 결제, 커뮤니티, 스터디 그룹을 관리하세요.
+          </p>
         </div>
       </div>
     </main>
   </div>
 
-  <script type="module">
-    import { db } from "./firebase.js";
-    import {
-      collection,
-      getDocs
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+  <script>
     if (sessionStorage.getItem("isAdmin") !== "true") {
       alert("관리자만 접근할 수 있습니다.");
       location.href = "login.html";
-    }
-
-    const totalUsersEl = document.getElementById("totalUsers");
-    const verifiedUsersEl = document.getElementById("verifiedUsers");
-    const unverifiedUsersEl = document.getElementById("unverifiedUsers");
-    const userTableBody = document.getElementById("userTableBody");
-
-    function formatDate(timestamp) {
-      if (!timestamp) return "-";
-
-      if (timestamp.seconds) {
-        const date = new Date(timestamp.seconds * 1000);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      }
-
-      return "-";
-    }
-
-    async function loadUsers() {
-      try {
-        const usersRef = collection(db, "users");
-        const snapshot = await getDocs(usersRef);
-
-        console.log("users 개수:", snapshot.size);
-
-        let totalUsers = 0;
-        let verifiedUsers = 0;
-        let unverifiedUsers = 0;
-        let html = "";
-
-        if (snapshot.empty) {
-          totalUsersEl.textContent = "0";
-          verifiedUsersEl.textContent = "0";
-          unverifiedUsersEl.textContent = "0";
-          userTableBody.innerHTML = "<tr><td colspan='4'>회원 데이터가 없습니다.</td></tr>";
-          return;
-        }
-
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          console.log("회원 문서:", docSnap.id, data);
-
-          totalUsers++;
-
-          if (data.emailVerified === true) {
-            verifiedUsers++;
-          } else {
-            unverifiedUsers++;
-          }
-
-          html += `
-            <tr>
-              <td>${data.name || "-"}</td>
-              <td>${data.email || "-"}</td>
-              <td>${formatDate(data.createdAt)}</td>
-              <td class="${data.emailVerified ? "status-active" : "status-stop"}">
-                ${data.emailVerified ? "인증 완료" : "미인증"}
-              </td>
-            </tr>
-          `;
-        });
-
-        totalUsersEl.textContent = String(totalUsers);
-        verifiedUsersEl.textContent = String(verifiedUsers);
-        unverifiedUsersEl.textContent = String(unverifiedUsers);
-        userTableBody.innerHTML = html;
-      } catch (error) {
-        console.error("회원 목록 불러오기 실패:", error);
-        totalUsersEl.textContent = "오류";
-        verifiedUsersEl.textContent = "오류";
-        unverifiedUsersEl.textContent = "오류";
-        userTableBody.innerHTML = "<tr><td colspan='4'>회원 정보를 불러오지 못했습니다.</td></tr>";
-      }
     }
 
     document.getElementById("adminLogoutBtn").addEventListener("click", () => {
@@ -368,8 +224,6 @@
       alert("관리자 로그아웃 되었습니다.");
       location.href = "login.html";
     });
-
-    loadUsers();
   </script>
 </body>
 </html>
