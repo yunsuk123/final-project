@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>회원 관리 | Study Spot</title>
+  <title>커뮤니티 관리 | Study Spot</title>
   <style>
     * {
       margin: 0;
@@ -178,7 +178,7 @@
       width: 100%;
       border-collapse: collapse;
       background: #fff;
-      min-width: 700px;
+      min-width: 1000px;
     }
 
     th, td {
@@ -186,6 +186,7 @@
       border-bottom: 1px solid #eef1f5;
       text-align: left;
       font-size: 14px;
+      vertical-align: middle;
     }
 
     th {
@@ -198,13 +199,54 @@
       color: #555;
     }
 
-    .status-active {
-      color: #1db954;
+    .post-title {
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 6px;
+    }
+
+    .post-content {
+      color: #666;
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .category-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef2ff;
+      color: #4a6cf7;
+    }
+
+    .category-study {
+      background: #ede9fe;
+      color: #7c3aed;
+    }
+
+    .category-review {
+      background: #fff7ed;
+      color: #f97316;
+    }
+
+    .category-notice {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status-open {
+      color: #16a34a;
       font-weight: 700;
     }
 
-    .status-stop {
-      color: #ff4d4f;
+    .status-closed {
+      color: #ef4444;
       font-weight: 700;
     }
 
@@ -212,15 +254,22 @@
       border: none;
       background: #ff4d4f;
       color: #fff;
-      padding: 8px 12px;
+      padding: 8px 14px;
       border-radius: 8px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
+      transition: 0.2s;
     }
 
     .delete-btn:hover {
       background: #e53935;
+    }
+
+    .empty-message {
+      text-align: center;
+      color: #777;
+      padding: 24px 0;
     }
 
     @media (max-width: 900px) {
@@ -230,6 +279,14 @@
 
       .sidebar {
         width: 100%;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .topbar h2 {
+        font-size: 28px;
       }
     }
   </style>
@@ -246,18 +303,18 @@
 
       <div class="menu">
         <a href="admin.html"><button type="button">관리자 홈</button></a>
-        <a href="admin-users.html"><button type="button" class="active">회원 관리</button></a>
+        <a href="admin-users.html"><button type="button">회원 관리</button></a>
         <a href="admin-seats.html"><button type="button">좌석 관리</button></a>
         <a href="admin-reserve.html"><button type="button">예약 관리</button></a>
         <a href="admin-pay.html"><button type="button">결제 관리</button></a>
-        <a href="admin-community.html"><button type="button">커뮤니티 관리</button></a>
+        <a href="admin-community.html"><button type="button" class="active">커뮤니티 관리</button></a>
         <a href="admin-study.html"><button type="button">스터디 그룹 관리</button></a>
       </div>
     </aside>
 
     <main class="content">
       <div class="topbar">
-        <h2>회원 관리</h2>
+        <h2>커뮤니티 관리</h2>
         <div class="top-actions">
           <a href="admin.html" class="secondary">관리자 홈</a>
           <button id="adminLogoutBtn" type="button">로그아웃</button>
@@ -266,37 +323,38 @@
 
       <div class="dashboard-grid">
         <div class="card">
-          <h3>전체 회원 수</h3>
-          <p id="totalUsers">불러오는 중...</p>
+          <h3>전체 게시글 수</h3>
+          <p id="totalPosts">불러오는 중...</p>
         </div>
         <div class="card">
-          <h3>인증 완료 회원 수</h3>
-          <p id="verifiedUsers">불러오는 중...</p>
+          <h3>모집중 스터디 수</h3>
+          <p id="openStudyPosts">불러오는 중...</p>
         </div>
         <div class="card">
-          <h3>미인증 회원 수</h3>
-          <p id="unverifiedUsers">불러오는 중...</p>
+          <h3>오늘 작성 글 수</h3>
+          <p id="todayPosts">불러오는 중...</p>
         </div>
       </div>
 
       <div class="panel">
-        <h3>최근 회원 목록</h3>
-        <p>Firestore의 users 컬렉션 기준으로 표시됩니다.</p>
+        <h3>최근 게시글 목록</h3>
+        <p>사용자 커뮤니티에 작성된 posts 컬렉션 기준으로 표시됩니다.</p>
 
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>이름</th>
-                <th>이메일</th>
-                <th>가입일</th>
-                <th>인증 상태</th>
+                <th>카테고리</th>
+                <th>제목 / 내용</th>
+                <th>작성자</th>
+                <th>작성일</th>
+                <th>상태</th>
                 <th>관리</th>
               </tr>
             </thead>
-            <tbody id="userTableBody">
+            <tbody id="postTableBody">
               <tr>
-                <td colspan="5">불러오는 중...</td>
+                <td colspan="6">불러오는 중...</td>
               </tr>
             </tbody>
           </table>
@@ -305,6 +363,6 @@
     </main>
   </div>
 
-  <script type="module" src="admin-users.js"></script>
+  <script type="module" src="admin-community.js"></script>
 </body>
 </html>

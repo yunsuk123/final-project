@@ -88,6 +88,12 @@
       background: #3655d6;
     }
 
+    #userName {
+      font-weight: 700;
+      color: #4a6cf7;
+      white-space: nowrap;
+    }
+
     .community-hero {
       padding: 60px 0 30px;
       background: linear-gradient(135deg, #eef2ff, #f8fbff);
@@ -446,7 +452,8 @@
           <li><a href="index.html#seats">좌석현황</a></li>
           <li><a href="index.html#groups">스터디그룹</a></li>
           <li><a href="index.html#info">매장정보</a></li>
-          <li><a href="login.html" class="nav-btn">로그인</a></li>
+          <li><span id="userName"></span></li>
+          <li><a href="login.html" class="nav-btn" id="loginBtn">로그인</a></li>
         </ul>
       </nav>
     </div>
@@ -463,15 +470,15 @@
         <div class="hero-stats">
           <div class="stat-card">
             <h3>전체 게시글</h3>
-            <p>12</p>
+            <p id="totalPostCount">0</p>
           </div>
           <div class="stat-card">
             <h3>모집중 스터디</h3>
-            <p>3</p>
+            <p id="recruitingStudyCount">0</p>
           </div>
           <div class="stat-card">
-            <h3>오늘 댓글</h3>
-            <p>8</p>
+            <h3>전체 댓글</h3>
+            <p id="todayCommentCount">0</p>
           </div>
         </div>
       </div>
@@ -497,189 +504,7 @@
         <button class="tab-btn" onclick="filterPosts('notice', this)">공지사항</button>
       </div>
 
-      <div class="post-list" id="postList">
-        <!-- 자유게시판 -->
-        <div class="post-card" data-category="free" data-search="공부 루틴 추천해주세요 시험기간 공부 루틴 질문">
-          <div class="post-top">
-            <div>
-              <span class="tag free">자유게시판</span>
-              <div class="post-title">시험기간 공부 루틴 추천해주세요</div>
-              <p class="post-desc">하루 공부 시간 배분을 어떻게 하는지 궁금합니다. 집중 잘 되는 방법도 같이 알려주세요.</p>
-              <div class="meta">
-                <span>작성자: 김민수</span>
-                <span>작성일: 2026-03-18</span>
-                <span>댓글 4</span>
-                <span>조회 23</span>
-              </div>
-            </div>
-            <div class="post-actions">
-              <button class="sub-btn">상세보기</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 스터디 모집 1 -->
-        <div class="post-card" data-category="study" data-search="토익 850 목표 스터디 강남점 화목 저녁 모집">
-          <div>
-            <span class="tag study">스터디 모집</span>
-            <span class="tag status-open">모집중</span>
-            <div class="post-title">토익 850+ 목표 스터디 모집</div>
-            <p class="post-desc">강남점에서 주 2회 모여서 단어 테스트와 RC 문제풀이 함께 하실 분 구합니다.</p>
-
-            <div class="study-info-grid">
-              <div class="study-info-box">
-                <h4>지점</h4>
-                <p>강남점</p>
-              </div>
-              <div class="study-info-box">
-                <h4>일정</h4>
-                <p>화/목 19:00</p>
-              </div>
-              <div class="study-info-box">
-                <h4>인원</h4>
-                <p>2 / 4명</p>
-              </div>
-              <div class="study-info-box">
-                <h4>상태</h4>
-                <p>모집중</p>
-              </div>
-            </div>
-
-            <div class="meta" style="margin-top: 14px;">
-              <span>작성자: 박지은</span>
-              <span>작성일: 2026-03-18</span>
-              <span>댓글 2</span>
-              <span>조회 18</span>
-            </div>
-
-            <div class="post-actions">
-              <button class="sub-btn">상세보기</button>
-              <button class="join-btn" onclick="joinStudy('토익 850+ 목표 스터디')">참여하기</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 후기게시판 -->
-        <div class="post-card" data-category="review" data-search="강남점 후기 조용한 좌석 시설 후기">
-          <div class="post-top">
-            <div>
-              <span class="tag review">후기 게시판</span>
-              <div class="post-title">강남점 후기 - 좌석 간격이 넓어서 좋아요</div>
-              <p class="post-desc">전체적으로 조용하고 좌석 사이 간격도 넓어서 장시간 공부하기 좋았습니다. 와이파이도 안정적이었어요.</p>
-              <div class="meta">
-                <span>작성자: 이서연</span>
-                <span>작성일: 2026-03-17</span>
-                <span>댓글 3</span>
-                <span>조회 31</span>
-              </div>
-            </div>
-            <div class="post-actions">
-              <button class="sub-btn">상세보기</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 공지사항 -->
-        <div class="post-card" data-category="notice" data-search="운영시간 변경 공지사항 야간 운영">
-          <div class="post-top">
-            <div>
-              <span class="tag notice">공지사항</span>
-              <div class="post-title">[공지] 강남점 운영시간 변경 안내</div>
-              <p class="post-desc">다음 주부터 강남점 운영시간이 오전 8시 ~ 오후 11시로 변경됩니다. 이용에 참고해주세요.</p>
-              <div class="meta">
-                <span>작성자: 관리자</span>
-                <span>작성일: 2026-03-16</span>
-                <span>댓글 0</span>
-                <span>조회 52</span>
-              </div>
-            </div>
-            <div class="post-actions">
-              <button class="sub-btn">상세보기</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 스터디 모집 2 마감 -->
-        <div class="post-card" data-category="study" data-search="웹개발 취업 준비 스터디 의정부점 모집 마감">
-          <div>
-            <span class="tag study">스터디 모집</span>
-            <span class="tag status-close">마감</span>
-            <div class="post-title">웹 개발 취업 준비 스터디</div>
-            <p class="post-desc">포트폴리오 제작과 면접 대비 중심으로 진행하는 스터디입니다. 현재 모집이 마감되었습니다.</p>
-
-            <div class="study-info-grid">
-              <div class="study-info-box">
-                <h4>지점</h4>
-                <p>의정부점</p>
-              </div>
-              <div class="study-info-box">
-                <h4>일정</h4>
-                <p>토 10:00</p>
-              </div>
-              <div class="study-info-box">
-                <h4>인원</h4>
-                <p>4 / 4명</p>
-              </div>
-              <div class="study-info-box">
-                <h4>상태</h4>
-                <p>마감</p>
-              </div>
-            </div>
-
-            <div class="meta" style="margin-top: 14px;">
-              <span>작성자: 최현우</span>
-              <span>작성일: 2026-03-15</span>
-              <span>댓글 5</span>
-              <span>조회 40</span>
-            </div>
-
-            <div class="post-actions">
-              <button class="sub-btn">상세보기</button>
-              <button class="join-btn disabled" disabled>모집 마감</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 자유게시판 2 -->
-        <div class="post-card" data-category="free" data-search="노원점 사람 많은 시간대 질문">
-          <div class="post-top">
-            <div>
-              <span class="tag free">자유게시판</span>
-              <div class="post-title">노원점 사람 많은 시간대가 언제인가요?</div>
-              <p class="post-desc">주말 오후에 자리가 많이 없는 편인지 궁금합니다. 자주 가시는 분들 알려주세요.</p>
-              <div class="meta">
-                <span>작성자: 정하늘</span>
-                <span>작성일: 2026-03-14</span>
-                <span>댓글 6</span>
-                <span>조회 20</span>
-              </div>
-            </div>
-            <div class="post-actions">
-              <button class="sub-btn">상세보기</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 후기게시판 2 -->
-        <div class="post-card" data-category="review" data-search="의정부점 스낵바 후기 커피 맛있음">
-          <div class="post-top">
-            <div>
-              <span class="tag review">후기 게시판</span>
-              <div class="post-title">의정부점 스낵바 후기</div>
-              <p class="post-desc">커피머신이 깔끔하고 간단한 간식도 잘 채워져 있어서 만족스러웠습니다.</p>
-              <div class="meta">
-                <span>작성자: 오수빈</span>
-                <span>작성일: 2026-03-13</span>
-                <span>댓글 1</span>
-                <span>조회 12</span>
-              </div>
-            </div>
-            <div class="post-actions">
-              <button class="sub-btn">상세보기</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="post-list" id="postList"></div>
 
       <div class="empty-message" id="emptyMessage">
         검색 결과가 없습니다.
@@ -694,76 +519,6 @@
     </div>
   </footer>
 
-  <script>
-    let currentCategory = "all";
-
-    function filterPosts(category, buttonElement) {
-      currentCategory = category;
-
-      const cards = document.querySelectorAll(".post-card");
-      const tabButtons = document.querySelectorAll(".tab-btn");
-      const searchValue = document.getElementById("searchInput").value.toLowerCase().trim();
-
-      tabButtons.forEach(btn => btn.classList.remove("active"));
-      buttonElement.classList.add("active");
-
-      let visibleCount = 0;
-
-      cards.forEach(card => {
-        const cardCategory = card.dataset.category;
-        const cardSearch = card.dataset.search.toLowerCase();
-
-        const matchCategory = category === "all" || cardCategory === category;
-        const matchSearch = searchValue === "" || cardSearch.includes(searchValue);
-
-        if (matchCategory && matchSearch) {
-          card.classList.remove("hidden");
-          visibleCount++;
-        } else {
-          card.classList.add("hidden");
-        }
-      });
-
-      toggleEmptyMessage(visibleCount);
-    }
-
-    function searchPosts() {
-      const cards = document.querySelectorAll(".post-card");
-      const searchValue = document.getElementById("searchInput").value.toLowerCase().trim();
-      let visibleCount = 0;
-
-      cards.forEach(card => {
-        const cardCategory = card.dataset.category;
-        const cardSearch = card.dataset.search.toLowerCase();
-
-        const matchCategory = currentCategory === "all" || cardCategory === currentCategory;
-        const matchSearch = searchValue === "" || cardSearch.includes(searchValue);
-
-        if (matchCategory && matchSearch) {
-          card.classList.remove("hidden");
-          visibleCount++;
-        } else {
-          card.classList.add("hidden");
-        }
-      });
-
-      toggleEmptyMessage(visibleCount);
-    }
-
-    function toggleEmptyMessage(count) {
-      const emptyMessage = document.getElementById("emptyMessage");
-      emptyMessage.style.display = count === 0 ? "block" : "none";
-    }
-
-    function joinStudy(title) {
-      alert(title + "에 참여 신청되었습니다.");
-    }
-
-    document.getElementById("searchInput").addEventListener("keydown", function(event) {
-      if (event.key === "Enter") {
-        searchPosts();
-      }
-    });
-  </script>
+  <script type="module" src="./community.js"></script>
 </body>
 </html>

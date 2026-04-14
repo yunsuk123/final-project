@@ -636,26 +636,58 @@
     </div>
   </footer>
 
-
-  
-
   <script type="module">
-    import { auth } from "./firebase.js";
+    import { auth, db } from "./firebase.js";
     import {
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+    import {
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
     window.joinGroup = function (groupName) {
       alert(groupName + "에 참여 신청되었습니다.");
     };
 
-  const authBtn = document.getElementById("authBtn");
-  const welcomeText = document.getElementById("welcomeText");
+    const authBtn = document.getElementById("authBtn");
+    const welcomeText = document.getElementById("welcomeText");
 
-  onAuthStateChanged(auth, (user) => {
+    async function getUserName(user) {
+      let displayName = "";
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+
+          displayName =
+            data.nickname ||
+            data.name ||
+            data.username ||
+            data.userName ||
+            "";
+        }
+     } catch (e) {
+        console.error("유저 정보 불러오기 실패:", e);
+    }
+
+    // fallback
+    if (!displayName) {
+      displayName = user.displayName || user.email?.split("@")[0] || "사용자";
+    }
+
+    return displayName;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
-      const displayName = user.email ? user.email.split("@")[0] : "사용자";
+      const displayName = await getUserName(user);
+
       welcomeText.textContent = displayName + "님";
 
       authBtn.textContent = "로그아웃";
@@ -674,6 +706,10 @@
       authBtn.onclick = null;
     }
   });
+
+  
+
+  
 </script>
 </body>
 </html>

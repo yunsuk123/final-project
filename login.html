@@ -22,10 +22,10 @@
 
     .login-container {
       width: 100%;
-      max-width: 430px;
+      max-width: 420px;
       background: #fff;
       padding: 40px 32px;
-      border-radius: 24px;
+      border-radius: 20px;
       box-shadow: 0 10px 30px rgba(74, 108, 247, 0.12);
     }
 
@@ -37,36 +37,11 @@
       font-weight: 800;
     }
 
-    .sub-title {
+    .login-container p {
       text-align: center;
       color: #666;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
       font-size: 15px;
-    }
-
-    .tab-wrap {
-      display: flex;
-      margin-bottom: 24px;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #d9dff5;
-    }
-
-    .tab-btn {
-      width: 50%;
-      padding: 14px 0;
-      border: none;
-      background: #f5f7ff;
-      color: #555;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .tab-btn.active {
-      background: #4a6cf7;
-      color: #fff;
     }
 
     .form-group {
@@ -117,10 +92,6 @@
       background: #6c7cff;
     }
 
-    .verify-btn:hover {
-      background: #5868f0;
-    }
-
     .bottom-links {
       margin-top: 20px;
       text-align: center;
@@ -156,53 +127,41 @@
       line-height: 1.5;
       min-height: 22px;
     }
-
-    .admin-guide {
-      margin-top: 14px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #f7f9ff;
-      color: #666;
-      font-size: 13px;
-      line-height: 1.5;
-      display: none;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
   <div class="login-container">
     <h1>Study Cafe</h1>
-    <p class="sub-title" id="loginTitle">스터디카페 일반 회원 로그인</p>
-
-    <div class="tab-wrap">
-      <button type="button" class="tab-btn active" id="userTab">일반 회원</button>
-      <button type="button" class="tab-btn" id="adminTab">관리자</button>
-    </div>
+    <p>스터디카페 로그인</p>
 
     <form id="loginForm">
       <div class="form-group">
-        <label for="email" id="idLabel">이메일</label>
-        <input type="text" id="email" placeholder="이메일을 입력하세요" required />
+        <label for="email">이메일</label>
+        <input
+          type="email"
+          id="email"
+          placeholder="이메일을 입력하세요"
+          required
+        />
       </div>
 
       <div class="form-group">
         <label for="password">비밀번호</label>
-        <input type="password" id="password" placeholder="비밀번호를 입력하세요" required />
+        <input
+          type="password"
+          id="password"
+          placeholder="비밀번호를 입력하세요"
+          required
+        />
       </div>
 
       <button type="submit" class="login-btn">로그인</button>
       <button type="button" id="resendBtn" class="verify-btn">인증 메일 다시 보내기</button>
     </form>
 
-    <div class="admin-guide" id="adminGuide">
-      관리자 테스트 계정<br>
-      아이디: admin / 비밀번호: 1234
-    </div>
-
     <div id="message" class="message"></div>
 
-    <div class="bottom-links" id="signupArea">
+    <div class="bottom-links">
       계정이 없으신가요?
       <a href="signup.html">회원가입</a>
     </div>

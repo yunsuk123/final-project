@@ -1,175 +1,155 @@
 import { auth, db } from "./firebase.js";
 import {
   signInWithEmailAndPassword,
-  sendEmailVerification
+  sendEmailVerification,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc,
-  getDoc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const loginForm = document.getElementById("loginForm");
-const resendBtn = document.getElementById("resendBtn");
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
+const resendBtn = document.getElementById("resendBtn");
 const message = document.getElementById("message");
 
-const userTab = document.getElementById("userTab");
-const adminTab = document.getElementById("adminTab");
-const loginTitle = document.getElementById("loginTitle");
-const idLabel = document.getElementById("idLabel");
-const signupArea = document.getElementById("signupArea");
-const adminGuide = document.getElementById("adminGuide");
+// Firebase Authentication에 미리 만들어둘 관리자 계정
+const ADMIN_EMAIL = "admin@studycafe.com";
 
-let lastUnverifiedUser = null;
-let loginMode = "user";
-
-function setUserMode() {
-  loginMode = "user";
-
-  userTab.classList.add("active");
-  adminTab.classList.remove("active");
-
-  loginTitle.textContent = "스터디카페 일반 회원 로그인";
-  idLabel.textContent = "이메일";
-  emailInput.placeholder = "이메일을 입력하세요";
-  emailInput.type = "text";
-  emailInput.value = "";
-  passwordInput.value = "";
-
-  resendBtn.style.display = "block";
-  signupArea.style.display = "block";
-  adminGuide.style.display = "none";
-
-  message.textContent = "";
-  message.style.color = "#444";
+function showMessage(text, color = "#444") {
+  message.textContent = text;
+  message.style.color = color;
 }
-
-function setAdminMode() {
-  loginMode = "admin";
-
-  adminTab.classList.add("active");
-  userTab.classList.remove("active");
-
-  loginTitle.textContent = "스터디카페 관리자 로그인";
-  idLabel.textContent = "아이디";
-  emailInput.placeholder = "아이디를 입력하세요";
-  emailInput.type = "text";
-  emailInput.value = "";
-  passwordInput.value = "";
-
-  resendBtn.style.display = "none";
-  signupArea.style.display = "none";
-  adminGuide.style.display = "block";
-
-  message.textContent = "";
-  message.style.color = "#444";
-}
-
-userTab.addEventListener("click", setUserMode);
-adminTab.addEventListener("click", setAdminMode);
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const idOrEmail = emailInput.value.trim();
+  const email = emailInput.value.trim().toLowerCase();
   const password = passwordInput.value.trim();
 
-  message.textContent = "";
-  message.style.color = "#444";
+  showMessage("");
 
-  if (!idOrEmail || !password) {
-    message.style.color = "red";
-    message.textContent = "아이디(또는 이메일)와 비밀번호를 모두 입력하세요.";
-    return;
-  }
-
-  // 관리자 로그인
-  if (loginMode === "admin") {
-    if (idOrEmail === "admin" && password === "1234") {
-      sessionStorage.setItem("isAdmin", "true");
-      message.style.color = "green";
-      message.textContent = "관리자 로그인 성공!";
-      window.location.href = "admin.html";
-    } else {
-      message.style.color = "red";
-      message.textContent = "관리자 아이디 또는 비밀번호가 올바르지 않습니다.";
-    }
-    return;
-  }
-
-  // 일반 회원 로그인
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, idOrEmail, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    if (!user.emailVerified) {
-      lastUnverifiedUser = user;
-      message.style.color = "red";
-      message.textContent = "이메일 인증이 완료되지 않았습니다. 인증 메일을 확인해주세요.";
+    // Firestore users 문서에 실제 인증 상태 반영
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        emailVerified: user.emailVerified
+      });
+    } catch (updateError) {
+      console.error("emailVerified 업데이트 실패:", updateError);
+    }
+
+    // 관리자 계정이면 이메일 인증 검사 없이 바로 관리자 페이지 이동
+    if (user.email === ADMIN_EMAIL) {
+      sessionStorage.setItem("isAdmin", "true");
+      sessionStorage.setItem("adminEmail", user.email);
+
+      alert("관리자 로그인 성공");
+      location.href = "admin.html";
       return;
     }
 
-    try {
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+    // 일반 사용자면 관리자 세션 제거
+    sessionStorage.removeItem("isAdmin");
+    sessionStorage.removeItem("adminEmail");
 
-      if (userSnap.exists()) {
-        await updateDoc(userRef, {
-          emailVerified: true
-        });
-      }
-    } catch (firestoreError) {
-      console.error("Firestore 업데이트 실패:", firestoreError);
+    // 일반 회원은 이메일 인증 필요
+    if (!user.emailVerified) {
+      showMessage("이메일 인증이 완료되지 않았습니다. 인증 후 다시 로그인해주세요.", "crimson");
+      await signOut(auth);
+      return;
     }
 
-    message.style.color = "green";
-    message.textContent = "로그인 성공!";
-    window.location.href = "index.html";
+    showMessage("로그인 성공", "green");
+    alert("로그인 성공");
+    location.href = "index.html";
   } catch (error) {
-    console.error(error);
+    console.error("로그인 오류:", error);
 
-    if (error.code === "auth/invalid-credential") {
-      message.style.color = "red";
-      message.textContent = "이메일 또는 비밀번호가 올바르지 않습니다.";
-    } else if (error.code === "auth/too-many-requests") {
-      message.style.color = "red";
-      message.textContent = "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.";
-    } else {
-      message.style.color = "red";
-      message.textContent = "로그인 중 오류가 발생했습니다.";
+    switch (error.code) {
+      case "auth/invalid-email":
+        showMessage("이메일 형식이 올바르지 않습니다.", "crimson");
+        break;
+      case "auth/user-not-found":
+        showMessage("존재하지 않는 계정입니다.", "crimson");
+        break;
+      case "auth/wrong-password":
+        showMessage("비밀번호가 올바르지 않습니다.", "crimson");
+        break;
+      case "auth/invalid-credential":
+        showMessage("이메일 또는 비밀번호가 올바르지 않습니다.", "crimson");
+        break;
+      case "auth/too-many-requests":
+        showMessage("로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.", "crimson");
+        break;
+      default:
+        showMessage("로그인 중 오류가 발생했습니다.", "crimson");
+        break;
     }
   }
 });
 
 resendBtn.addEventListener("click", async () => {
-  if (loginMode === "admin") return;
+  const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput.value.trim();
+
+  showMessage("");
+
+  if (!email || !password) {
+    showMessage("이메일과 비밀번호를 먼저 입력해주세요.", "crimson");
+    return;
+  }
 
   try {
-    const user = lastUnverifiedUser || auth.currentUser;
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    if (!user) {
-      message.style.color = "red";
-      message.textContent = "먼저 일반 회원 로그인을 시도한 뒤 다시 보내기를 눌러주세요.";
+    // 관리자 계정은 인증 메일 제외
+    if (user.email === ADMIN_EMAIL) {
+      showMessage("관리자 계정은 인증 메일 기능을 사용하지 않습니다.", "crimson");
+      await signOut(auth);
+      return;
+    }
+
+    if (user.emailVerified) {
+      try {
+        await updateDoc(doc(db, "users", user.uid), {
+          emailVerified: true
+        });
+      } catch (updateError) {
+        console.error("인증 상태 업데이트 실패:", updateError);
+      }
+
+      showMessage("이미 이메일 인증이 완료된 계정입니다.", "green");
+      await signOut(auth);
       return;
     }
 
     await sendEmailVerification(user);
-
-    message.style.color = "green";
-    message.textContent = "인증 메일을 다시 보냈습니다. 스팸함도 확인해주세요.";
+    showMessage("인증 메일을 다시 보냈습니다. 이메일을 확인해주세요.", "green");
+    await signOut(auth);
   } catch (error) {
-    console.error(error);
-    message.style.color = "red";
+    console.error("인증 메일 재전송 오류:", error);
 
-    if (error.code === "auth/too-many-requests") {
-      message.textContent = "너무 많이 요청했습니다. 잠시 후 다시 시도해주세요.";
-    } else {
-      message.textContent = "인증 메일 재전송 중 오류가 발생했습니다.";
+    switch (error.code) {
+      case "auth/invalid-email":
+        showMessage("이메일 형식이 올바르지 않습니다.", "crimson");
+        break;
+      case "auth/user-not-found":
+        showMessage("존재하지 않는 계정입니다.", "crimson");
+        break;
+      case "auth/wrong-password":
+      case "auth/invalid-credential":
+        showMessage("비밀번호가 올바르지 않습니다.", "crimson");
+        break;
+      default:
+        showMessage("인증 메일 재전송 중 오류가 발생했습니다.", "crimson");
+        break;
     }
   }
 });
-
-// 페이지 처음 열릴 때 기본값
-setUserMode();

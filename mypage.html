@@ -607,63 +607,12 @@
             <h2>내가 쓴 게시글</h2>
             <p class="panel-desc">커뮤니티에 작성한 게시글 목록입니다.</p>
 
-            <div class="card-list">
-              <div class="list-card">
-                <div>
-                  <span class="tag blue">자유게시판</span>
-                  <h3>강남점 스터디카페 후기</h3>
-                  <div class="meta">
-                    <span>작성일: 2026-03-18</span>
-                    <span>댓글 3개</span>
-                    <span>조회수 25</span>
-                  </div>
-                  <p>조용하고 좌석 간격이 넓어서 공부하기 좋았습니다.</p>
-                </div>
-                <div class="actions">
-                  <button class="sub-btn">상세보기</button>
-                  <button class="sub-btn">수정</button>
-                  <button class="danger-btn">삭제</button>
-                </div>
-              </div>
-
-              <div class="list-card">
-                <div>
-                  <span class="tag blue">후기게시판</span>
-                  <h3>노원점 와이파이 속도 괜찮네요</h3>
-                  <div class="meta">
-                    <span>작성일: 2026-03-15</span>
-                    <span>댓글 1개</span>
-                    <span>조회수 14</span>
-                  </div>
-                  <p>영상 강의 들을 때도 끊김이 없어서 만족스러웠습니다.</p>
-                </div>
-                <div class="actions">
-                  <button class="sub-btn">상세보기</button>
-                  <button class="sub-btn">수정</button>
-                  <button class="danger-btn">삭제</button>
-                </div>
-              </div>
-
-              <div class="list-card">
-                <div>
-                  <span class="tag blue">스터디모집</span>
-                  <h3>정보처리기사 스터디 모집합니다</h3>
-                  <div class="meta">
-                    <span>작성일: 2026-03-12</span>
-                    <span>댓글 5개</span>
-                    <span>조회수 41</span>
-                  </div>
-                  <p>주 2회 모여서 문제 풀이 중심으로 진행할 분 구합니다.</p>
-                </div>
-                <div class="actions">
-                  <button class="sub-btn">상세보기</button>
-                  <button class="sub-btn">수정</button>
-                  <button class="danger-btn">삭제</button>
-                </div>
-              </div>
-            </div>
+              <div class="card-list" id="myPostList"></div>
+              <p id="emptyPostMessage" class="panel-desc" style="display:none; margin-top:16px;">
+                작성한 게시글이 없습니다.
+              </p>
+            </div>        
           </div>
-        </div>
 
         <!-- 좌석 예약 내역 -->
         <div id="reservations" class="tab-content">
@@ -756,43 +705,15 @@
             <h2>참여 스터디 그룹</h2>
             <p class="panel-desc">현재 참여 중인 스터디 그룹과 채팅방 이동 기능을 제공합니다.</p>
 
-            <div class="card-list">
-              <div class="list-card">
-                <div>
-                  <span class="tag green">참여중</span>
-                  <h3>토익 850+ 목표 스터디</h3>
-                  <div class="meta">
-                    <span>참여일: 2026-03-11</span>
-                    <span>장소: 강남점</span>
-                    <span>인원: 4 / 6명</span>
-                  </div>
-                  <p>매주 화, 목 오후 7시 진행. 문제 풀이와 단어 테스트 중심.</p>
-                </div>
-                <div class="actions">
-                  <button class="sub-btn">채팅방 이동</button>
-                  <button class="danger-btn">나가기</button>
-                </div>
-              </div>
+            <div class="card-list" id="joinedStudyList"></div>
 
-              <div class="list-card">
-                <div>
-                  <span class="tag green">참여중</span>
-                  <h3>웹 개발 취업 준비 스터디</h3>
-                  <div class="meta">
-                    <span>참여일: 2026-03-13</span>
-                    <span>장소: 의정부점</span>
-                    <span>인원: 5 / 6명</span>
-                  </div>
-                  <p>HTML, CSS, JS 포트폴리오 제작 및 면접 대비 중심 스터디.</p>
-                </div>
-                <div class="actions">
-                  <button class="sub-btn">채팅방 이동</button>
-                  <button class="danger-btn">나가기</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+         <p id="emptyJoinedStudyMessage" class="panel-desc" style="display:none; margin-top:16px;">
+            참여 중인 스터디 그룹이 없습니다.
+          </p>
+      </div>
+    </div>
+  </section>
+              
       </div>
     </div>
   </section>

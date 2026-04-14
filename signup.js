@@ -1,7 +1,8 @@
 import { auth, db } from "./firebase.js";
 import {
   createUserWithEmailAndPassword,
-  sendEmailVerification
+  sendEmailVerification,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc,
@@ -21,7 +22,6 @@ signupForm.addEventListener("submit", async (e) => {
   const confirmPassword = document.getElementById("confirmPassword").value;
 
   message.textContent = "";
-  message.style.color = "red";
 
   if (!name || !email || !password || !confirmPassword) {
     message.textContent = "모든 항목을 입력해주세요.";
@@ -29,12 +29,19 @@ signupForm.addEventListener("submit", async (e) => {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
   if (!emailRegex.test(email)) {
     message.textContent = "올바른 이메일 형식이 아닙니다.";
     return;
   }
 
-  const allowedDomains = ["gmail.com", "naver.com", "daum.net", "kakao.com"];
+  const allowedDomains = [
+    "gmail.com",
+    "naver.com",
+    "daum.net",
+    "kakao.com"
+  ];
+
   const domain = email.split("@")[1];
 
   if (!allowedDomains.includes(domain)) {
@@ -56,21 +63,23 @@ signupForm.addEventListener("submit", async (e) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    // 인증 메일 발송
     await sendEmailVerification(user);
 
+    // Firestore 자동 저장
     await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       name: name,
       email: email,
       createdAt: serverTimestamp(),
-      emailVerified: false,
-      role: "user"
+      role: "user",
+      emailVerified: user.emailVerified
     });
 
-    message.style.color = "green";
+    await signOut(auth);
+
     message.textContent = "회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.";
     signupForm.reset();
-
   } catch (error) {
     console.error("회원가입 에러 코드:", error.code);
     console.error("회원가입 에러 메시지:", error.message);
