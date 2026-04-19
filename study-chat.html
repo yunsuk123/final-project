@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스터디 채팅방 | Study Spot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(180deg, #f5f7ff 0%, #f7f8fc 100%);
+      color: #222;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .container {
+      width: 92%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 0;
+      gap: 16px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      color: #4a6cf7;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      background: #4a6cf7;
+      color: #fff !important;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    #userName {
+      font-weight: 700;
+      color: #4a6cf7;
+      white-space: nowrap;
+    }
+
+    .chat-page {
+      padding: 36px 0 50px;
+    }
+
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .side-card,
+    .chat-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 14px 34px rgba(74, 108, 247, 0.08);
+      border: 1px solid #edf1ff;
+    }
+
+    .side-card {
+      padding: 24px;
+      position: sticky;
+      top: 96px;
+    }
+
+    .chat-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 24px 24px 18px;
+      border-bottom: 1px solid #eef1f7;
+      background: linear-gradient(180deg, #fbfcff 0%, #f8faff 100%);
+    }
+
+    .chat-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .chat-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1b2238;
+    }
+
+    .chat-sub {
+      margin-top: 8px;
+      color: #6b7488;
+      font-size: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .pill.study {
+      background: #eafaf0;
+      color: #1a9a55;
+    }
+
+    .pill.member-count {
+      background: #eef2ff;
+      color: #4a6cf7;
+    }
+
+    .side-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #1d2438;
+      margin-bottom: 14px;
+    }
+
+    .info-box {
+      background: #f8faff;
+      border: 1px solid #e9eeff;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .info-box h4 {
+      font-size: 13px;
+      color: #7a8398;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .info-box p {
+      font-size: 16px;
+      font-weight: 800;
+      color: #222;
+    }
+
+    .member-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .member-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: #f8faff;
+      border: 1px solid #e9eeff;
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+
+    .member-name {
+      font-weight: 700;
+      color: #222;
+    }
+
+    .member-role {
+      font-size: 12px;
+      font-weight: 700;
+      color: #4a6cf7;
+      background: #eef2ff;
+      padding: 5px 9px;
+      border-radius: 999px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 22px;
+      overflow-y: auto;
+      background: linear-gradient(180deg, #fcfdff 0%, #f7f9ff 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .message-row {
+      display: flex;
+    }
+
+    .message-row.mine {
+      justify-content: flex-end;
+    }
+
+    .message-row.other {
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      max-width: min(72%, 520px);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+      word-break: break-word;
+    }
+
+    .message-row.mine .message-bubble {
+      background: linear-gradient(135deg, #4a6cf7, #5f7cff);
+      color: #fff;
+      border-bottom-right-radius: 8px;
+    }
+
+    .message-row.other .message-bubble {
+      background: #fff;
+      color: #222;
+      border: 1px solid #e8ecf7;
+      border-bottom-left-radius: 8px;
+    }
+
+    .message-author {
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      opacity: 0.9;
+    }
+
+    .message-text {
+      white-space: pre-wrap;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .message-time {
+      margin-top: 8px;
+      font-size: 11px;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    .chat-input-wrap {
+      border-top: 1px solid #eef1f7;
+      background: #fff;
+      padding: 16px 18px 18px;
+    }
+
+    .chat-input-box {
+      background: #f8faff;
+      border: 1px solid #e6ecff;
+      border-radius: 20px;
+      padding: 14px;
+    }
+
+    #chatInput {
+      width: 100%;
+      min-height: 90px;
+      resize: vertical;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 15px;
+      line-height: 1.6;
+      font-family: inherit;
+    }
+
+    .chat-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chat-hint {
+      font-size: 13px;
+      color: #7a8398;
+    }
+
+    #sendBtn {
+      background: linear-gradient(135deg, #4a6cf7, #5f7cff);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 18px rgba(74, 108, 247, 0.18);
+    }
+
+    #sendBtn:hover {
+      transform: translateY(-1px);
+    }
+
+    .message-box {
+      text-align: center;
+      background: #fff;
+      padding: 46px 20px;
+      border-radius: 22px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #edf1ff;
+    }
+
+    .empty-chat {
+      text-align: center;
+      padding: 28px 18px;
+      color: #7b8398;
+      background: #fff;
+      border: 1px dashed #dde4f8;
+      border-radius: 18px;
+    }
+
+    .sub-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #eef2ff;
+      color: #4a6cf7;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 960px) {
+      .chat-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-card {
+        position: static;
+      }
+
+      .chat-card {
+        min-height: 700px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .chat-title {
+        font-size: 22px;
+      }
+
+      .chat-header,
+      .side-card,
+      .chat-messages,
+      .chat-input-wrap {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .message-bubble {
+        max-width: 88%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container navbar">
+      <div class="logo">Study Spot</div>
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html">홈</a></li>
+          <li><a href="community.html">커뮤니티</a></li>
+          <li><span id="userName"></span></li>
+          <li><a href="login.html" class="nav-btn" id="loginBtn">로그인</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="chat-page">
+    <div class="container">
+      <div id="loadingBox" class="message-box">채팅방을 불러오는 중입니다...</div>
+
+      <div id="errorBox" class="message-box hidden">
+        채팅방에 접근할 수 없습니다.
+      </div>
+
+      <div id="chatLayout" class="chat-layout hidden">
+        <aside class="side-card">
+          <h3 class="side-title">스터디 정보</h3>
+
+          <div class="info-box">
+            <h4>스터디 제목</h4>
+            <p id="studyTitle">-</p>
+          </div>
+
+          <div class="info-box">
+            <h4>지점</h4>
+            <p id="studyPlace">-</p>
+          </div>
+
+          <div class="info-box">
+            <h4>일정</h4>
+            <p id="studySchedule">-</p>
+          </div>
+
+          <div class="info-box">
+            <h4>상태</h4>
+            <p id="studyStatus">-</p>
+          </div>
+
+          <h3 class="side-title" style="margin-top: 18px;">참여 멤버</h3>
+          <div id="memberList" class="member-list"></div>
+
+          <div style="margin-top: 18px;">
+            <a id="backToPostBtn" href="community.html" class="sub-btn">게시글로 돌아가기</a>
+          </div>
+        </aside>
+
+        <main class="chat-card">
+          <div class="chat-header">
+            <div class="chat-header-top">
+              <div>
+                <div class="pill study">스터디 채팅방</div>
+                <div class="chat-title" id="headerTitle">스터디 채팅방</div>
+                <div class="chat-sub" id="headerSub">멤버만 참여할 수 있습니다.</div>
+              </div>
+              <div class="pill member-count" id="memberCountBadge">0명</div>
+            </div>
+          </div>
+
+          <div id="chatList" class="chat-messages"></div>
+
+          <div class="chat-input-wrap">
+            <div class="chat-input-box">
+              <textarea id="chatInput" placeholder="메시지를 입력하세요"></textarea>
+              <div class="chat-actions">
+                <span class="chat-hint">Shift + Enter 줄바꿈 / Enter 전송</span>
+                <button type="button" id="sendBtn">전송</button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>s
+    </div>
+  </section>
+
+  <script type="module" src="./study-chat.js"></script>
+</body>
+</html>

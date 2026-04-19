@@ -196,6 +196,51 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;");
 }
 
+// ===============================
+// 채팅방 멤버 구성 함수 추가
+// ===============================
+function getOwnerMember(post) {
+  return {
+    uid: post.authorUid || post.uid || "",
+    email: post.authorEmail || post.email || "",
+    name: post.author || "작성자",
+    role: "owner"
+  };
+}
+
+function buildChatMembers(post) {
+  const members = [];
+  const owner = getOwnerMember(post);
+
+  if (owner.uid || owner.email) {
+    members.push(owner);
+  }
+
+  const applications = post.applications || [];
+
+  applications.forEach((app) => {
+    if (app.status !== "approved") return;
+
+    const alreadyExists = members.some((member) => {
+      return (
+        (member.uid && app.uid && member.uid === app.uid) ||
+        (member.email && app.email && member.email === app.email)
+      );
+    });
+
+    if (!alreadyExists) {
+      members.push({
+        uid: app.uid || "",
+        email: app.email || "",
+        name: app.name || "참여자",
+        role: "member"
+      });
+    }
+  });
+
+  return members;
+}
+
 function loadComments() {
   if (!postId || !commentList || !commentEmptyMessage) return;
 
@@ -435,7 +480,7 @@ window.approveApplication = async function (postId, index) {
     }
 
     const post = postSnap.data();
-    const applications = post.applications || [];
+    const applications = [...(post.applications || [])];
     const studyInfo = post.studyInfo || {};
 
     if (!applications[index]) {
@@ -459,10 +504,25 @@ window.approveApplication = async function (postId, index) {
     applications[index].status = "approved";
     currentMembers += 1;
 
+    const nextStatus = currentMembers >= maxMembers ? "마감" : "모집중";
+
+    const updatedPostForMembers = {
+      ...post,
+      applications: applications,
+      studyInfo: {
+        ...studyInfo,
+        currentMembers: currentMembers,
+        status: nextStatus
+      }
+    };
+
+    const chatMembers = buildChatMembers(updatedPostForMembers);
+
     await updateDoc(postRef, {
       applications: applications,
       "studyInfo.currentMembers": currentMembers,
-      "studyInfo.status": currentMembers >= maxMembers ? "마감" : "모집중"
+      "studyInfo.status": nextStatus,
+      chatMembers: chatMembers
     });
 
     alert("신청을 수락했습니다.");
@@ -484,7 +544,7 @@ window.rejectApplication = async function (postId, index) {
     }
 
     const post = postSnap.data();
-    const applications = post.applications || [];
+    const applications = [...(post.applications || [])];
 
     if (!applications[index]) {
       alert("신청자 정보를 찾을 수 없습니다.");
@@ -498,8 +558,16 @@ window.rejectApplication = async function (postId, index) {
 
     applications[index].status = "rejected";
 
-    await updateDoc(postRef, {
+    const updatedPostForMembers = {
+      ...post,
       applications: applications
+    };
+
+    const chatMembers = buildChatMembers(updatedPostForMembers);
+
+    await updateDoc(postRef, {
+      applications: applications,
+      chatMembers: chatMembers
     });
 
     alert("신청을 거절했습니다.");
@@ -508,6 +576,10 @@ window.rejectApplication = async function (postId, index) {
     console.error("신청 거절 오류:", error);
     alert("신청 거절 중 오류가 발생했습니다.");
   }
+};
+
+window.goToStudyChat = function () {
+  location.href = `study-chat.html?id=${postId}`;
 };
 
 async function loadPost(user) {
@@ -526,6 +598,25 @@ async function loadPost(user) {
     }
 
     let post = postSnap.data();
+
+    // 스터디 글이면 chatMembers 초기화
+    if (post.category === "study") {
+      const currentChatMembers = post.chatMembers || [];
+      const shouldInitChatMembers = currentChatMembers.length === 0;
+
+      if (shouldInitChatMembers) {
+        const initializedChatMembers = buildChatMembers(post);
+
+        await updateDoc(postRef, {
+          chatMembers: initializedChatMembers
+        });
+
+        const refreshedSnap = await getDoc(postRef);
+        if (refreshedSnap.exists()) {
+          post = refreshedSnap.data();
+        }
+      }
+    }
 
     const viewerId = user ? user.uid : "guest";
     const viewedKey = `viewed_post_${postId}_${viewerId}`;

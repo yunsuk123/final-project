@@ -212,6 +212,7 @@ function renderJoinedStudies(user) {
             </div>
             <div class="actions">
               <button class="sub-btn" onclick="viewPost('${study.id}')">상세보기</button>
+              <button class="sub-btn" onclick="goToStudyChat('${study.id}')">채팅방 이동</button>
             </div>
           </div>
         `;
@@ -266,6 +267,10 @@ onAuthStateChanged(auth, async (user) => {
 
 window.viewPost = function (postId) {
   location.href = `community-detail.html?id=${postId}`;
+};
+
+window.goToStudyChat = function (postId) {
+  location.href = `study-chat.html?id=${postId}`;
 };
 
 window.editPost = function (postId) {
