@@ -6,12 +6,20 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc,
+  getDoc,
   setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const signupForm = document.getElementById("signupForm");
 const message = document.getElementById("message");
+
+async function isBlockedEmail(email) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const blockedRef = doc(db, "blockedEmails", normalizedEmail);
+  const blockedSnap = await getDoc(blockedRef);
+  return blockedSnap.exists();
+}
 
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -60,13 +68,18 @@ signupForm.addEventListener("submit", async (e) => {
   }
 
   try {
+    const blocked = await isBlockedEmail(email);
+
+    if (blocked) {
+      message.textContent = "관리자에 의해 제한된 이메일입니다.";
+      return;
+    }
+
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // 인증 메일 발송
     await sendEmailVerification(user);
 
-    // Firestore 자동 저장
     await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       name: name,

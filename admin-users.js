@@ -1,10 +1,15 @@
-import { db } from "./firebase.js";
+import { db, auth } from "./firebase.js";
 import {
   collection,
   getDocs,
   doc,
-  deleteDoc
+  deleteDoc,
+  setDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 if (sessionStorage.getItem("isAdmin") !== "true") {
   alert("관리자만 접근할 수 있습니다.");
@@ -27,6 +32,14 @@ function formatDate(timestamp) {
 
   return "-";
 }
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("현재 Firebase 로그인 사용자:", user.email, user.uid);
+  } else {
+    console.log("Firebase 로그인 안 된 상태");
+  }
+});
 
 async function loadUsers() {
   try {
@@ -67,7 +80,13 @@ async function loadUsers() {
             ${data.emailVerified ? "인증 완료" : "미인증"}
           </td>
           <td>
-            <button class="delete-btn" data-uid="${uid}" data-name="${data.name || ""}">
+            <button
+              type="button"
+              class="delete-btn"
+              data-uid="${uid}"
+              data-name="${data.name || ""}"
+              data-email="${data.email || ""}"
+            >
               삭제
             </button>
           </td>
@@ -88,27 +107,47 @@ async function loadUsers() {
   }
 }
 
-async function deleteUserDoc(uid, name) {
+async function deleteUserDoc(uid, name, email) {
+  if (!uid) {
+    alert("삭제할 회원 ID를 찾지 못했습니다.");
+    return;
+  }
+
   const ok = confirm(`${name || "해당 회원"} 삭제하시겠습니까?`);
   if (!ok) return;
 
   try {
+    if (email) {
+      const normalizedEmail = email.trim().toLowerCase();
+
+      await setDoc(doc(db, "blockedEmails", normalizedEmail), {
+        email: normalizedEmail,
+        blockedAt: serverTimestamp(),
+        blockedReason: "관리자 삭제",
+        uid: uid,
+        name: name || ""
+      });
+    }
+
     await deleteDoc(doc(db, "users", uid));
+
     alert("삭제되었습니다.");
     await loadUsers();
   } catch (error) {
     console.error("회원 삭제 실패:", error);
-    alert("삭제에 실패했습니다.");
+    alert("삭제에 실패했습니다.\n" + error.message);
   }
 }
 
 document.addEventListener("click", async (e) => {
-  if (!e.target.classList.contains("delete-btn")) return;
+  const deleteButton = e.target.closest(".delete-btn");
+  if (!deleteButton) return;
 
-  const uid = e.target.dataset.uid;
-  const name = e.target.dataset.name;
+  const uid = deleteButton.dataset.uid;
+  const name = deleteButton.dataset.name;
+  const email = deleteButton.dataset.email;
 
-  await deleteUserDoc(uid, name);
+  await deleteUserDoc(uid, name, email);
 });
 
 adminLogoutBtn.addEventListener("click", () => {
