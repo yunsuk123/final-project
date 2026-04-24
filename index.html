@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>스터디카페</title>
+
+  <!-- 카카오맵 API : appkey= 뒤에 본인 API 키 입력 -->
+  <script type="text/javascript"
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=&libraries=services">
+  </script>
+
   <style>
     * {
       margin: 0;
@@ -33,7 +39,7 @@
       margin: 0 auto;
     }
 
-    /* header */
+    /* ── header ── */
     header {
       background: #ffffff;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
@@ -84,7 +90,7 @@
       color: #fff;
     }
 
-    /* hero */
+    /* ── hero ── */
     .hero {
       padding: 80px 0;
       background: linear-gradient(135deg, #eef2ff, #f8fbff);
@@ -92,7 +98,7 @@
 
     .hero-wrap {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 40px;
       flex-wrap: wrap;
@@ -150,47 +156,68 @@
       background: #f2f5ff;
     }
 
-    .hero-card {
+    /* ── hero 오른쪽 : 매장정보 + 지도 카드 ── */
+    .hero-info-card {
       flex: 1;
-      min-width: 300px;
+      min-width: 320px;
       background: #fff;
-      padding: 30px;
+      padding: 28px;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(74, 108, 247, 0.12);
     }
 
-    .hero-card h3 {
-      font-size: 24px;
-      margin-bottom: 20px;
+    .hero-info-card h3 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 18px;
       color: #333;
     }
 
-    .seat-summary {
+    /* 서비스 아이콘 가로 나열 */
+    .hero-service-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
-    .seat-box {
+    .hero-service-item {
       background: #f8faff;
-      border-radius: 14px;
-      padding: 20px;
+      border-radius: 12px;
+      padding: 12px 6px;
       text-align: center;
     }
 
-    .seat-box h4 {
-      font-size: 16px;
-      margin-bottom: 8px;
-      color: #666;
+    .hero-service-item .svc-icon {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 6px;
     }
 
-    .seat-box p {
-      font-size: 24px;
-      font-weight: 800;
-      color: #4a6cf7;
+    .hero-service-item span.svc-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
     }
 
-    /* common section */
+    /* 히어로 내 미니 지도 */
+    #hero-map {
+      width: 100%;
+      height: 220px;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+
+    .hero-map-label {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #999;
+    }
+
+    /* ── common section ── */
     section {
       padding: 80px 0;
     }
@@ -211,41 +238,7 @@
       font-size: 17px;
     }
 
-    /* features */
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 24px;
-    }
-
-    .feature-card {
-      background: #fff;
-      padding: 28px;
-      border-radius: 18px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-      transition: 0.25s;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-6px);
-    }
-
-    .feature-icon {
-      font-size: 34px;
-      margin-bottom: 16px;
-    }
-
-    .feature-card h3 {
-      margin-bottom: 10px;
-      font-size: 22px;
-    }
-
-    .feature-card p {
-      color: #666;
-      font-size: 15px;
-    }
-
-    /* seat status */
+    /* ── seat status ── */
     .seat-status-wrap {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -275,22 +268,11 @@
       border-bottom: none;
     }
 
-    .available {
-      color: #1db954;
-      font-weight: 700;
-    }
+    .available { color: #1db954; font-weight: 700; }
+    .occupied  { color: #ff4d4f; font-weight: 700; }
+    .ending    { color: #f5a623; font-weight: 700; }
 
-    .occupied {
-      color: #ff4d4f;
-      font-weight: 700;
-    }
-
-    .ending {
-      color: #f5a623;
-      font-weight: 700;
-    }
-
-    /* study groups */
+    /* ── study groups ── */
     .group-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -342,38 +324,7 @@
       background: #3655d6;
     }
 
-    /* store info */
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 18px;
-    }
-
-    .info-box {
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      text-align: center;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
-    }
-
-    .info-box .emoji {
-      font-size: 30px;
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    .info-box h4 {
-      font-size: 18px;
-      margin-bottom: 8px;
-    }
-
-    .info-box p {
-      color: #666;
-      font-size: 14px;
-    }
-
-    /* footer */
+    /* ── footer ── */
     footer {
       background: #1f2430;
       color: #ddd;
@@ -393,29 +344,14 @@
       font-size: 14px;
     }
 
-    /* responsive */
+    /* ── responsive ── */
     @media (max-width: 768px) {
-      .navbar {
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .nav-menu {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .hero-text h1 {
-        font-size: 34px;
-      }
-
-      .section-title h2 {
-        font-size: 28px;
-      }
-
-      .seat-summary {
-        grid-template-columns: 1fr;
-      }
+      .navbar { flex-direction: column; gap: 14px; }
+      .nav-menu { flex-wrap: wrap; justify-content: center; }
+      .hero-text h1 { font-size: 34px; }
+      .section-title h2 { font-size: 28px; }
+      .hero-service-grid { grid-template-columns: repeat(3, 1fr); }
+      #hero-map { height: 180px; }
     }
   </style>
 </head>
@@ -443,6 +379,8 @@
   <!-- hero -->
   <section class="hero" id="home">
     <div class="container hero-wrap">
+
+      <!-- 왼쪽: 텍스트 & 버튼 (기존 유지) -->
       <div class="hero-text">
         <h1>집중이 필요한 순간,<br>가장 편리한 스터디카페</h1>
         <p>
@@ -455,23 +393,74 @@
         </div>
       </div>
 
-      <div class="hero-card">
-        <h3>실시간 좌석 현황</h3>
-        <div class="seat-summary">
-          <div class="seat-box">
-            <h4>전체 좌석</h4>
-            <p>120</p>
+      <!-- 오른쪽: 매장 서비스 정보 + 카카오맵 (실시간 좌석 현황 대체) -->
+      <div class="hero-info-card" id="info">
+        <h3>매장 서비스 및 위치</h3>
+
+        <!-- 서비스 아이콘 -->
+        <div class="hero-service-grid">
+          <div class="hero-service-item">
+            <span class="svc-icon">
+              <!-- 냉난방 SVG -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93 4.93 19.07"/>
+              </svg>
+            </span>
+            <span class="svc-label">냉난방</span>
           </div>
-          <div class="seat-box">
-            <h4>사용 가능</h4>
-            <p>48</p>
+          <div class="hero-service-item">
+            <span class="svc-icon">
+              <!-- 주차 SVG -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="3"/>
+                <path d="M9 12h3a2 2 0 0 0 0-4H9v8"/>
+              </svg>
+            </span>
+            <span class="svc-label">주차장</span>
           </div>
-          <div class="seat-box">
-            <h4>사용 중</h4>
-            <p>72</p>
+          <div class="hero-service-item">
+            <span class="svc-icon">
+              <!-- 커피 SVG -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 8h1a4 4 0 0 1 0 8h-1"/>
+                <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
+                <line x1="6" y1="2" x2="6" y2="4"/>
+                <line x1="10" y1="2" x2="10" y2="4"/>
+                <line x1="14" y1="2" x2="14" y2="4"/>
+              </svg>
+            </span>
+            <span class="svc-label">스낵바</span>
+          </div>
+          <div class="hero-service-item">
+            <span class="svc-icon">
+              <!-- 와이파이 SVG -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                <circle cx="12" cy="20" r="1" fill="#4a6cf7"/>
+              </svg>
+            </span>
+            <span class="svc-label">와이파이</span>
+          </div>
+          <div class="hero-service-item">
+            <span class="svc-icon">
+              <!-- 콘센트 SVG -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="3"/>
+                <line x1="9" y1="9" x2="9" y2="13"/>
+                <line x1="15" y1="9" x2="15" y2="13"/>
+              </svg>
+            </span>
+            <span class="svc-label">콘센트</span>
           </div>
         </div>
+
+        <!-- 카카오맵 -->
+        <div id="hero-map"></div>
+        <p class="hero-map-label">주변 스터디카페 위치를 지도에서 확인하세요.</p>
       </div>
+
     </div>
   </section>
 
@@ -486,62 +475,26 @@
       <div class="seat-status-wrap">
         <div class="status-card">
           <h3>1인 좌석</h3>
-          <div class="status-item">
-            <span>A-01</span>
-            <span class="available">예약 가능</span>
-          </div>
-          <div class="status-item">
-            <span>A-02</span>
-            <span class="occupied">사용 중</span>
-          </div>
-          <div class="status-item">
-            <span>A-03</span>
-            <span class="ending">곧 종료</span>
-          </div>
-          <div class="status-item">
-            <span>A-04</span>
-            <span class="available">예약 가능</span>
-          </div>
+          <div class="status-item"><span>A-01</span><span class="available">예약 가능</span></div>
+          <div class="status-item"><span>A-02</span><span class="occupied">사용 중</span></div>
+          <div class="status-item"><span>A-03</span><span class="ending">곧 종료</span></div>
+          <div class="status-item"><span>A-04</span><span class="available">예약 가능</span></div>
         </div>
 
         <div class="status-card">
           <h3>오픈 좌석</h3>
-          <div class="status-item">
-            <span>B-01</span>
-            <span class="occupied">사용 중</span>
-          </div>
-          <div class="status-item">
-            <span>B-02</span>
-            <span class="available">예약 가능</span>
-          </div>
-          <div class="status-item">
-            <span>B-03</span>
-            <span class="available">예약 가능</span>
-          </div>
-          <div class="status-item">
-            <span>B-04</span>
-            <span class="ending">곧 종료</span>
-          </div>
+          <div class="status-item"><span>B-01</span><span class="occupied">사용 중</span></div>
+          <div class="status-item"><span>B-02</span><span class="available">예약 가능</span></div>
+          <div class="status-item"><span>B-03</span><span class="available">예약 가능</span></div>
+          <div class="status-item"><span>B-04</span><span class="ending">곧 종료</span></div>
         </div>
 
         <div class="status-card">
           <h3>스터디룸</h3>
-          <div class="status-item">
-            <span>Room 1</span>
-            <span class="available">예약 가능</span>
-          </div>
-          <div class="status-item">
-            <span>Room 2</span>
-            <span class="occupied">사용 중</span>
-          </div>
-          <div class="status-item">
-            <span>Room 3</span>
-            <span class="available">예약 가능</span>
-          </div>
-          <div class="status-item">
-            <span>Room 4</span>
-            <span class="occupied">사용 중</span>
-          </div>
+          <div class="status-item"><span>Room 1</span><span class="available">예약 가능</span></div>
+          <div class="status-item"><span>Room 2</span><span class="occupied">사용 중</span></div>
+          <div class="status-item"><span>Room 3</span><span class="available">예약 가능</span></div>
+          <div class="status-item"><span>Room 4</span><span class="occupied">사용 중</span></div>
         </div>
       </div>
     </div>
@@ -586,48 +539,6 @@
     </div>
   </section>
 
-  <!-- info -->
-  <section id="info">
-    <div class="container">
-      <div class="section-title">
-        <h2>매장 서비스 정보</h2>
-        <p>매장 내 편의시설과 서비스를 한눈에 확인할 수 있습니다.</p>
-      </div>
-
-      <div class="info-grid">
-        <div class="info-box">
-          <span class="emoji">❄️</span>
-          <h4>냉난방</h4>
-          <p>쾌적한 온도 유지</p>
-        </div>
-
-        <div class="info-box">
-          <span class="emoji">🚗</span>
-          <h4>주차장</h4>
-          <p>무료 주차 가능</p>
-        </div>
-
-        <div class="info-box">
-          <span class="emoji">☕</span>
-          <h4>스낵바</h4>
-          <p>커피와 간식 제공</p>
-        </div>
-
-        <div class="info-box">
-          <span class="emoji">📶</span>
-          <h4>와이파이</h4>
-          <p>무료 고속 인터넷</p>
-        </div>
-
-        <div class="info-box">
-          <span class="emoji">🔌</span>
-          <h4>콘센트</h4>
-          <p>모든 좌석 전원 지원</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- footer -->
   <footer>
     <div class="container footer-wrap">
@@ -642,74 +553,103 @@
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
     import {
       doc,
       getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+    /* ── 스터디 그룹 참여 ── */
     window.joinGroup = function (groupName) {
       alert(groupName + "에 참여 신청되었습니다.");
     };
 
-    const authBtn = document.getElementById("authBtn");
+    /* ── Firebase 인증 상태 ── */
+    const authBtn     = document.getElementById("authBtn");
     const welcomeText = document.getElementById("welcomeText");
 
     async function getUserName(user) {
       let displayName = "";
-
       try {
-        const userRef = doc(db, "users", user.uid);
+        const userRef  = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
-
         if (userSnap.exists()) {
           const data = userSnap.data();
-
-          displayName =
-            data.nickname ||
-            data.name ||
-            data.username ||
-            data.userName ||
-            "";
+          displayName = data.nickname || data.name || data.username || data.userName || "";
         }
-     } catch (e) {
+      } catch (e) {
         console.error("유저 정보 불러오기 실패:", e);
+      }
+      if (!displayName) {
+        displayName = user.displayName || user.email?.split("@")[0] || "사용자";
+      }
+      return displayName;
     }
 
-    // fallback
-    if (!displayName) {
-      displayName = user.displayName || user.email?.split("@")[0] || "사용자";
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const displayName = await getUserName(user);
+        welcomeText.textContent = displayName + "님";
+        authBtn.textContent = "로그아웃";
+        authBtn.href = "#";
+        authBtn.onclick = async (e) => {
+          e.preventDefault();
+          await signOut(auth);
+          alert("로그아웃 되었습니다.");
+          location.reload();
+        };
+      } else {
+        welcomeText.textContent = "";
+        authBtn.textContent = "로그인";
+        authBtn.href = "login.html";
+        authBtn.onclick = null;
+      }
+    });
+
+    /* ── 카카오맵 초기화 (hero-map 사용) ── */
+    function startKakaoMap() {
+      kakao.maps.load(() => {
+        const mapContainer = document.getElementById("hero-map");
+        const mapOption = {
+          center: new kakao.maps.LatLng(37.566826, 126.9786567),
+          level: 4
+        };
+
+        const map = new kakao.maps.Map(mapContainer, mapOption);
+        const ps  = new kakao.maps.services.Places();
+
+        ps.keywordSearch("스터디카페", (data, status) => {
+          if (status === kakao.maps.services.Status.OK) {
+            const bounds = new kakao.maps.LatLngBounds();
+
+            for (let i = 0; i < Math.min(data.length, 5); i++) {
+              const point = new kakao.maps.LatLng(data[i].y, data[i].x);
+              const marker = new kakao.maps.Marker({ map, position: point });
+
+              const infowindow = new kakao.maps.InfoWindow({
+                content: `<div style="padding:6px 10px;font-size:13px;font-weight:600;">${data[i].place_name}</div>`
+              });
+
+              kakao.maps.event.addListener(marker, "click", () => {
+                infowindow.open(map, marker);
+              });
+
+              bounds.extend(point);
+            }
+
+            map.setBounds(bounds);
+          }
+        });
+      });
     }
 
-    return displayName;
-  }
+    /* kakao 전역 객체 로드 대기 */
+    const checkInterval = setInterval(() => {
+      if (typeof kakao !== "undefined" && kakao.maps) {
+        clearInterval(checkInterval);
+        startKakaoMap();
+      }
+    }, 100);
 
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const displayName = await getUserName(user);
-
-      welcomeText.textContent = displayName + "님";
-
-      authBtn.textContent = "로그아웃";
-      authBtn.href = "#";
-
-      authBtn.onclick = async (e) => {
-        e.preventDefault();
-        await signOut(auth);
-        alert("로그아웃 되었습니다.");
-        location.reload();
-      };
-    } else {
-      welcomeText.textContent = "";
-      authBtn.textContent = "로그인";
-      authBtn.href = "login.html";
-      authBtn.onclick = null;
-    }
-  });
-
-  
-
-  
-</script>
+  </script>
 </body>
 </html>
