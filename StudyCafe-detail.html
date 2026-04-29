@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>스터디카페 상세</title>
+</head>
+<body>
+
+  <h1 id="cafeName"></h1>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const name = params.get("name");
+
+    document.getElementById("cafeName").innerText = name;
+  </script>
+
+</body>
+</html>
