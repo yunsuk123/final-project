@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>회원가입</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #eef2ff, #f8fbff);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .signup-container {
+      width: 100%;
+      max-width: 460px;
+      background: #fff;
+      padding: 40px 32px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(74, 108, 247, 0.12);
+    }
+
+    .signup-container h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #4a6cf7;
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    .signup-container p {
+      text-align: center;
+      color: #666;
+      margin-bottom: 28px;
+      font-size: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #d9dff5;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: #4a6cf7;
+    }
+
+    .signup-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #4a6cf7;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .signup-btn:hover {
+      background: #3655d6;
+    }
+
+    .bottom-links {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .bottom-links a {
+      color: #4a6cf7;
+      font-weight: 700;
+      text-decoration: none;
+      margin-left: 4px;
+    }
+
+    .home-link {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      color: #888;
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .home-link:hover {
+      color: #4a6cf7;
+    }
+
+    .message {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 14px;
+      color: #444;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+    <h1>Study Cafe</h1>
+    <p>스터디카페 회원가입</p>
+
+    <form id="signupForm">
+      <div class="form-group">
+        <label for="name">이름</label>
+        <input type="text" id="name" placeholder="이름을 입력하세요" required />
+      </div>
+
+      <div class="form-group">
+        <label for="email">이메일</label>
+        <input type="email" id="email" placeholder="이메일을 입력하세요" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" placeholder="비밀번호를 입력하세요" required />
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">비밀번호 확인</label>
+        <input type="password" id="confirmPassword" placeholder="비밀번호를 다시 입력하세요" required />
+      </div>
+
+      <button type="submit" class="signup-btn">회원가입</button>
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <div class="bottom-links">
+      이미 계정이 있으신가요?
+      <a href="login.html">로그인</a>
+    </div>
+
+    <a href="index.html" class="home-link">메인으로 돌아가기</a>
+  </div>
+
+  <script type="module" src="signup.js"></script>
+</body>
+</html>
