@@ -459,6 +459,14 @@
         <!-- 카카오맵 -->
         <div id="hero-map"></div>
         <p class="hero-map-label">주변 스터디카페 위치를 지도에서 확인하세요.</p>
+        <div id="placePreview" style="display:none; margin-top:14px; background:#f8faff; border-radius:14px; padding:16px;">
+          <h4 id="previewName" style="color:#4a6cf7; margin-bottom:6px;"></h4>
+          <p id="previewAddress" style="font-size:13px; color:#555; margin-bottom:6px;"></p>
+          <p id="previewPhone" style="font-size:13px; color:#777; margin-bottom:12px;"></p>
+
+          <button id="goDetailBtn" style="width:100%; padding:12px; border:none; border-radius:10px; background:#4a6cf7; color:white; font-weight:700; cursor:pointer;">
+            상세보기
+          </button>
       </div>
 
     </div>
@@ -628,12 +636,33 @@
               const infowindow = new kakao.maps.InfoWindow({
                 content: `<div style="padding:6px 10px;font-size:13px;font-weight:600;">${data[i].place_name}</div>`
               });
+            kakao.maps.event.addListener(marker, "click", () => {
+              const placePreview = document.getElementById("placePreview");
+              const previewName = document.getElementById("previewName");
+              const previewAddress = document.getElementById("previewAddress");
+              const previewPhone = document.getElementById("previewPhone");
+              const goDetailBtn = document.getElementById("goDetailBtn");
 
-              kakao.maps.event.addListener(marker, "click", () => {
-                infowindow.open(map, marker);
-              });
+              previewName.textContent = data[i].place_name;
+              previewAddress.textContent = data[i].road_address_name || data[i].address_name || "주소 정보 없음";
+              previewPhone.textContent = data[i].phone || "전화번호 정보 없음";
 
-              bounds.extend(point);
+              placePreview.style.display = "block";
+
+              goDetailBtn.onclick = () => {
+                location.href = `studycafe-detail.html?name=${encodeURIComponent(data[i].place_name)}`;
+              };
+
+              infowindow.setContent(`
+                <div style="padding:6px 10px;font-size:13px;font-weight:600;color:#4a6cf7;">
+                  ${data[i].place_name}
+                </div>
+              `);
+
+              infowindow.open(map, marker);
+            });
+          
+                          bounds.extend(point);
             }
 
             map.setBounds(bounds);
@@ -641,7 +670,7 @@
         });
       });
     }
-
+    
     /* kakao 전역 객체 로드 대기 */
     const checkInterval = setInterval(() => {
       if (typeof kakao !== "undefined" && kakao.maps) {
