@@ -7,7 +7,7 @@
 
   <!-- 카카오맵 API : appkey= 뒤에 본인 API 키 입력 -->
   <script type="text/javascript"
-    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=&libraries=services">
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6ce8a915000c6718bf65ac51e6e0c214&libraries=services">
   </script>
 
   <style>
@@ -478,34 +478,8 @@
       <div class="section-title">
         <h2>좌석 현황</h2>
         <p>좌석 상태를 빠르게 확인하고 원하는 자리를 선택해보세요.</p>
+      
       </div>
-
-      <div class="seat-status-wrap">
-        <div class="status-card">
-          <h3>1인 좌석</h3>
-          <div class="status-item"><span>A-01</span><span class="available">예약 가능</span></div>
-          <div class="status-item"><span>A-02</span><span class="occupied">사용 중</span></div>
-          <div class="status-item"><span>A-03</span><span class="ending">곧 종료</span></div>
-          <div class="status-item"><span>A-04</span><span class="available">예약 가능</span></div>
-        </div>
-
-        <div class="status-card">
-          <h3>오픈 좌석</h3>
-          <div class="status-item"><span>B-01</span><span class="occupied">사용 중</span></div>
-          <div class="status-item"><span>B-02</span><span class="available">예약 가능</span></div>
-          <div class="status-item"><span>B-03</span><span class="available">예약 가능</span></div>
-          <div class="status-item"><span>B-04</span><span class="ending">곧 종료</span></div>
-        </div>
-
-        <div class="status-card">
-          <h3>스터디룸</h3>
-          <div class="status-item"><span>Room 1</span><span class="available">예약 가능</span></div>
-          <div class="status-item"><span>Room 2</span><span class="occupied">사용 중</span></div>
-          <div class="status-item"><span>Room 3</span><span class="available">예약 가능</span></div>
-          <div class="status-item"><span>Room 4</span><span class="occupied">사용 중</span></div>
-        </div>
-      </div>
-    </div>
   </section>
 
   <!-- groups -->
@@ -518,32 +492,7 @@
 
       <div class="group-grid">
         <div class="group-card">
-          <span class="group-tag">토익</span>
-          <h3>토익 850+ 목표 스터디</h3>
-          <p>장소: 강남점</p>
-          <p>시간: 오후 7시 ~ 9시</p>
-          <p>인원: 4 / 6명</p>
-          <button onclick="joinGroup('토익 850+ 목표 스터디')">참여하기</button>
-        </div>
-
-        <div class="group-card">
-          <span class="group-tag">자격증</span>
-          <h3>정보처리기사 필기 스터디</h3>
-          <p>장소: 노원점</p>
-          <p>시간: 오후 2시 ~ 5시</p>
-          <p>인원: 3 / 5명</p>
-          <button onclick="joinGroup('정보처리기사 필기 스터디')">참여하기</button>
-        </div>
-
-        <div class="group-card">
-          <span class="group-tag">코딩</span>
-          <h3>웹 개발 취업 준비 스터디</h3>
-          <p>장소: 의정부점</p>
-          <p>시간: 오전 10시 ~ 12시</p>
-          <p>인원: 5 / 6명</p>
-          <button onclick="joinGroup('웹 개발 취업 준비 스터디')">참여하기</button>
-        </div>
-      </div>
+          
     </div>
   </section>
 
@@ -650,7 +599,7 @@
               placePreview.style.display = "block";
 
               goDetailBtn.onclick = () => {
-                location.href = `studycafe-detail.html?name=${encodeURIComponent(data[i].place_name)}`;
+                 window.open(data[i].place_url, "_blank");
               };
 
               infowindow.setContent(`
