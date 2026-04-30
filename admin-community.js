@@ -77,8 +77,6 @@ function getCategoryClass(category) {
 
 function getPostStatus(data) {
   const category = String(data.category || "").toLowerCase();
-  const status = String(data.status || "").toLowerCase();
-  const recruitStatus = String(data.recruitStatus || "").toLowerCase();
 
   const isStudy =
     category === "study" ||
@@ -91,7 +89,21 @@ function getPostStatus(data) {
     };
   }
 
-  if (status === "closed" || recruitStatus === "closed" || data.isClosed === true) {
+  const currentMembers = data.studyInfo?.currentMembers || 1;
+  const maxMembers = data.studyInfo?.maxMembers || 1;
+  const studyStatus = String(data.studyInfo?.status || "").trim();
+
+  const status = String(data.status || "").toLowerCase();
+  const recruitStatus = String(data.recruitStatus || "").toLowerCase();
+
+  const isClosed =
+    currentMembers >= maxMembers ||
+    studyStatus === "마감" ||
+    status === "closed" ||
+    recruitStatus === "closed" ||
+    data.isClosed === true;
+
+  if (isClosed) {
     return {
       text: "모집 마감",
       className: "status-closed"

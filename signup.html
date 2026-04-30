@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>회원가입 | Study Cafe</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #eef3ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .signup-box {
+      width: 460px;
+      background: #fff;
+      padding: 42px 32px;
+      border-radius: 18px;
+      box-shadow: 0 16px 35px rgba(74, 108, 247, 0.12);
+    }
+
+    h1 {
+      text-align: center;
+      color: #5968f2;
+      margin-bottom: 8px;
+      font-size: 32px;
+    }
+
+    .sub-title {
+      text-align: center;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid #d6ddff;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #5968f2;
+    }
+
+    button {
+      width: 100%;
+      height: 50px;
+      margin-top: 28px;
+      border: none;
+      border-radius: 10px;
+      background: #5968f2;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #4656e8;
+    }
+
+    #message {
+      margin-top: 16px;
+      text-align: center;
+      color: #d93025;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    .links {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .links a {
+      color: #4a6cf7;
+      text-decoration: none;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    .home-link {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      color: #888;
+      text-decoration: none;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-box">
+    <h1>Study Cafe</h1>
+    <p class="sub-title">스터디카페 회원가입</p>
+
+    <form id="signupForm">
+      <label for="name">이름</label>
+      <input type="text" id="name" autocomplete="name" />
+
+      <label for="email">이메일</label>
+      <input type="email" id="email" autocomplete="email" />
+
+      <label for="password">비밀번호</label>
+      <input type="password" id="password" autocomplete="new-password" />
+
+      <label for="confirmPassword">비밀번호 확인</label>
+      <input type="password" id="confirmPassword" autocomplete="new-password" />
+
+      <button type="submit">회원가입</button>
+
+      <p id="message"></p>
+    </form>
+
+    <div class="links">
+      이미 계정이 있으신가요?
+      <a href="login.html">로그인</a>
+    </div>
+
+    <a class="home-link" href="index.html">메인으로 돌아가기</a>
+  </div>
+
+  <script type="module" src="signup.js"></script>
+</body>
+</html>

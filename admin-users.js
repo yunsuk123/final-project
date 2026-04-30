@@ -1,29 +1,29 @@
-import { db, auth } from "./firebase.js";
+import { db } from "./firebase.js";
 import {
   collection,
   getDocs,
   doc,
+  getDoc,
   deleteDoc,
   setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 if (sessionStorage.getItem("isAdmin") !== "true") {
   alert("관리자만 접근할 수 있습니다.");
   location.href = "login.html";
 }
 
-const totalUsersEl = document.getElementById("totalUsers");
-const verifiedUsersEl = document.getElementById("verifiedUsers");
-const unverifiedUsersEl = document.getElementById("unverifiedUsers");
 const userTableBody = document.getElementById("userTableBody");
 const adminLogoutBtn = document.getElementById("adminLogoutBtn");
 
 function formatDate(timestamp) {
   if (!timestamp) return "-";
+
+  if (timestamp.toDate) {
+    const date = timestamp.toDate();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
 
   if (timestamp.seconds) {
     const date = new Date(timestamp.seconds * 1000);
@@ -33,77 +33,101 @@ function formatDate(timestamp) {
   return "-";
 }
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("현재 Firebase 로그인 사용자:", user.email, user.uid);
-  } else {
-    console.log("Firebase 로그인 안 된 상태");
+function getSuspendedDate(suspendedUntil) {
+  if (!suspendedUntil) return null;
+
+  if (suspendedUntil.toDate) {
+    return suspendedUntil.toDate();
   }
-});
+
+  if (suspendedUntil.seconds) {
+    return new Date(suspendedUntil.seconds * 1000);
+  }
+
+  return new Date(suspendedUntil);
+}
+
+function getUserName(data) {
+  return (
+    data.name ||
+    data.nickname ||
+    data.username ||
+    data.userName ||
+    "-"
+  );
+}
 
 async function loadUsers() {
   try {
-    const usersRef = collection(db, "users");
-    const snapshot = await getDocs(usersRef);
-
-    let totalUsers = 0;
-    let verifiedUsers = 0;
-    let unverifiedUsers = 0;
-    let html = "";
+    const snapshot = await getDocs(collection(db, "users"));
 
     if (snapshot.empty) {
-      totalUsersEl.textContent = "0";
-      verifiedUsersEl.textContent = "0";
-      unverifiedUsersEl.textContent = "0";
-      userTableBody.innerHTML = "<tr><td colspan='5'>회원 데이터가 없습니다.</td></tr>";
+      userTableBody.innerHTML = `
+        <tr>
+          <td colspan="6">회원 데이터가 없습니다.</td>
+        </tr>
+      `;
       return;
     }
 
+    let html = "";
+
     snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
       const uid = docSnap.id;
+      const data = docSnap.data();
 
-      totalUsers++;
+      const reportCount = data.reportCount || 0;
 
-      if (data.emailVerified === true) {
-        verifiedUsers++;
-      } else {
-        unverifiedUsers++;
+      const suspendedDate = getSuspendedDate(data.suspendedUntil);
+      const isSuspended =
+        suspendedDate &&
+        !isNaN(suspendedDate.getTime()) &&
+        suspendedDate > new Date();
+
+      let statusText = "정상";
+      let statusClass = "status-active";
+
+      if (isSuspended) {
+        statusText = `정지 중 (${formatDate(data.suspendedUntil)}까지)`;
+        statusClass = "status-stop";
+      }
+
+      let manageHtml = `<span style="color:#999; font-weight:700;">삭제 불가</span>`;
+
+      if (reportCount >= 30) {
+        manageHtml = `
+          <button
+            type="button"
+            class="delete-btn"
+            data-uid="${uid}"
+            data-name="${getUserName(data)}"
+            data-email="${data.email || ""}"
+          >
+            삭제
+          </button>
+        `;
       }
 
       html += `
         <tr>
-          <td>${data.name || "-"}</td>
+          <td>${getUserName(data)}</td>
           <td>${data.email || "-"}</td>
           <td>${formatDate(data.createdAt)}</td>
-          <td class="${data.emailVerified ? "status-active" : "status-stop"}">
-            ${data.emailVerified ? "인증 완료" : "미인증"}
-          </td>
-          <td>
-            <button
-              type="button"
-              class="delete-btn"
-              data-uid="${uid}"
-              data-name="${data.name || ""}"
-              data-email="${data.email || ""}"
-            >
-              삭제
-            </button>
-          </td>
+          <td>${reportCount}회</td>
+          <td class="${statusClass}">${statusText}</td>
+          <td>${manageHtml}</td>
         </tr>
       `;
     });
 
-    totalUsersEl.textContent = String(totalUsers);
-    verifiedUsersEl.textContent = String(verifiedUsers);
-    unverifiedUsersEl.textContent = String(unverifiedUsers);
     userTableBody.innerHTML = html;
   } catch (error) {
     console.error("회원 목록 불러오기 실패:", error);
-    totalUsersEl.textContent = "오류";
-    verifiedUsersEl.textContent = "오류";
-    unverifiedUsersEl.textContent = "오류";
-    userTableBody.innerHTML = "<tr><td colspan='5'>회원 정보를 불러오지 못했습니다.</td></tr>";
+    userTableBody.innerHTML = `
+      <tr>
+        <td colspan="6">회원 정보를 불러오지 못했습니다.</td>
+      </tr>
+    `;
   }
 }
 
@@ -113,18 +137,34 @@ async function deleteUserDoc(uid, name, email) {
     return;
   }
 
-  const ok = confirm(`${name || "해당 회원"} 삭제하시겠습니까?`);
-  if (!ok) return;
-
   try {
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      alert("회원 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    const userData = userSnap.data();
+    const reportCount = userData.reportCount || 0;
+
+    if (reportCount < 30) {
+      alert("신고 횟수가 30회 이상인 회원만 삭제할 수 있습니다.");
+      return;
+    }
+
+    const ok = confirm(`${name || "해당 회원"} 삭제하시겠습니까?`);
+    if (!ok) return;
+
     if (email) {
       const normalizedEmail = email.trim().toLowerCase();
 
       await setDoc(doc(db, "blockedEmails", normalizedEmail), {
         email: normalizedEmail,
         blockedAt: serverTimestamp(),
-        blockedReason: "관리자 삭제",
-        uid: uid,
+        blockedReason: "신고 30회 이상 관리자 삭제",
+        uid,
         name: name || ""
       });
     }
@@ -143,17 +183,19 @@ document.addEventListener("click", async (e) => {
   const deleteButton = e.target.closest(".delete-btn");
   if (!deleteButton) return;
 
-  const uid = deleteButton.dataset.uid;
-  const name = deleteButton.dataset.name;
-  const email = deleteButton.dataset.email;
-
-  await deleteUserDoc(uid, name, email);
+  await deleteUserDoc(
+    deleteButton.dataset.uid,
+    deleteButton.dataset.name,
+    deleteButton.dataset.email
+  );
 });
 
-adminLogoutBtn.addEventListener("click", () => {
-  sessionStorage.removeItem("isAdmin");
-  alert("관리자 로그아웃 되었습니다.");
-  location.href = "login.html";
-});
+if (adminLogoutBtn) {
+  adminLogoutBtn.addEventListener("click", () => {
+    sessionStorage.removeItem("isAdmin");
+    alert("관리자 로그아웃 되었습니다.");
+    location.href = "login.html";
+  });
+}
 
 loadUsers();

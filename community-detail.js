@@ -15,7 +15,8 @@ import {
   query,
   orderBy,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const userName = document.getElementById("userName");
@@ -45,7 +46,6 @@ const applicationList = document.getElementById("applicationList");
 const editBtn = document.getElementById("editBtn");
 const deleteBtn = document.getElementById("deleteBtn");
 
-// 댓글 관련 DOM
 const commentInput = document.getElementById("commentInput");
 const commentSubmitBtn = document.getElementById("commentSubmitBtn");
 const commentList = document.getElementById("commentList");
@@ -84,6 +84,53 @@ function getCategoryClass(category) {
   if (category === "review") return "review";
   if (category === "notice") return "notice";
   return "";
+}
+
+function getPostAuthorUid(post) {
+  return post.authorUid || post.uid || "";
+}
+
+function isUserSuspended(userData) {
+  if (!userData || !userData.suspendedUntil) return false;
+
+  let suspendedDate = null;
+
+  if (userData.suspendedUntil.toDate) {
+    suspendedDate = userData.suspendedUntil.toDate();
+  } else if (userData.suspendedUntil.seconds) {
+    suspendedDate = new Date(userData.suspendedUntil.seconds * 1000);
+  } else {
+    suspendedDate = new Date(userData.suspendedUntil);
+  }
+
+  return suspendedDate > new Date();
+}
+
+async function checkSuspendedUser(user) {
+  if (!user) return false;
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) return false;
+
+  return isUserSuspended(userSnap.data());
+}
+
+function makeSuspendedDate(reportCount) {
+  const suspendedDate = new Date();
+
+  if (reportCount >= 20 && reportCount < 30) {
+    suspendedDate.setDate(suspendedDate.getDate() + 14);
+    return suspendedDate;
+  }
+
+  if (reportCount >= 10 && reportCount < 20) {
+    suspendedDate.setDate(suspendedDate.getDate() + 7);
+    return suspendedDate;
+  }
+
+  return null;
 }
 
 async function updateHeaderUserInfo(user) {
@@ -196,9 +243,6 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;");
 }
 
-// ===============================
-// 채팅방 멤버 구성 함수 추가
-// ===============================
 function getOwnerMember(post) {
   return {
     uid: post.authorUid || post.uid || "",
@@ -240,6 +284,80 @@ function buildChatMembers(post) {
 
   return members;
 }
+
+window.reportPostDetail = async function () {
+  const user = auth.currentUser;
+
+  if (!user) {
+    alert("로그인 후 신고할 수 있습니다.");
+    return;
+  }
+
+  if (!postId) {
+    alert("잘못된 접근입니다.");
+    return;
+  }
+
+  try {
+    const postRef = doc(db, "posts", postId);
+    const postSnap = await getDoc(postRef);
+
+    if (!postSnap.exists()) {
+      alert("게시글이 존재하지 않습니다.");
+      return;
+    }
+
+    const post = postSnap.data();
+    const authorUid = getPostAuthorUid(post);
+
+    if (!authorUid) {
+      alert("작성자 정보를 찾을 수 없어 신고할 수 없습니다.");
+      return;
+    }
+
+    if (isMyPost(post, user)) {
+      alert("본인이 작성한 글은 신고할 수 없습니다.");
+      return;
+    }
+
+    const reportKey = `${user.uid}_${postId}`;
+    const authorRef = doc(db, "users", authorUid);
+    const authorSnap = await getDoc(authorRef);
+
+    if (!authorSnap.exists()) {
+      alert("작성자 회원 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    const authorData = authorSnap.data();
+    const reportedPosts = authorData.reportedPosts || [];
+
+    if (reportedPosts.includes(reportKey)) {
+      alert("이미 신고한 게시글입니다.");
+      return;
+    }
+
+    const newReportCount = (authorData.reportCount || 0) + 1;
+    const suspendedUntil = makeSuspendedDate(newReportCount);
+
+    const updateData = {
+      reportCount: newReportCount,
+      reportedPosts: arrayUnion(reportKey),
+      reportedBy: arrayUnion(user.uid)
+    };
+
+    if (suspendedUntil) {
+      updateData.suspendedUntil = suspendedUntil;
+    }
+
+    await updateDoc(authorRef, updateData);
+
+     alert("신고가 접수되었습니다.\n관리자 검토 후 처리됩니다.");
+  } catch (error) {
+    console.error("신고 처리 오류:", error);
+    alert("신고 처리 중 오류가 발생했습니다.");
+  }
+};
 
 function loadComments() {
   if (!postId || !commentList || !commentEmptyMessage) return;
@@ -353,6 +471,13 @@ async function submitComment() {
   }
 
   try {
+    const suspended = await checkSuspendedUser(user);
+
+    if (suspended) {
+      alert("정지된 계정은 댓글을 작성할 수 없습니다.");
+      return;
+    }
+
     const authorName = await getUserDisplayName(user);
 
     await addDoc(collection(db, "posts", postId, "comments"), {
@@ -383,6 +508,13 @@ window.editComment = async function (commentId) {
   }
 
   try {
+    const suspended = await checkSuspendedUser(user);
+
+    if (suspended) {
+      alert("정지된 계정은 댓글을 수정할 수 없습니다.");
+      return;
+    }
+
     const commentRef = doc(db, "posts", postId, "comments", commentId);
     const commentSnap = await getDoc(commentRef);
 
@@ -599,7 +731,6 @@ async function loadPost(user) {
 
     let post = postSnap.data();
 
-    // 스터디 글이면 chatMembers 초기화
     if (post.category === "study") {
       const currentChatMembers = post.chatMembers || [];
       const shouldInitChatMembers = currentChatMembers.length === 0;
@@ -646,6 +777,31 @@ async function loadPost(user) {
     postViews.textContent = `조회수: ${post.viewCount || 0}`;
     postComments.textContent = `댓글: ${post.commentCount || 0}개`;
     postContent.textContent = post.content || "";
+
+    const oldReportButton = document.getElementById("reportPostBtn");
+    if (oldReportButton) {
+      oldReportButton.remove();
+    }
+
+    if (!isMyPost(post, user)) {
+      const reportButton = document.createElement("button");
+      reportButton.id = "reportPostBtn";
+      reportButton.type = "button";
+      reportButton.textContent = "신고";
+      reportButton.onclick = function () {
+        reportPostDetail();
+      };
+      reportButton.style.marginTop = "16px";
+      reportButton.style.padding = "10px 14px";
+      reportButton.style.border = "none";
+      reportButton.style.borderRadius = "10px";
+      reportButton.style.background = "#ffeaea";
+      reportButton.style.color = "#d63b3b";
+      reportButton.style.fontWeight = "700";
+      reportButton.style.cursor = "pointer";
+
+      postContent.insertAdjacentElement("afterend", reportButton);
+    }
 
     if (post.category === "study" && post.studyInfo) {
       studyBox?.classList.remove("hidden");

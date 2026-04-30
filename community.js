@@ -6,7 +6,8 @@ import {
   onSnapshot,
   doc,
   getDoc,
-  updateDoc
+  updateDoc,
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -52,6 +53,53 @@ function getCategoryClass(category) {
   if (category === "review") return "review";
   if (category === "notice") return "notice";
   return "";
+}
+
+function getPostAuthorUid(post) {
+  return post.authorUid || post.uid || "";
+}
+
+function isUserSuspended(userData) {
+  if (!userData || !userData.suspendedUntil) return false;
+
+  let suspendedDate = null;
+
+  if (userData.suspendedUntil.toDate) {
+    suspendedDate = userData.suspendedUntil.toDate();
+  } else if (userData.suspendedUntil.seconds) {
+    suspendedDate = new Date(userData.suspendedUntil.seconds * 1000);
+  } else {
+    suspendedDate = new Date(userData.suspendedUntil);
+  }
+
+  return suspendedDate > new Date();
+}
+
+async function checkSuspendedUser(user) {
+  if (!user) return false;
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) return false;
+
+  return isUserSuspended(userSnap.data());
+}
+
+function makeSuspendedDate(reportCount) {
+  const suspendedDate = new Date();
+
+  if (reportCount >= 20 && reportCount < 30) {
+    suspendedDate.setDate(suspendedDate.getDate() + 14);
+    return suspendedDate;
+  }
+
+  if (reportCount >= 10 && reportCount < 20) {
+    suspendedDate.setDate(suspendedDate.getDate() + 7);
+    return suspendedDate;
+  }
+
+  return null;
 }
 
 async function updateHeaderUserInfo(user) {
@@ -101,6 +149,104 @@ async function updateHeaderUserInfo(user) {
   };
 }
 
+window.reportPost = async function (postId) {
+  const user = auth.currentUser;
+
+  if (!user) {
+    alert("로그인 후 신고할 수 있습니다.");
+    return;
+  }
+
+  const reason = prompt(
+    "신고 사유를 입력해주세요.\n예: 욕설, 광고, 부적절한 게시글, 기타"
+  );
+
+  if (reason === null) return;
+
+  const trimmedReason = reason.trim();
+
+  if (!trimmedReason) {
+    alert("신고 사유를 입력해야 합니다.");
+    return;
+  }
+
+  try {
+    const postRef = doc(db, "posts", postId);
+    const postSnap = await getDoc(postRef);
+
+    if (!postSnap.exists()) {
+      alert("게시글이 존재하지 않습니다.");
+      return;
+    }
+
+    const post = postSnap.data();
+    const authorUid = getPostAuthorUid(post);
+
+    if (!authorUid) {
+      alert("작성자 정보를 찾을 수 없어 신고할 수 없습니다.");
+      return;
+    }
+
+    const isMyPost =
+      (post.authorUid && post.authorUid === user.uid) ||
+      (post.uid && post.uid === user.uid) ||
+      (post.authorEmail && post.authorEmail === user.email) ||
+      (post.email && post.email === user.email);
+
+    if (isMyPost) {
+      alert("본인이 작성한 글은 신고할 수 없습니다.");
+      return;
+    }
+
+    const reportKey = `${user.uid}_${postId}`;
+    const authorRef = doc(db, "users", authorUid);
+    const authorSnap = await getDoc(authorRef);
+
+    if (!authorSnap.exists()) {
+      alert("작성자 회원 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    const authorData = authorSnap.data();
+    const reportedPosts = authorData.reportedPosts || [];
+
+    if (reportedPosts.includes(reportKey)) {
+      alert("이미 신고한 게시글입니다.");
+      return;
+    }
+
+    const newReportCount = (authorData.reportCount || 0) + 1;
+    const suspendedUntil = makeSuspendedDate(newReportCount);
+
+    const reportLog = {
+      postId: postId,
+      postTitle: post.title || "",
+      reporterUid: user.uid,
+      reporterEmail: user.email || "",
+      reason: trimmedReason,
+      reportedAt: new Date()
+    };
+
+    const updateData = {
+      reportCount: newReportCount,
+      reportedPosts: arrayUnion(reportKey),
+      reportedBy: arrayUnion(user.uid),
+      reportLogs: arrayUnion(reportLog)
+    };
+
+    if (suspendedUntil) {
+      updateData.suspendedUntil = suspendedUntil;
+    }
+
+    await updateDoc(authorRef, updateData);
+
+    alert("신고가 접수되었습니다.\n관리자 검토 후 처리됩니다.");
+  } catch (error) {
+    console.error("신고 처리 오류:", error);
+    alert("신고 처리 중 오류가 발생했습니다.");
+  }
+};
+
 window.joinStudy = async function (postId) {
   const user = auth.currentUser;
 
@@ -110,6 +256,13 @@ window.joinStudy = async function (postId) {
   }
 
   try {
+    const suspended = await checkSuspendedUser(user);
+
+    if (suspended) {
+      alert("정지된 계정은 스터디에 신청할 수 없습니다.");
+      return;
+    }
+
     const postRef = doc(db, "posts", postId);
     const postSnap = await getDoc(postRef);
 
@@ -318,12 +471,23 @@ onAuthStateChanged(auth, async (user) => {
             (post.authorEmail && post.authorEmail === user.email)
           );
 
+        const applications = post.applications || [];
+
+        const alreadyApplied =
+          user &&
+          applications.some((app) =>
+            (app.uid && app.uid === user.uid) ||
+            (app.email && app.email === user.email)
+          );
+
         let joinButtonHtml = "";
 
         if (isClosed) {
           joinButtonHtml = `<button class="join-btn disabled" disabled>모집 마감</button>`;
         } else if (isMyPost) {
           joinButtonHtml = `<button class="join-btn disabled" disabled>내가 작성한 글</button>`;
+        } else if (alreadyApplied) {
+          joinButtonHtml = `<button class="join-btn disabled" disabled>신청 완료</button>`;
         } else {
           joinButtonHtml = `<button class="join-btn" onclick="joinStudy('${docItem.id}')">참여하기</button>`;
         }
@@ -367,6 +531,7 @@ onAuthStateChanged(auth, async (user) => {
               <div class="post-actions">
                 <button class="sub-btn" onclick="viewPost('${docItem.id}')">상세보기</button>
                 ${joinButtonHtml}
+                <button class="sub-btn" onclick="reportPost('${docItem.id}')">신고</button>
               </div>
             </div>
           </div>
@@ -387,6 +552,7 @@ onAuthStateChanged(auth, async (user) => {
               </div>
               <div class="post-actions">
                 <button class="sub-btn" onclick="viewPost('${docItem.id}')">상세보기</button>
+                <button class="sub-btn" onclick="reportPost('${docItem.id}')">신고</button>
               </div>
             </div>
           </div>
