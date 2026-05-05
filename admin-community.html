@@ -168,6 +168,48 @@
       margin-bottom: 18px;
     }
 
+    .notice-form {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .notice-form input,
+    .notice-form textarea {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #dfe5ff;
+      border-radius: 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .notice-form input:focus,
+    .notice-form textarea:focus {
+      border-color: #4a6cf7;
+    }
+
+    .notice-form textarea {
+      height: 130px;
+      resize: vertical;
+    }
+
+    .notice-form button {
+      width: 160px;
+      border: none;
+      background: #4a6cf7;
+      color: #fff;
+      padding: 13px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .notice-form button:hover {
+      background: #3655d6;
+    }
+
     .table-wrap {
       overflow-x: auto;
       border-radius: 14px;
@@ -288,6 +330,10 @@
       .topbar h2 {
         font-size: 28px;
       }
+
+      .notice-form button {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -304,7 +350,7 @@
       <div class="menu">
         <a href="admin.html"><button type="button">관리자 홈</button></a>
         <a href="admin-community.html"><button type="button" class="active">커뮤니티 관리</button></a>
-       </div>
+      </div>
     </aside>
 
     <main class="content">
@@ -328,6 +374,17 @@
         <div class="card">
           <h3>오늘 작성 글 수</h3>
           <p id="todayPosts">불러오는 중...</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>공지사항 작성</h3>
+        <p>관리자가 작성한 공지사항은 사용자 커뮤니티의 공지사항 탭에 표시됩니다.</p>
+
+        <div class="notice-form">
+          <input type="text" id="noticeTitle" placeholder="공지 제목을 입력하세요">
+          <textarea id="noticeContent" placeholder="공지 내용을 입력하세요"></textarea>
+          <button type="button" id="createNoticeBtn">공지 등록</button>
         </div>
       </div>
 

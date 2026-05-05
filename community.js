@@ -7,6 +7,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  deleteDoc,
   arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -57,6 +58,17 @@ function getCategoryClass(category) {
 
 function getPostAuthorUid(post) {
   return post.authorUid || post.uid || "";
+}
+
+function checkMyPost(post, user) {
+  if (!user || !post) return false;
+
+  return (
+    (post.authorUid && post.authorUid === user.uid) ||
+    (post.uid && post.uid === user.uid) ||
+    (post.authorEmail && post.authorEmail === user.email) ||
+    (post.email && post.email === user.email)
+  );
 }
 
 function isUserSuspended(userData) {
@@ -149,6 +161,42 @@ async function updateHeaderUserInfo(user) {
   };
 }
 
+window.deletePost = async function (postId) {
+  const user = auth.currentUser;
+
+  if (!user) {
+    alert("로그인 후 삭제할 수 있습니다.");
+    return;
+  }
+
+  const ok = confirm("정말 이 게시글을 삭제하시겠습니까?");
+  if (!ok) return;
+
+  try {
+    const postRef = doc(db, "posts", postId);
+    const postSnap = await getDoc(postRef);
+
+    if (!postSnap.exists()) {
+      alert("이미 삭제되었거나 존재하지 않는 게시글입니다.");
+      return;
+    }
+
+    const post = postSnap.data();
+
+    if (!checkMyPost(post, user)) {
+      alert("본인이 작성한 글만 삭제할 수 있습니다.");
+      return;
+    }
+
+    await deleteDoc(postRef);
+
+    alert("게시글이 삭제되었습니다.");
+  } catch (error) {
+    console.error("게시글 삭제 오류:", error);
+    alert("게시글 삭제 중 오류가 발생했습니다.");
+  }
+};
+
 window.reportPost = async function (postId) {
   const user = auth.currentUser;
 
@@ -187,13 +235,7 @@ window.reportPost = async function (postId) {
       return;
     }
 
-    const isMyPost =
-      (post.authorUid && post.authorUid === user.uid) ||
-      (post.uid && post.uid === user.uid) ||
-      (post.authorEmail && post.authorEmail === user.email) ||
-      (post.email && post.email === user.email);
-
-    if (isMyPost) {
+    if (checkMyPost(post, user)) {
       alert("본인이 작성한 글은 신고할 수 없습니다.");
       return;
     }
@@ -273,13 +315,7 @@ window.joinStudy = async function (postId) {
 
     const post = postSnap.data();
 
-    const isMyPost =
-      (post.authorUid && post.authorUid === user.uid) ||
-      (post.uid && post.uid === user.uid) ||
-      (post.authorEmail && post.authorEmail === user.email) ||
-      (post.email && post.email === user.email);
-
-    if (isMyPost) {
+    if (checkMyPost(post, user)) {
       alert("본인이 작성한 글에는 신청할 수 없습니다.");
       return;
     }
@@ -452,6 +488,16 @@ onAuthStateChanged(auth, async (user) => {
       const commentCount = post.commentCount || 0;
       totalComments += commentCount;
 
+      const isMyPost = checkMyPost(post, user);
+
+      const deleteButtonHtml = isMyPost
+        ? `<button class="sub-btn" style="background:#ffeaea; color:#e64d4d;" onclick="deletePost('${docItem.id}')">삭제</button>`
+        : "";
+
+      const reportButtonHtml = !isMyPost
+        ? `<button class="sub-btn" onclick="reportPost('${docItem.id}')">신고</button>`
+        : "";
+
       let cardHtml = "";
 
       if (post.category === "study" && post.studyInfo) {
@@ -463,13 +509,6 @@ onAuthStateChanged(auth, async (user) => {
         if (!isClosed) {
           recruitingCount++;
         }
-
-        const isMyPost =
-          user &&
-          (
-            (post.authorUid && post.authorUid === user.uid) ||
-            (post.authorEmail && post.authorEmail === user.email)
-          );
 
         const applications = post.applications || [];
 
@@ -531,7 +570,8 @@ onAuthStateChanged(auth, async (user) => {
               <div class="post-actions">
                 <button class="sub-btn" onclick="viewPost('${docItem.id}')">상세보기</button>
                 ${joinButtonHtml}
-                <button class="sub-btn" onclick="reportPost('${docItem.id}')">신고</button>
+                ${deleteButtonHtml}
+                ${reportButtonHtml}
               </div>
             </div>
           </div>
@@ -550,9 +590,11 @@ onAuthStateChanged(auth, async (user) => {
                   <span>댓글: ${commentCount}개</span>
                 </div>
               </div>
+
               <div class="post-actions">
                 <button class="sub-btn" onclick="viewPost('${docItem.id}')">상세보기</button>
-                <button class="sub-btn" onclick="reportPost('${docItem.id}')">신고</button>
+                ${deleteButtonHtml}
+                ${reportButtonHtml}
               </div>
             </div>
           </div>
