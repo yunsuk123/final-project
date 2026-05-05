@@ -13,13 +13,19 @@ import {
   query,
   orderBy,
   onSnapshot,
-  deleteDoc
+  deleteDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const userName = document.getElementById("userName");
 const userEmail = document.getElementById("userEmail");
 const userCreatedAt = document.getElementById("userCreatedAt");
 const userVerified = document.getElementById("userVerified");
+const userRegion = document.getElementById("userRegion");
+
+const sidoSelect = document.getElementById("sido");
+const sigunguInput = document.getElementById("sigungu");
+const dongInput = document.getElementById("dong");
 
 const joinedStudyList = document.getElementById("joinedStudyList");
 const emptyJoinedStudyMessage = document.getElementById("emptyJoinedStudyMessage");
@@ -28,6 +34,7 @@ const myPostList = document.getElementById("myPostList");
 const emptyPostMessage = document.getElementById("emptyPostMessage");
 
 let unsubscribeMyPosts = null;
+let currentUser = null;
 
 function formatDate(value) {
   if (!value) return "-";
@@ -234,6 +241,8 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
+  currentUser = user;
+
   try {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
@@ -241,13 +250,37 @@ onAuthStateChanged(auth, async (user) => {
     if (userSnap.exists()) {
       const data = userSnap.data();
 
+      const region =
+        data.region ||
+        `${data.sido || ""} ${data.sigungu || ""} ${data.dong || ""}`.trim();
+
       userName.textContent = data.name || data.nickname || "이름 없음";
       userEmail.textContent = data.email || user.email || "이메일 없음";
       userCreatedAt.textContent = formatDate(data.createdAt);
+
+      if (userRegion) {
+        userRegion.textContent = region || "지역 미설정";
+      }
+
+      if (sidoSelect) {
+        sidoSelect.value = data.sido || "";
+      }
+
+      if (sigunguInput) {
+        sigunguInput.value = data.sigungu || "";
+      }
+
+      if (dongInput) {
+        dongInput.value = data.dong || "";
+      }
     } else {
       userName.textContent = "이름 없음";
       userEmail.textContent = user.email || "이메일 없음";
       userCreatedAt.textContent = "-";
+
+      if (userRegion) {
+        userRegion.textContent = "지역 미설정";
+      }
     }
 
     userVerified.textContent = user.emailVerified ? "인증 완료" : "미인증";
@@ -260,10 +293,50 @@ onAuthStateChanged(auth, async (user) => {
     userEmail.textContent = "오류";
     userCreatedAt.textContent = "오류";
     userVerified.textContent = "오류";
+
+    if (userRegion) {
+      userRegion.textContent = "오류";
+    }
   }
 
   renderJoinedStudies(user);
 });
+
+window.updateRegion = async function () {
+  if (!currentUser) {
+    alert("로그인 정보를 확인할 수 없습니다.");
+    return;
+  }
+
+  const sido = sidoSelect.value.trim();
+  const sigungu = sigunguInput.value.trim();
+  const dong = dongInput.value.trim();
+
+  if (!sido || !sigungu || !dong) {
+    alert("시/도, 시/군/구, 동/읍/면을 모두 입력해주세요.");
+    return;
+  }
+
+  const region = `${sido} ${sigungu} ${dong}`;
+
+  try {
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      sido: sido,
+      sigungu: sigungu,
+      dong: dong,
+      region: region
+    });
+
+    if (userRegion) {
+      userRegion.textContent = region;
+    }
+
+    alert("지역이 저장되었습니다.");
+  } catch (error) {
+    console.error("지역 저장 오류:", error);
+    alert("지역 저장 중 오류가 발생했습니다.");
+  }
+};
 
 window.viewPost = function (postId) {
   location.href = `community-detail.html?id=${postId}`;

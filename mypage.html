@@ -268,15 +268,18 @@
       margin-bottom: 8px;
     }
 
-    .form-group input {
+    .form-group input,
+    .form-group select {
       padding: 14px;
       border: 1px solid #d8def7;
       border-radius: 12px;
       font-size: 15px;
       outline: none;
+      background: #fff;
     }
 
-    .form-group input:focus {
+    .form-group input:focus,
+    .form-group select:focus {
       border-color: #4a6cf7;
     }
 
@@ -565,10 +568,58 @@
                 <p id="userCreatedAt">로딩 중...</p>
               </div>
               <div class="info-item">
-              <h4>이메일 인증 상태</h4>
-              <p id="userVerified" class="verified">확인 중...</p>
+                <h4>이메일 인증 상태</h4>
+                <p id="userVerified" class="verified">확인 중...</p>
+              </div>
+              <div class="info-item">
+                <h4>현재 지역</h4>
+                <p id="userRegion">지역 미설정</p>
+              </div>
             </div>
+          </div>
+
+          <!-- 지역 설정 추가 -->
+          <div class="panel" style="margin-top: 24px;">
+            <h2>지역 설정</h2>
+            <p class="panel-desc">스터디카페 추천과 예약 페이지에 사용할 지역을 설정하세요.</p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="sido">시/도</label>
+                <select id="sido">
+                  <option value="">시/도 선택</option>
+                  <option value="서울특별시">서울특별시</option>
+                  <option value="부산광역시">부산광역시</option>
+                  <option value="대구광역시">대구광역시</option>
+                  <option value="인천광역시">인천광역시</option>
+                  <option value="광주광역시">광주광역시</option>
+                  <option value="대전광역시">대전광역시</option>
+                  <option value="울산광역시">울산광역시</option>
+                  <option value="세종특별자치시">세종특별자치시</option>
+                  <option value="경기도">경기도</option>
+                  <option value="강원특별자치도">강원특별자치도</option>
+                  <option value="충청북도">충청북도</option>
+                  <option value="충청남도">충청남도</option>
+                  <option value="전북특별자치도">전북특별자치도</option>
+                  <option value="전라남도">전라남도</option>
+                  <option value="경상북도">경상북도</option>
+                  <option value="경상남도">경상남도</option>
+                  <option value="제주특별자치도">제주특별자치도</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="sigungu">시/군/구</label>
+                <input type="text" id="sigungu" placeholder="예: 성북구, 양주시">
+              </div>
+
+              <div class="form-group">
+                <label for="dong">동/읍/면</label>
+                <input type="text" id="dong" placeholder="예: 정릉동, 고읍동">
+              </div>
             </div>
+
+            <button type="button" class="submit-btn" onclick="updateRegion()">지역 저장</button>
           </div>
         </div>
 
@@ -607,12 +658,12 @@
             <h2>내가 쓴 게시글</h2>
             <p class="panel-desc">커뮤니티에 작성한 게시글 목록입니다.</p>
 
-              <div class="card-list" id="myPostList"></div>
-              <p id="emptyPostMessage" class="panel-desc" style="display:none; margin-top:16px;">
-                작성한 게시글이 없습니다.
-              </p>
-            </div>        
+            <div class="card-list" id="myPostList"></div>
+            <p id="emptyPostMessage" class="panel-desc" style="display:none; margin-top:16px;">
+              작성한 게시글이 없습니다.
+            </p>
           </div>
+        </div>
 
         <!-- 좌석 예약 내역 -->
         <div id="reservations" class="tab-content">
@@ -707,13 +758,11 @@
 
             <div class="card-list" id="joinedStudyList"></div>
 
-         <p id="emptyJoinedStudyMessage" class="panel-desc" style="display:none; margin-top:16px;">
-            참여 중인 스터디 그룹이 없습니다.
-          </p>
-      </div>
-    </div>
-  </section>
-              
+            <p id="emptyJoinedStudyMessage" class="panel-desc" style="display:none; margin-top:16px;">
+              참여 중인 스터디 그룹이 없습니다.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -726,25 +775,25 @@
   </footer>
 
   <script>
-  function showTab(tabId) {
-    const tabs = document.querySelectorAll(".tab-content");
-    const buttons = document.querySelectorAll(".tab-btn");
+    function showTab(tabId) {
+      const tabs = document.querySelectorAll(".tab-content");
+      const buttons = document.querySelectorAll(".tab-btn");
 
-    tabs.forEach(tab => tab.classList.remove("active"));
-    buttons.forEach(button => button.classList.remove("active"));
+      tabs.forEach(tab => tab.classList.remove("active"));
+      buttons.forEach(button => button.classList.remove("active"));
 
-    document.getElementById(tabId).classList.add("active");
+      document.getElementById(tabId).classList.add("active");
 
-    const clickedButton = Array.from(buttons).find(button =>
-      button.getAttribute("onclick").includes(tabId)
-    );
+      const clickedButton = Array.from(buttons).find(button =>
+        button.getAttribute("onclick").includes(tabId)
+      );
 
-    if (clickedButton) {
-      clickedButton.classList.add("active");
+      if (clickedButton) {
+        clickedButton.classList.add("active");
+      }
     }
-  }
-</script>
+  </script>
 
-<script type="module" src="./mypage.js"></script>
+  <script type="module" src="./mypage.js"></script>
 </body>
 </html>
