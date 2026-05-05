@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>회원 관리 | Study Spot</title>
+
   <style>
     * {
       margin: 0;
@@ -55,11 +56,6 @@
       gap: 12px;
     }
 
-    .menu a {
-      display: block;
-      width: 100%;
-    }
-
     .menu button {
       width: 100%;
       border: none;
@@ -71,11 +67,6 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .menu button:hover {
-      background: #3a4258;
     }
 
     .menu button.active {
@@ -90,38 +81,7 @@
     .topbar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
       margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .topbar h2 {
-      font-size: 34px;
-      font-weight: 800;
-    }
-
-    .top-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .top-actions a,
-    .top-actions button {
-      border: none;
-      background: #4a6cf7;
-      color: #fff;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .top-actions .secondary {
-      background: #e9edff;
-      color: #4a6cf7;
     }
 
     .dashboard-grid {
@@ -135,67 +95,22 @@
       background: #fff;
       padding: 24px;
       border-radius: 18px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    .card h3 {
-      font-size: 15px;
-      color: #666;
-      margin-bottom: 10px;
-    }
-
-    .card p {
-      font-size: 30px;
-      font-weight: 800;
-      color: #4a6cf7;
     }
 
     .panel {
       background: #fff;
       border-radius: 20px;
       padding: 28px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-      margin-bottom: 22px;
-    }
-
-    .panel h3 {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-
-    .panel p {
-      color: #666;
-      margin-bottom: 18px;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 14px;
-      border: 1px solid #eef1f5;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #fff;
-      min-width: 700px;
     }
 
     th, td {
       padding: 14px;
-      border-bottom: 1px solid #eef1f5;
-      text-align: left;
-      font-size: 14px;
-    }
-
-    th {
-      background: #f7f9ff;
-      font-weight: 800;
-      color: #444;
-    }
-
-    td {
-      color: #555;
+      border-bottom: 1px solid #eee;
     }
 
     .status-active {
@@ -214,94 +129,53 @@
       color: #fff;
       padding: 8px 12px;
       border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
       cursor: pointer;
-    }
-
-    .delete-btn:hover {
-      background: #e53935;
-    }
-
-    @media (max-width: 900px) {
-      .admin-layout {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        width: 100%;
-      }
     }
   </style>
 </head>
+
 <body>
   <div class="admin-layout">
+
     <aside class="sidebar">
       <h1>Study Spot</h1>
 
-      <div class="admin-badge">
-        관리자 계정으로 로그인됨<br>
-        아이디: <strong>admin</strong>
-      </div>
-
       <div class="menu">
-        <a href="admin.html"><button type="button">관리자 홈</button></a>
-        <a href="admin-users.html"><button type="button" class="active">회원 관리</button></a>
-        <a href="admin-seats.html"><button type="button">좌석 관리</button></a>
-        <a href="admin-reserve.html"><button type="button">예약 관리</button></a>
-        <a href="admin-pay.html"><button type="button">결제 관리</button></a>
-        <a href="admin-community.html"><button type="button">커뮤니티 관리</button></a>
-        <a href="admin-study.html"><button type="button">스터디 그룹 관리</button></a>
+        <a href="admin.html"><button>관리자 홈</button></a>
+        <a href="admin-users.html"><button class="active">회원 관리</button></a>
       </div>
     </aside>
 
     <main class="content">
+
       <div class="topbar">
         <h2>회원 관리</h2>
-        <div class="top-actions">
-          <a href="admin.html" class="secondary">관리자 홈</a>
-          <button id="adminLogoutBtn" type="button">로그아웃</button>
-        </div>
-      </div>
-
-      <div class="dashboard-grid">
-        <div class="card">
-          <h3>전체 회원 수</h3>
-          <p id="totalUsers">불러오는 중...</p>
-        </div>
-        <div class="card">
-          <h3>인증 완료 회원 수</h3>
-          <p id="verifiedUsers">불러오는 중...</p>
-        </div>
-        <div class="card">
-          <h3>미인증 회원 수</h3>
-          <p id="unverifiedUsers">불러오는 중...</p>
-        </div>
       </div>
 
       <div class="panel">
-        <h3>최근 회원 목록</h3>
-        <p>Firestore의 users 컬렉션 기준으로 표시됩니다.</p>
+        <h3>회원 목록</h3>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>이름</th>
-                <th>이메일</th>
-                <th>가입일</th>
-                <th>인증 상태</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody id="userTableBody">
-              <tr>
-                <td colspan="5">불러오는 중...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>이름</th>
+              <th>이메일</th>
+              <th>가입일</th>
+              <th>신고당한회수</th> <!-- 🔥 추가 -->
+              <th>정지 상태</th> <!-- 🔥 추가 -->
+              <th>관리</th>
+            </tr>
+          </thead>
+
+          <tbody id="userTableBody">
+            <tr>
+              <td colspan="6">불러오는 중...</td>
+            </tr>
+          </tbody>
+
+        </table>
       </div>
+
     </main>
   </div>
 
