@@ -29,9 +29,15 @@ signupForm.addEventListener("submit", async (e) => {
   const password = document.getElementById("password").value;
   const confirmPassword = document.getElementById("confirmPassword").value;
 
+  const sido = document.getElementById("sido").value.trim();
+  const sigungu = document.getElementById("sigungu").value.trim();
+  const dong = document.getElementById("dong").value.trim();
+
+  const region = `${sido} ${sigungu} ${dong}`.trim();
+
   message.textContent = "";
 
-  if (!name || !email || !password || !confirmPassword) {
+  if (!name || !email || !password || !confirmPassword || !sido || !sigungu || !dong) {
     message.textContent = "모든 항목을 입력해주세요.";
     return;
   }
@@ -84,6 +90,12 @@ signupForm.addEventListener("submit", async (e) => {
       uid: user.uid,
       name: name,
       email: email,
+
+      sido: sido,
+      sigungu: sigungu,
+      dong: dong,
+      region: region,
+
       createdAt: serverTimestamp(),
       role: "user",
       emailVerified: user.emailVerified
@@ -91,8 +103,13 @@ signupForm.addEventListener("submit", async (e) => {
 
     await signOut(auth);
 
-    message.textContent = "회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.";
+    message.textContent = "회원가입 완료! 이메일 인증 후 로그인하세요.";
     signupForm.reset();
+
+    const sigunguSelect = document.getElementById("sigungu");
+    sigunguSelect.innerHTML = '<option value="">시/군/구 선택</option>';
+    sigunguSelect.disabled = true;
+
   } catch (error) {
     console.error("회원가입 에러 코드:", error.code);
     console.error("회원가입 에러 메시지:", error.message);

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스터디카페 좌석 예약</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="https://js.tosspayments.com/v1/payment"></script>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=631343aadfb0ebd9e064328c2767b936&libraries=services&autoload=false"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #f7f8fc; font-family: 'Noto Sans KR', sans-serif; }
+    .step-bar { display:flex; justify-content:center; align-items:center; padding:32px 0 24px; }
+    .step-item { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .step-circle { width:36px; height:36px; border-radius:50%; background:#e0e4f7; color:#aab; font-weight:800; font-size:15px; display:flex; align-items:center; justify-content:center; transition:all 0.3s; }
+    .step-circle.active { background:#4a6cf7; color:#fff; box-shadow:0 4px 14px rgba(74,108,247,0.35); }
+    .step-circle.done   { background:#43b89c; color:#fff; }
+    .step-label { font-size:12px; font-weight:600; color:#aab; }
+    .step-label.active { color:#4a6cf7; }
+    .step-label.done   { color:#43b89c; }
+    .step-line { width:60px; height:2px; background:#e0e4f7; margin-bottom:22px; transition:background 0.3s; }
+    .step-line.done { background:#43b89c; }
+    .rsv-card { background:#fff; border-radius:22px; box-shadow:0 10px 30px rgba(74,108,247,0.10); padding:28px; margin-bottom:24px; }
+    .rsv-title { font-size:22px; font-weight:800; color:#222; margin-bottom:6px; }
+    .rsv-sub   { font-size:14px; color:#888; margin-bottom:20px; }
+    #step1 { display:block; }
+    #step2, #step3, #step-done { display:none; }
+    #reservation-map { width:100%; height:300px; border-radius:14px; border:1px solid #eee; margin-bottom:20px; }
+    .cafe-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px; }
+    .cafe-card { background:#f7f8fc; border:2px solid transparent; border-radius:16px; padding:18px; cursor:pointer; transition:all 0.2s; }
+    .cafe-card:hover { border-color:#4a6cf7; background:#fff; box-shadow:0 6px 20px rgba(74,108,247,0.12); transform:translateY(-2px); }
+    .cafe-card h3 { font-size:15px; font-weight:800; color:#4a6cf7; margin-bottom:6px; }
+    .cafe-card p  { font-size:13px; color:#666; margin-bottom:4px; }
+    .cafe-select-btn { margin-top:12px; width:100%; padding:10px; background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border:none; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; }
+    .cafe-select-btn:hover { opacity:0.88; }
+    .selected-cafe-info { background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border-radius:14px; padding:16px 20px; margin-bottom:20px; }
+    .selected-cafe-info h3 { font-size:17px; font-weight:800; margin-bottom:4px; }
+    .selected-cafe-info p  { font-size:13px; opacity:0.85; }
+    .time-section { margin-bottom:24px; }
+    .time-section h4 { font-size:15px; font-weight:700; color:#333; margin-bottom:12px; }
+    .time-picker-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .time-picker-row label { font-size:13px; font-weight:600; color:#555; }
+    .time-picker-row select,
+    .time-picker-row input[type="date"] { padding:8px 14px; border:2px solid #e0e4f7; border-radius:10px; font-size:14px; font-weight:600; color:#333; outline:none; background:#f7f8fc; }
+    .time-picker-row select:focus,
+    .time-picker-row input[type="date"]:focus { border-color:#4a6cf7; background:#fff; }
+    .seat-legend { display:flex; gap:18px; margin-bottom:14px; flex-wrap:wrap; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:13px; color:#555; }
+    .legend-box  { width:20px; height:20px; border-radius:6px; }
+    .legend-box.available { background:#e8ecff; border:2px solid #c5ceff; }
+    .legend-box.selected  { background:#4a6cf7; }
+    .legend-box.occupied  { background:#e5e5e5; }
+    .seat-area-label { font-size:13px; font-weight:700; color:#888; margin:16px 0 8px; }
+    .seat-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:8px; margin-bottom:8px; }
+    .seat { aspect-ratio:1; border-radius:8px; border:2px solid #c5ceff; background:#e8ecff; font-size:11px; font-weight:700; color:#4a6cf7; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; user-select:none; }
+    .seat:hover:not(.occupied) { background:#c5ceff; transform:scale(1.08); }
+    .seat.selected { background:#4a6cf7; border-color:#4a6cf7; color:#fff; box-shadow:0 3px 10px rgba(74,108,247,0.4); transform:scale(1.08); }
+    .seat.occupied { background:#e5e5e5; border-color:#ddd; color:#bbb; cursor:not-allowed; }
+    .seat-summary { background:#f0f2ff; border-radius:12px; padding:14px 18px; margin-top:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+    .seat-summary-text { font-size:14px; color:#444; font-weight:600; }
+    .seat-summary-text span { color:#4a6cf7; font-weight:800; }
+    .order-summary { background:#f7f8fc; border-radius:14px; padding:20px; margin-bottom:20px; }
+    .order-row { display:flex; justify-content:space-between; font-size:14px; color:#555; padding:8px 0; border-bottom:1px solid #eee; }
+    .order-row:last-child { border-bottom:none; }
+    .order-row.total { font-size:17px; font-weight:800; color:#222; padding-top:14px; }
+    .order-row.total span { color:#4a6cf7; }
+    .pay-methods { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+    .pay-method { border:2px solid #e0e4f7; border-radius:12px; padding:14px 8px; text-align:center; cursor:pointer; transition:all 0.2s; font-size:13px; font-weight:700; color:#555; }
+    .pay-method .pay-icon { font-size:22px; display:block; margin-bottom:6px; }
+    .pay-method:hover    { border-color:#4a6cf7; color:#4a6cf7; }
+    .pay-method.selected { border-color:#4a6cf7; background:#f0f2ff; color:#4a6cf7; }
+    .agree-box { background:#f7f8fc; border-radius:12px; padding:16px; margin-bottom:20px; }
+    .agree-box label { display:flex; align-items:center; gap:10px; font-size:14px; color:#444; cursor:pointer; }
+    .agree-box input[type="checkbox"] { width:18px; height:18px; accent-color:#4a6cf7; }
+    .btn-primary { width:100%; padding:16px; background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:800; cursor:pointer; transition:opacity 0.2s,transform 0.15s; }
+    .btn-primary:hover    { opacity:0.9; transform:translateY(-1px); }
+    .btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+    .btn-outline { width:100%; padding:13px; background:#fff; color:#4a6cf7; border:2px solid #4a6cf7; border-radius:14px; font-size:15px; font-weight:700; cursor:pointer; margin-top:10px; }
+    .btn-outline:hover { background:#f0f2ff; }
+    #step-done { text-align:center; padding:40px 20px; }
+    .done-icon  { font-size:64px; margin-bottom:16px; }
+    .done-title { font-size:26px; font-weight:800; color:#222; margin-bottom:8px; }
+    .done-sub   { font-size:15px; color:#777; margin-bottom:30px; }
+    .done-box { background:#f0f2ff; border-radius:16px; padding:20px 28px; display:inline-block; text-align:left; margin-bottom:28px; min-width:280px; }
+    .done-box p { font-size:14px; color:#444; padding:6px 0; border-bottom:1px solid #e0e4f7; display:flex; justify-content:space-between; }
+    .done-box p:last-child { border-bottom:none; }
+    .done-box span { font-weight:800; color:#4a6cf7; }
+    .back-link { display:block; text-align:center; margin-top:14px; color:#4a6cf7; font-weight:700; text-decoration:none; font-size:14px; }
+    .loading-msg { text-align:center; padding:40px; color:#888; font-size:15px; }
+    @media (max-width:600px) {
+      .seat-grid { grid-template-columns:repeat(6,1fr); }
+      .pay-methods { grid-template-columns:repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<section style="max-width:800px; margin:0 auto; padding:0 20px 60px;">
+
+  <div class="step-bar">
+    <div class="step-item">
+      <div class="step-circle active" id="sc1">1</div>
+      <div class="step-label active" id="sl1">지점 선택</div>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc2">2</div>
+      <div class="step-label" id="sl2">좌석 선택</div>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc3">3</div>
+      <div class="step-label" id="sl3">결제</div>
+    </div>
+  </div>
+
+  <div id="step1">
+    <div class="rsv-card">
+      <div class="rsv-title">📍 지점 선택</div>
+      <div class="rsv-sub" id="reservationDesc">회원가입 지역 기준으로 주변 스터디카페를 불러오는 중입니다.</div>
+      <div id="reservation-map"></div>
+      <div class="cafe-list" id="cafeList">
+        <div class="loading-msg">🔍 스터디카페를 검색 중입니다...</div>
+      </div>
+    </div>
+    <a href="index.html" class="back-link">← 메인으로 돌아가기</a>
+  </div>
+
+  <div id="step2">
+    <div class="rsv-card">
+      <div class="rsv-title">🪑 좌석 선택</div>
+      <div class="rsv-sub">원하는 좌석을 선택해주세요.</div>
+      <div class="selected-cafe-info">
+        <h3 id="selectedCafeName">-</h3>
+        <p id="selectedCafeAddr">-</p>
+      </div>
+      <div class="time-section">
+        <h4>📅 이용 날짜 및 시간</h4>
+        <div class="time-picker-row">
+          <label>날짜</label><input type="date" id="pickDate">
+          <label>시작</label><select id="pickStart"></select>
+          <label>종료</label><select id="pickEnd"></select>
+        </div>
+      </div>
+      <div class="seat-legend">
+        <div class="legend-item"><div class="legend-box available"></div> 이용 가능</div>
+        <div class="legend-item"><div class="legend-box selected"></div> 선택됨</div>
+        <div class="legend-item"><div class="legend-box occupied"></div> 이용 중</div>
+      </div>
+      <div class="seat-area-label">일반석 (A구역) — 시간당 1,500원</div>
+      <div class="seat-grid" id="seatGridA"></div>
+      <div class="seat-area-label">프리미엄석 (B구역) — 시간당 2,500원</div>
+      <div class="seat-grid" id="seatGridB"></div>
+      <div class="seat-summary">
+        <div class="seat-summary-text">선택 좌석: <span id="selectedSeatLabel">없음</span></div>
+        <div class="seat-summary-text">이용 시간: <span id="selectedTimeLabel">-</span></div>
+        <div class="seat-summary-text">예상 금액: <span id="selectedPriceLabel">-</span></div>
+      </div>
+    </div>
+    <button class="btn-primary" id="goToPayBtn" onclick="goToStep3()" disabled>결제하기 →</button>
+    <button class="btn-outline" onclick="goToStep1()">← 지점 다시 선택</button>
+  </div>
+
+  <div id="step3">
+    <div class="rsv-card">
+      <div class="rsv-title">💳 결제</div>
+      <div class="rsv-sub">예약 내용을 확인하고 결제해주세요.</div>
+      <div class="order-summary">
+        <div class="order-row"><span>지점</span><span id="pay_cafe">-</span></div>
+        <div class="order-row"><span>좌석</span><span id="pay_seat">-</span></div>
+        <div class="order-row"><span>날짜</span><span id="pay_date">-</span></div>
+        <div class="order-row"><span>시간</span><span id="pay_time">-</span></div>
+        <div class="order-row"><span>총 이용시간</span><span id="pay_hours">-</span></div>
+        <div class="order-row total"><span>결제 금액</span><span id="pay_total">-</span></div>
+      </div>
+      <h4 style="font-size:15px;font-weight:700;color:#333;margin-bottom:12px;">결제 수단 선택</h4>
+      <div class="pay-methods">
+        <div class="pay-method" onclick="selectPayMethod(this,'카드')"><span class="pay-icon">💳</span>신용/체크카드</div>
+        <div class="pay-method" onclick="selectPayMethod(this,'카카오페이')"><span class="pay-icon">💛</span>카카오페이</div>
+        <div class="pay-method" onclick="selectPayMethod(this,'네이버페이')"><span class="pay-icon">🟢</span>네이버페이</div>
+        <div class="pay-method" onclick="selectPayMethod(this,'토스페이')"><span class="pay-icon">🔵</span>토스페이</div>
+        <div class="pay-method" onclick="selectPayMethod(this,'계좌이체')"><span class="pay-icon">🏦</span>계좌이체</div>
+        <div class="pay-method" onclick="selectPayMethod(this,'토스포인트')"><span class="pay-icon">⭐</span>포인트</div>
+      </div>
+      <div class="agree-box">
+        <label>
+          <input type="checkbox" id="agreeCheck">
+          이용약관 및 개인정보처리방침에 동의합니다.
+        </label>
+      </div>
+      <button class="btn-primary" id="payBtn" onclick="doPay()">결제 완료하기</button>
+      <button class="btn-outline" onclick="goToStep2()">← 좌석 다시 선택</button>
+    </div>
+  </div>
+
+  <div id="step-done">
+    <div class="rsv-card">
+      <div class="done-icon">✅</div>
+      <div class="done-title">예약이 완료되었습니다!</div>
+      <div class="done-sub">즐거운 스터디 되세요 😊</div>
+      <div class="done-box" id="doneDetail"></div>
+      <button class="btn-primary" onclick="location.href='index.html'" style="max-width:300px;margin:0 auto;display:block;">메인으로 돌아가기</button>
+    </div>
+  </div>
+
+</section>
+
+<script type="module">
+  import { auth, db } from "./firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { doc, getDoc, collection, addDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const PRICE_A = 1500;
+  const PRICE_B = 2500;
+
+  window._rsv = { user:null, cafe:null, seat:null, date:"", startHour:9, endHour:11, payMethod:null };
+
+  let map=null, ps=null, geocoder=null, activeIW=null;
+
+  function setStepUI(step) {
+    [1,2,3].forEach(n => {
+      const c = document.getElementById(`sc${n}`);
+      const l = document.getElementById(`sl${n}`);
+      c.className = "step-circle" + (n < step ? " done" : n === step ? " active" : "");
+      l.className = "step-label"  + (n < step ? " done" : n === step ? " active" : "");
+    });
+    [1,2].forEach(n => {
+      document.getElementById(`line${n}`).className = "step-line" + (n < step ? " done" : "");
+    });
+  }
+
+  window.goToStep1 = function() {
+    document.getElementById("step1").style.display = "block";
+    document.getElementById("step2").style.display = "none";
+    document.getElementById("step3").style.display = "none";
+    document.getElementById("step-done").style.display = "none";
+    setStepUI(1);
+    window.scrollTo({top:0, behavior:"smooth"});
+  };
+
+  window.goToStep2 = function() {
+    if (!window._rsv.cafe) return;
+    document.getElementById("selectedCafeName").textContent = window._rsv.cafe.name;
+    document.getElementById("selectedCafeAddr").textContent = window._rsv.cafe.address;
+    buildSeats();
+    initTimePickers();
+    updateSeatSummary();
+    document.getElementById("step1").style.display = "none";
+    document.getElementById("step2").style.display = "block";
+    document.getElementById("step3").style.display = "none";
+    document.getElementById("step-done").style.display = "none";
+    setStepUI(2);
+    window.scrollTo({top:0, behavior:"smooth"});
+  };
+
+  window.goToStep3 = function() {
+    const { cafe, seat, date, startHour, endHour } = window._rsv;
+    const hours = endHour - startHour;
+    if (!cafe || !seat || hours <= 0 || !date) return;
+    const total = seat.price * hours;
+    document.getElementById("pay_cafe").textContent  = cafe.name;
+    document.getElementById("pay_seat").textContent  = `${seat.id} (${seat.zone === "A" ? "일반석" : "프리미엄석"})`;
+    document.getElementById("pay_date").textContent  = date;
+    document.getElementById("pay_time").textContent  = `${startHour}:00 ~ ${endHour}:00`;
+    document.getElementById("pay_hours").textContent = `${hours}시간`;
+    document.getElementById("pay_total").textContent = `${total.toLocaleString()}원`;
+    document.getElementById("step1").style.display = "none";
+    document.getElementById("step2").style.display = "none";
+    document.getElementById("step3").style.display = "block";
+    document.getElementById("step-done").style.display = "none";
+    setStepUI(3);
+    window.scrollTo({top:0, behavior:"smooth"});
+  };
+
+  function initMap(region, preselected) {
+    kakao.maps.load(() => {
+      map = new kakao.maps.Map(document.getElementById("reservation-map"), {
+        center: new kakao.maps.LatLng(37.566826, 126.9786567), level: 5
+      });
+      ps       = new kakao.maps.services.Places();
+      geocoder = new kakao.maps.services.Geocoder();
+      geocoder.addressSearch(region, (res, st) => {
+        if (st === kakao.maps.services.Status.OK)
+          map.setCenter(new kakao.maps.LatLng(res[0].y, res[0].x));
+      });
+      const keyword = preselected || `${region} 스터디카페`;
+      document.getElementById("reservationDesc").textContent = `${region} 주변 스터디카페를 불러오는 중...`;
+      ps.keywordSearch(keyword, (data, status) => {
+        const list = document.getElementById("cafeList");
+        if (status !== kakao.maps.services.Status.OK || data.length === 0) {
+          list.innerHTML = `<p style="color:#888;text-align:center;padding:20px">검색 결과가 없습니다.</p>`;
+          return;
+        }
+        renderCafeList(data, region);
+      });
+    });
+  }
+
+  function renderCafeList(data, region) {
+    const list = document.getElementById("cafeList");
+    list.innerHTML = "";
+    document.getElementById("reservationDesc").textContent = `${region} 주변 스터디카페 목록입니다. 원하는 지점을 선택하세요.`;
+    const bounds = new kakao.maps.LatLngBounds();
+    data.slice(0,10).forEach(place => {
+      const point = new kakao.maps.LatLng(place.y, place.x);
+      const marker = new kakao.maps.Marker({ map, position: point });
+      const iw = new kakao.maps.InfoWindow({
+        content: `<div style="padding:8px 12px;font-size:13px;font-weight:700;color:#4a6cf7;">${place.place_name}</div>`
+      });
+      kakao.maps.event.addListener(marker, "click", () => {
+        if (activeIW) activeIW.close();
+        iw.open(map, marker);
+        activeIW = iw;
+      });
+      bounds.extend(point);
+      const card = document.createElement("div");
+      card.className = "cafe-card";
+      card.innerHTML = `
+        <h3>${place.place_name}</h3>
+        <p>📍 ${place.road_address_name || place.address_name || "주소 정보 없음"}</p>
+        <p>📞 ${place.phone || "전화번호 정보 없음"}</p>
+        <button class="cafe-select-btn">이 지점 선택 →</button>
+      `;
+      card.querySelector("button").addEventListener("click", () => {
+        window._rsv.cafe = { name: place.place_name, address: place.road_address_name || place.address_name || "", phone: place.phone || "" };
+        goToStep2();
+      });
+      list.appendChild(card);
+    });
+    map.setBounds(bounds);
+  }
+
+  function buildSeats() {
+    const gridA = document.getElementById("seatGridA");
+    const gridB = document.getElementById("seatGridB");
+    gridA.innerHTML = ""; gridB.innerHTML = "";
+    const occA = randomSet(24, 6);
+    const occB = randomSet(16, 4);
+    for (let i=1; i<=24; i++) gridA.appendChild(makeSeat(`A${i}`, "A", occA.has(i), PRICE_A));
+    for (let i=1; i<=16; i++) gridB.appendChild(makeSeat(`B${i}`, "B", occB.has(i), PRICE_B));
+  }
+
+  function randomSet(total, count) {
+    const s = new Set();
+    while (s.size < count) s.add(Math.floor(Math.random()*total)+1);
+    return s;
+  }
+
+  function makeSeat(id, zone, occupied, price) {
+    const el = document.createElement("div");
+    el.className = "seat" + (occupied ? " occupied" : "");
+    el.textContent = id;
+    el.dataset.id = id; el.dataset.zone = zone; el.dataset.price = price;
+    if (!occupied) el.addEventListener("click", () => toggleSeat(el));
+    return el;
+  }
+
+  function toggleSeat(el) {
+    document.querySelectorAll(".seat.selected").forEach(s => s.classList.remove("selected"));
+    el.classList.add("selected");
+    window._rsv.seat = { id: el.dataset.id, zone: el.dataset.zone, price: parseInt(el.dataset.price) };
+    updateSeatSummary();
+  }
+
+  function updateSeatSummary() {
+    const { seat, startHour, endHour, date } = window._rsv;
+    const hours = endHour - startHour;
+    document.getElementById("selectedSeatLabel").textContent =
+      seat ? `${seat.id} (${seat.zone === "A" ? "일반석" : "프리미엄석"})` : "없음";
+    document.getElementById("selectedTimeLabel").textContent =
+      hours > 0 ? `${startHour}:00 ~ ${endHour}:00 (${hours}시간)` : "-";
+    document.getElementById("selectedPriceLabel").textContent =
+      (seat && hours > 0) ? `${(seat.price * hours).toLocaleString()}원` : "-";
+    document.getElementById("goToPayBtn").disabled = !(seat && hours > 0 && date);
+  }
+
+  function initTimePickers() {
+    const startSel = document.getElementById("pickStart");
+    const endSel   = document.getElementById("pickEnd");
+    startSel.innerHTML = ""; endSel.innerHTML = "";
+    for (let h=6; h<=22; h++) startSel.innerHTML += `<option value="${h}">${h}:00</option>`;
+    for (let h=7; h<=23; h++) endSel.innerHTML   += `<option value="${h}">${h}:00</option>`;
+    startSel.value = "9"; endSel.value = "11";
+    window._rsv.startHour = 9; window._rsv.endHour = 11;
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("pickDate").value = today;
+    window._rsv.date = today;
+    startSel.onchange = () => {
+      window._rsv.startHour = parseInt(startSel.value);
+      if (window._rsv.endHour <= window._rsv.startHour) {
+        window._rsv.endHour = window._rsv.startHour + 1;
+        endSel.value = String(window._rsv.endHour);
+      }
+      updateSeatSummary();
+    };
+    endSel.onchange = () => {
+      window._rsv.endHour = parseInt(endSel.value);
+      if (window._rsv.endHour <= window._rsv.startHour) {
+        window._rsv.startHour = window._rsv.endHour - 1;
+        startSel.value = String(window._rsv.startHour);
+      }
+      updateSeatSummary();
+    };
+    document.getElementById("pickDate").onchange = (e) => {
+      window._rsv.date = e.target.value;
+      updateSeatSummary();
+    };
+  }
+
+  window.selectPayMethod = function(el, method) {
+    document.querySelectorAll(".pay-method").forEach(m => m.classList.remove("selected"));
+    el.classList.add("selected");
+    window._rsv.payMethod = method;
+  };
+
+  /* ── 토스페이먼츠 v1 결제 ── */
+  window.doPay = async function() {
+    if (!window._rsv.payMethod) { alert("결제 수단을 선택해주세요."); return; }
+    if (!document.getElementById("agreeCheck").checked) { alert("이용약관에 동의해주세요."); return; }
+
+    const { user, cafe, seat, date, startHour, endHour, payMethod } = window._rsv;
+    const hours = endHour - startHour;
+    const total = seat.price * hours;
+    const orderId   = "ORDER-" + Date.now();
+    const orderName = `${cafe.name} ${seat.id}좌석 (${hours}시간)`;
+
+    const base = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+    const successUrl = base + "payment-result.html"
+      + `?cafe=${encodeURIComponent(cafe.name)}`
+      + `&seat=${encodeURIComponent(seat.id)}`
+      + `&zone=${seat.zone}`
+      + `&date=${date}`
+      + `&start=${startHour}`
+      + `&end=${endHour}`
+      + `&total=${total}`
+      + `&method=${payMethod}`;
+    const failUrl = base + "payment-result.html?fail=true";
+
+    const payBtn = document.getElementById("payBtn");
+    payBtn.disabled = true;
+    payBtn.textContent = "결제창 열는 중...";
+
+    try {
+      const tossPayments = window.TossPayments("test_ck_XZYkKL4MrjYdyY0YLENRVOzJwlEW");
+      await tossPayments.requestPayment(payMethod, {
+        amount: total,
+        orderId,
+        orderName,
+        customerName: user?.displayName || user?.email || "고객",
+        successUrl,
+        failUrl,
+      });
+    } catch(e) {
+      console.error(e);
+      if (e.code !== "USER_CANCEL") {
+        alert("결제 중 오류가 발생했습니다: " + e.message);
+      }
+      payBtn.disabled = false;
+      payBtn.textContent = "결제 완료하기";
+    }
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { alert("로그인 후 이용해주세요."); location.href = "login.html"; return; }
+    window._rsv.user = user;
+
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (!userDoc.exists()) { alert("회원 정보를 찾을 수 없습니다."); location.href = "index.html"; return; }
+
+    const userData = userDoc.data();
+    const region = userData.region ||
+      `${userData.sido||""} ${userData.sigungu||""} ${userData.dong||""}`.trim();
+    if (!region) { alert("마이페이지에서 지역을 먼저 설정해주세요."); location.href = "mypage.html"; return; }
+
+    const params = new URLSearchParams(location.search);
+    const cafeParam = params.get("cafe");
+    if (cafeParam) {
+      window._rsv.cafe = { name: decodeURIComponent(cafeParam), address: "", phone: "" };
+    }
+
+    const checkInterval = setInterval(() => {
+      if (typeof kakao !== "undefined" && kakao.maps) {
+        clearInterval(checkInterval);
+        if (cafeParam) { goToStep2(); initMap(region, cafeParam); }
+        else { initMap(region, null); }
+      }
+    }, 100);
+  });
+</script>
+
+</body>
+</html>
