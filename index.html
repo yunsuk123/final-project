@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="index.css">
 
   <script type="text/javascript"
-    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6ce8a915000c6718bf65ac51e6e0c214&libraries=services&autoload=false">
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ab34450ee73c368883934f250da91d70&libraries=services&autoload=false">
   </script>
 </head>
 <body>
@@ -128,6 +128,10 @@
     let currentRegion = "";
     let markers = [];
     let activeInfoWindow = null;
+
+    let lastSearchKeyword = "";
+    let isSearchingCafe = false;
+    let searchTimer = null;
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -348,26 +352,50 @@
     }
 
     function searchStudyCafe(region) {
-      if (!map || !ps) {
-        console.error("카카오맵이 아직 준비되지 않았습니다.");
-        return;
-      }
+  if (!map || !ps) {
+    console.error("카카오맵이 아직 준비되지 않았습니다.");
+    return;
+  }
 
-      if (!region) {
-        console.error("사용자 지역 정보가 없습니다.");
-        return;
-      }
+  if (!region) {
+    console.error("사용자 지역 정보가 없습니다.");
+    return;
+  }
 
-      currentRegion = region;
+  currentRegion = region;
 
-      const keyword = `${region} 스터디카페`;
+  const keyword = `${region} 스터디카페`;
 
-      mapLabel.textContent = `${region} 주변 스터디카페를 표시합니다.`;
+  
+  if (lastSearchKeyword === keyword) {
+    console.log("이미 검색한 지역:", keyword);
+    return;
+  }
 
-      moveMapToRegion(region);
+  
+  if (isSearchingCafe) {
+    console.log("현재 검색 진행 중");
+    return;
+  }
 
-      ps.keywordSearch(keyword, placesSearchCB);
-    }
+  clearTimeout(searchTimer);
+
+  searchTimer = setTimeout(() => {
+    isSearchingCafe = true;
+    lastSearchKeyword = keyword;
+
+    mapLabel.textContent = `${region} 주변 스터디카페를 표시합니다.`;
+
+    moveMapToRegion(region);
+
+    ps.keywordSearch(keyword, (data, status) => {
+      placesSearchCB(data, status);
+
+      isSearchingCafe = false;
+    });
+
+  }, 500);
+}
 
     function placesSearchCB(data, status) {
       clearMarkers();
@@ -421,24 +449,31 @@
       map.setBounds(bounds);
     }
 
-    function startKakaoMap() {
-      kakao.maps.load(() => {
-        const mapContainer = document.getElementById("hero-map");
+    let isMapStarted = false;
 
-        const mapOption = {
-          center: new kakao.maps.LatLng(37.566826, 126.9786567),
-          level: 5
-        };
+  function startKakaoMap() {
+    if (typeof window.kakao === "undefined") {
+      console.error("카카오 SDK 로드 실패");
+      return;
+  }
 
-        map = new kakao.maps.Map(mapContainer, mapOption);
-        ps = new kakao.maps.services.Places();
-        geocoder = new kakao.maps.services.Geocoder();
+    kakao.maps.load(() => {
+      const mapContainer = document.getElementById("hero-map");
 
-        if (currentRegion) {
-          searchStudyCafe(currentRegion);
-        }
-      });
-    }
+      const mapOption = {
+        center: new kakao.maps.LatLng(37.566826, 126.9786567),
+        level: 5
+      };
+
+      map = new kakao.maps.Map(mapContainer, mapOption);
+      ps = new kakao.maps.services.Places();
+      geocoder = new kakao.maps.services.Geocoder();
+
+      if (currentRegion) {
+        searchStudyCafe(currentRegion);
+      }
+  });
+}
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -485,12 +520,9 @@
       renderMainStudyGroups(user);
     });
 
-    const checkInterval = setInterval(() => {
-      if (typeof kakao !== "undefined" && kakao.maps) {
-        clearInterval(checkInterval);
-        startKakaoMap();
-      }
-    }, 100);
+   window.addEventListener("load", () => {
+  startKakaoMap();
+});
   </script>
 </body>
 </html>

@@ -15,7 +15,7 @@ const passwordInput = document.getElementById("password");
 const resendBtn = document.getElementById("resendBtn");
 const message = document.getElementById("message");
 
-// Firebase Authentication에 미리 만들어둘 관리자 계정
+
 const ADMIN_EMAIL = "admin@studycafe.com";
 
 function showMessage(text, color = "#444") {
@@ -35,7 +35,7 @@ loginForm.addEventListener("submit", async (e) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Firestore users 문서에 실제 인증 상태 반영
+    
     try {
       await updateDoc(doc(db, "users", user.uid), {
         emailVerified: user.emailVerified
@@ -44,7 +44,7 @@ loginForm.addEventListener("submit", async (e) => {
       console.error("emailVerified 업데이트 실패:", updateError);
     }
 
-    // 관리자 계정이면 이메일 인증 검사 없이 바로 관리자 페이지 이동
+    
     if (user.email === ADMIN_EMAIL) {
       sessionStorage.setItem("isAdmin", "true");
       sessionStorage.setItem("adminEmail", user.email);
@@ -54,11 +54,11 @@ loginForm.addEventListener("submit", async (e) => {
       return;
     }
 
-    // 일반 사용자면 관리자 세션 제거
+    
     sessionStorage.removeItem("isAdmin");
     sessionStorage.removeItem("adminEmail");
 
-    // 일반 회원은 이메일 인증 필요
+    
     if (!user.emailVerified) {
       showMessage("이메일 인증이 완료되지 않았습니다. 인증 후 다시 로그인해주세요.", "crimson");
       await signOut(auth);

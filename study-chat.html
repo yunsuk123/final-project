@@ -240,6 +240,7 @@
     }
 
     .message-bubble {
+      position: relative;
       max-width: min(72%, 520px);
       border-radius: 18px;
       padding: 14px 16px;
@@ -265,6 +266,7 @@
       font-weight: 800;
       margin-bottom: 6px;
       opacity: 0.9;
+      padding-right: 46px;
     }
 
     .message-text {
@@ -278,6 +280,31 @@
       font-size: 11px;
       opacity: 0.8;
       text-align: right;
+    }
+
+    .report-chat-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      line-height: 1;
+    }
+
+    .message-row.other .report-chat-btn {
+      background: #fff1f2;
+      color: #ef4444;
+      border: 1px solid #fecdd3;
+    }
+
+    .report-chat-btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.9;
     }
 
     .chat-input-wrap {
@@ -478,7 +505,7 @@
             </div>
           </div>
         </main>
-      </div>s
+      </div>
     </div>
   </section>
 

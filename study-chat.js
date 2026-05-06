@@ -12,7 +12,9 @@ import {
   query,
   orderBy,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const userName = document.getElementById("userName");
@@ -129,11 +131,26 @@ function isChatMember(post, user) {
   });
 }
 
+function checkIsOwner(post, user) {
+  if (!post || !user) return false;
+
+  const members = post.chatMembers || [];
+
+  return members.some((member) => {
+    return (
+      member.uid === user.uid &&
+      member.role === "owner"
+    );
+  });
+}
+
 function renderStudyInfo(post) {
   const members = post.chatMembers || [];
   const place = post.studyInfo?.place || "-";
   const schedule = post.studyInfo?.schedule || "-";
   const status = post.studyInfo?.status || "모집중";
+
+  const isOwner = checkIsOwner(post, currentUser);
 
   studyTitle.textContent = post.title || "제목 없음";
   studyPlace.textContent = place;
@@ -150,10 +167,46 @@ function renderStudyInfo(post) {
     memberList.innerHTML = `<div class="empty-chat">참여 멤버가 없습니다.</div>`;
   } else {
     members.forEach((member) => {
+      const isMe =
+        currentUser &&
+        (
+          (member.uid && member.uid === currentUser.uid) ||
+          (member.email && member.email === currentUser.email)
+        );
+
+      const kickButton =
+        isOwner && member.role !== "owner" && !isMe
+          ? `
+            <button
+              type="button"
+              class="kick-member-btn"
+              data-uid="${escapeHtml(member.uid || "")}"
+              data-email="${escapeHtml(member.email || "")}"
+              data-name="${escapeHtml(member.name || "사용자")}"
+              style="
+                border:none;
+                background:#ff4d4f;
+                color:white;
+                padding:6px 10px;
+                border-radius:8px;
+                font-size:12px;
+                cursor:pointer;
+                font-weight:700;
+              "
+            >
+              강퇴
+            </button>
+          `
+          : "";
+
       memberList.innerHTML += `
         <div class="member-item">
           <span class="member-name">${escapeHtml(member.name || "사용자")}</span>
-          <span class="member-role">${member.role === "owner" ? "방장" : "멤버"}</span>
+
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="member-role">${member.role === "owner" ? "방장" : "멤버"}</span>
+            ${kickButton}
+          </div>
         </div>
       `;
     });
@@ -180,6 +233,7 @@ function renderMessages(snapshot) {
   }
 
   snapshot.forEach((docItem) => {
+    const messageId = docItem.id;
     const message = docItem.data();
 
     const isMine =
@@ -191,9 +245,26 @@ function renderMessages(snapshot) {
 
     const rowClass = isMine ? "mine" : "other";
 
+    const reportButton = isMine
+      ? ""
+      : `
+        <button
+          type="button"
+          class="report-chat-btn"
+          data-message-id="${messageId}"
+          data-target-uid="${escapeHtml(message.senderUid || "")}"
+          data-target-email="${escapeHtml(message.senderEmail || "")}"
+          data-target-name="${escapeHtml(message.senderName || "사용자")}"
+          title="메시지 신고"
+        >
+          신고
+        </button>
+      `;
+
     chatList.innerHTML += `
       <div class="message-row ${rowClass}">
         <div class="message-bubble">
+          ${reportButton}
           <div class="message-author">${escapeHtml(message.senderName || "사용자")}</div>
           <div class="message-text">${escapeHtml(message.text || "")}</div>
           <div class="message-time">${formatDate(message.createdAt)}</div>
@@ -223,6 +294,137 @@ function loadMessages() {
     console.error("채팅 불러오기 오류:", error);
     showError("채팅 메시지를 불러오는 중 오류가 발생했습니다.");
   });
+}
+
+async function reportChatMessage(button) {
+  if (!currentUser) {
+    alert("로그인 후 신고할 수 있습니다.");
+    return;
+  }
+
+  if (!currentPost) {
+    alert("채팅방 정보를 찾을 수 없습니다.");
+    return;
+  }
+
+  const messageId = button.dataset.messageId;
+  const targetUid = button.dataset.targetUid || "";
+  const targetEmail = button.dataset.targetEmail || "";
+  const targetName = button.dataset.targetName || "사용자";
+
+  if (!messageId) {
+    alert("신고할 메시지 정보를 찾을 수 없습니다.");
+    return;
+  }
+
+  if (targetUid && targetUid === currentUser.uid) {
+    alert("본인 메시지는 신고할 수 없습니다.");
+    return;
+  }
+
+  const ok = confirm(`${targetName}님의 메시지를 신고하시겠습니까?`);
+
+  if (!ok) return;
+
+  try {
+    await addDoc(collection(db, "chatReports"), {
+      postId: postId,
+      postTitle: currentPost.title || "",
+
+      messageId: messageId,
+
+      reportedMessage: button.closest(".message-bubble")
+        ?.querySelector(".message-text")
+        ?.textContent || "",
+
+      reportedMessageTime: button.closest(".message-bubble")
+        ?.querySelector(".message-time")
+        ?.textContent || "",
+
+      reporterUid: currentUser.uid,
+      reporterEmail: currentUser.email || "",
+
+      targetUid: targetUid,
+      targetEmail: targetEmail,
+      targetName: targetName,
+
+      status: "pending",
+      type: "chatMessage",
+
+      createdAt: serverTimestamp()
+    });
+
+    if (targetUid) {
+      const targetUserRef = doc(db, "users", targetUid);
+
+      await updateDoc(targetUserRef, {
+        reportCount: increment(1),
+        chatReportCount: increment(1)
+      });
+    }
+
+    alert("신고가 접수되었습니다.");
+  } catch (error) {
+    console.error("채팅 신고 오류:", error);
+    alert("이미 신고된 메세지 입니다.");
+  }
+}
+
+async function kickMember(targetUid, targetEmail, targetName) {
+  if (!currentUser) {
+    alert("로그인 후 이용할 수 있습니다.");
+    return;
+  }
+
+  if (!currentPost) {
+    alert("채팅방 정보를 찾을 수 없습니다.");
+    return;
+  }
+
+  const isOwner = checkIsOwner(currentPost, currentUser);
+
+  if (!isOwner) {
+    alert("방장만 멤버를 강퇴할 수 있습니다.");
+    return;
+  }
+
+  if (!targetUid && !targetEmail) {
+    alert("강퇴할 멤버 정보를 찾을 수 없습니다.");
+    return;
+  }
+
+  if (targetUid === currentUser.uid || targetEmail === currentUser.email) {
+    alert("본인은 강퇴할 수 없습니다.");
+    return;
+  }
+
+  const ok = confirm(`${targetName}님을 채팅방에서 강퇴하시겠습니까?`);
+
+  if (!ok) return;
+
+  try {
+    const members = currentPost.chatMembers || [];
+
+    const updatedMembers = members.filter((member) => {
+      const sameUid = targetUid && member.uid === targetUid;
+      const sameEmail = targetEmail && member.email === targetEmail;
+
+      return !sameUid && !sameEmail;
+    });
+
+    await updateDoc(doc(db, "posts", postId), {
+      chatMembers: updatedMembers
+    });
+
+    currentPost.chatMembers = updatedMembers;
+
+    renderStudyInfo(currentPost);
+
+    alert("강퇴되었습니다.");
+  } catch (error) {
+    console.error("강퇴 오류:", error);
+    alert("강퇴 중 오류가 발생했습니다.");
+  }
 }
 
 async function getCurrentUserDisplayName(user) {
@@ -320,7 +522,7 @@ async function loadChatRoom(user) {
     }
 
     if (!isChatMember(post, user)) {
-      showError("이 채팅방에 접근할 권한이 없습니다.");
+      showError("방장에 의해 추방되었습니다.");
       return;
     }
 
@@ -348,6 +550,30 @@ if (chatInput) {
       event.preventDefault();
       sendMessage();
     }
+  });
+}
+
+if (chatList) {
+  chatList.addEventListener("click", (event) => {
+    const reportBtn = event.target.closest(".report-chat-btn");
+
+    if (!reportBtn) return;
+
+    reportChatMessage(reportBtn);
+  });
+}
+
+if (memberList) {
+  memberList.addEventListener("click", (event) => {
+    const kickBtn = event.target.closest(".kick-member-btn");
+
+    if (!kickBtn) return;
+
+    kickMember(
+      kickBtn.dataset.uid,
+      kickBtn.dataset.email,
+      kickBtn.dataset.name
+    );
   });
 }
 
