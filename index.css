@@ -377,9 +377,80 @@ section {
 .status-card,
 .group-card {
   background: #fff;
-  border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 26px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.group-card {
+  transition: 0.25s ease;
+}
+
+.group-card:hover {
+  transform: translateY(-4px);
+}
+
+.group-card h3 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: #222;
+}
+
+.group-card p {
+  font-size: 15px;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.group-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #eef2ff;
+  color: #4a6cf7;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+/* 버튼 */
+.group-card button {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 13px 16px;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #4a6cf7, #6d8dff);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.25s;
+  box-shadow: 0 6px 15px rgba(74,108,247,0.25);
+}
+
+.group-card button:hover {
+  background: linear-gradient(135deg, #3655d6, #5878ff);
+  transform: translateY(-2px);
+}
+
+.detail-btn {
+  background: #eef2ff !important;
+  color: #4a6cf7 !important;
+  border: 1px solid #d9e1ff !important;
+  box-shadow: none !important;
+}
+
+.detail-btn:hover {
+  background: #dfe7ff !important;
+}
+
+.group-card button:disabled {
+  background: #dfe3ee !important;
+  color: #888 !important;
+  cursor: not-allowed;
+  box-shadow: none !important;
 }
 
 .status-item {

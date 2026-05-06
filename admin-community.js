@@ -5,8 +5,11 @@ import {
   doc,
   deleteDoc,
   query,
-  orderBy
+  orderBy,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -22,11 +25,20 @@ const todayPostsEl = document.getElementById("todayPosts");
 const postTableBody = document.getElementById("postTableBody");
 const adminLogoutBtn = document.getElementById("adminLogoutBtn");
 
+const noticeTitle = document.getElementById("noticeTitle");
+const noticeContent = document.getElementById("noticeContent");
+const createNoticeBtn = document.getElementById("createNoticeBtn");
+
 function formatDate(timestamp) {
   if (!timestamp) return "-";
 
   if (timestamp.seconds) {
     const date = new Date(timestamp.seconds * 1000);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  }
+
+  if (timestamp.toDate) {
+    const date = timestamp.toDate();
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   }
 
@@ -43,9 +55,18 @@ function getTodayDateString() {
 }
 
 function isToday(timestamp) {
-  if (!timestamp || !timestamp.seconds) return false;
+  if (!timestamp) return false;
 
-  const date = new Date(timestamp.seconds * 1000);
+  let date = null;
+
+  if (timestamp.seconds) {
+    date = new Date(timestamp.seconds * 1000);
+  } else if (timestamp.toDate) {
+    date = timestamp.toDate();
+  } else {
+    return false;
+  }
+
   const target = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   return target === getTodayDateString();
 }
@@ -77,8 +98,6 @@ function getCategoryClass(category) {
 
 function getPostStatus(data) {
   const category = String(data.category || "").toLowerCase();
-  const status = String(data.status || "").toLowerCase();
-  const recruitStatus = String(data.recruitStatus || "").toLowerCase();
 
   const isStudy =
     category === "study" ||
@@ -91,7 +110,21 @@ function getPostStatus(data) {
     };
   }
 
-  if (status === "closed" || recruitStatus === "closed" || data.isClosed === true) {
+  const currentMembers = data.studyInfo?.currentMembers || 1;
+  const maxMembers = data.studyInfo?.maxMembers || 1;
+  const studyStatus = String(data.studyInfo?.status || "").trim();
+
+  const status = String(data.status || "").toLowerCase();
+  const recruitStatus = String(data.recruitStatus || "").toLowerCase();
+
+  const isClosed =
+    currentMembers >= maxMembers ||
+    studyStatus === "마감" ||
+    status === "closed" ||
+    recruitStatus === "closed" ||
+    data.isClosed === true;
+
+  if (isClosed) {
     return {
       text: "모집 마감",
       className: "status-closed"
@@ -111,6 +144,52 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+async function createNotice() {
+  const title = noticeTitle.value.trim();
+  const content = noticeContent.value.trim();
+
+  if (!title) {
+    alert("공지 제목을 입력하세요.");
+    noticeTitle.focus();
+    return;
+  }
+
+  if (!content) {
+    alert("공지 내용을 입력하세요.");
+    noticeContent.focus();
+    return;
+  }
+
+  try {
+    createNoticeBtn.disabled = true;
+    createNoticeBtn.textContent = "등록 중...";
+
+    await addDoc(collection(db, "posts"), {
+      category: "notice",
+      title: title,
+      content: content,
+      author: "관리자",
+      authorUid: "admin",
+      authorEmail: "admin",
+      commentCount: 0,
+      createdAt: serverTimestamp()
+    });
+
+    alert("공지사항이 등록되었습니다.");
+
+    noticeTitle.value = "";
+    noticeContent.value = "";
+
+    await loadPosts();
+  } catch (error) {
+    console.error("공지사항 등록 실패:", error);
+    alert("공지사항 등록 중 오류가 발생했습니다.");
+  } finally {
+    createNoticeBtn.disabled = false;
+    createNoticeBtn.textContent = "공지 등록";
+  }
 }
 
 async function loadPosts() {
@@ -212,6 +291,18 @@ document.addEventListener("click", async (e) => {
 
   await deletePost(postId, title);
 });
+
+if (createNoticeBtn) {
+  createNoticeBtn.addEventListener("click", createNotice);
+}
+
+if (noticeContent) {
+  noticeContent.addEventListener("keydown", function (e) {
+    if (e.ctrlKey && e.key === "Enter") {
+      createNotice();
+    }
+  });
+}
 
 adminLogoutBtn.addEventListener("click", async () => {
   try {

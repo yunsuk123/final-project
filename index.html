@@ -21,7 +21,6 @@
           <li><a href="#home">홈</a></li>
           <li><a href="mypage.html">마이페이지</a></li>
           <li><a href="community.html">커뮤니티</a></li>
-          <li><a href="#seats">좌석현황</a></li>
           <li><a href="#groups">스터디그룹</a></li>
           <li><a href="#info">매장정보</a></li>
           <li><a href="login.html" class="nav-btn" id="authBtn">로그인</a></li>
@@ -40,7 +39,7 @@
           좌석 예약 및 결제, 스터디 그룹 참여, 매장 정보 확인까지 한 번에 이용 가능한 스터디카페 웹 서비스입니다.
         </p>
         <div class="hero-buttons">
-          <a href="#" class="btn-secondary">스터디 그룹 보기</a>
+          <a href="#groups" class="btn-secondary">스터디 그룹 보기</a>
         </div>
       </div>
 
@@ -82,29 +81,6 @@
     </div>
   </section>
 
-  <section id="seats">
-    <div class="container">
-      <div class="section-title">
-        <h2>좌석 현황</h2>
-        <p>좌석 상태를 빠르게 확인하고 원하는 자리를 선택해보세요.</p>
-      </div>
-
-      <div class="seat-status-wrap">
-        <div class="status-card">
-          <h3>1인 좌석</h3>
-        </div>
-
-        <div class="status-card">
-          <h3>오픈 좌석</h3>
-        </div>
-
-        <div class="status-card">
-          <h3>스터디룸</h3>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <section id="groups">
     <div class="container">
       <div class="section-title">
@@ -112,10 +88,8 @@
         <p>혼자 공부하기 어렵다면 관심 있는 스터디 그룹에 참여해보세요.</p>
       </div>
 
-      <div class="group-grid">
-        <div class="group-card"></div>
-        <div class="group-card"></div>
-        <div class="group-card"></div>
+      <div class="group-grid" id="mainStudyGroupList">
+        <p class="empty-study-message">스터디 모집 글을 불러오는 중입니다...</p>
       </div>
     </div>
   </section>
@@ -123,7 +97,7 @@
   <footer>
     <div class="container footer-wrap">
       <p>2026 Study Cafe. All Rights Reserved.</p>
-      <p>문의: studycafe@email.com | 전화: 010-1234-5678</p>
+      <p>문의: StudySpot@gmail.com | 전화: 010-2422-5733</p>
     </div>
   </footer>
 
@@ -134,13 +108,19 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
+      collection,
+      query,
+      orderBy,
+      onSnapshot,
       doc,
-      getDoc
+      getDoc,
+      updateDoc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const authBtn = document.getElementById("authBtn");
     const welcomeText = document.getElementById("welcomeText");
     const mapLabel = document.getElementById("mapLabel");
+    const mainStudyGroupList = document.getElementById("mainStudyGroupList");
 
     let map = null;
     let ps = null;
@@ -149,9 +129,25 @@
     let markers = [];
     let activeInfoWindow = null;
 
-    window.joinGroup = function (groupName) {
-      alert(groupName + "에 참여 신청되었습니다.");
-    };
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function checkMyPost(post, user) {
+      if (!user || !post) return false;
+
+      return (
+        (post.authorUid && post.authorUid === user.uid) ||
+        (post.uid && post.uid === user.uid) ||
+        (post.authorEmail && post.authorEmail === user.email) ||
+        (post.email && post.email === user.email)
+      );
+    }
 
     async function getUserName(user) {
       let displayName = "";
@@ -173,6 +169,157 @@
       }
 
       return displayName;
+    }
+
+    window.viewStudyPost = function (postId) {
+      location.href = `community-detail.html?id=${postId}`;
+    };
+
+    window.joinMainStudy = async function (postId) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("로그인 후 신청할 수 있습니다.");
+        location.href = "login.html";
+        return;
+      }
+
+      try {
+        const postRef = doc(db, "posts", postId);
+        const postSnap = await getDoc(postRef);
+
+        if (!postSnap.exists()) {
+          alert("게시글이 존재하지 않습니다.");
+          return;
+        }
+
+        const post = postSnap.data();
+
+        if (checkMyPost(post, user)) {
+          alert("본인이 작성한 글에는 신청할 수 없습니다.");
+          return;
+        }
+
+        const studyInfo = post.studyInfo || {};
+        const currentMembers = studyInfo.currentMembers || 1;
+        const maxMembers = studyInfo.maxMembers || 1;
+        const isClosed = currentMembers >= maxMembers || studyInfo.status === "마감";
+
+        if (isClosed) {
+          alert("이미 모집 마감된 스터디입니다.");
+          return;
+        }
+
+        const applications = post.applications || [];
+
+        const alreadyApplied = applications.some((app) =>
+          (app.uid && app.uid === user.uid) ||
+          (app.email && app.email === user.email)
+        );
+
+        if (alreadyApplied) {
+          alert("이미 신청한 글입니다.");
+          return;
+        }
+
+        let applicantName = user.email ? user.email.split("@")[0] : "사용자";
+
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          applicantName =
+            userData.nickname ||
+            userData.name ||
+            userData.username ||
+            userData.userName ||
+            applicantName;
+        }
+
+        applications.push({
+          uid: user.uid,
+          email: user.email,
+          name: applicantName,
+          status: "pending"
+        });
+
+        await updateDoc(postRef, {
+          applications: applications
+        });
+
+        alert("참여 신청되었습니다.");
+      } catch (error) {
+        console.error("스터디 참여 신청 오류:", error);
+        alert("참여 신청 중 오류가 발생했습니다.");
+      }
+    };
+
+    function renderMainStudyGroups(user) {
+      if (!mainStudyGroupList) return;
+
+      const postsQuery = query(
+        collection(db, "posts"),
+        orderBy("createdAt", "desc")
+      );
+
+      onSnapshot(postsQuery, (snapshot) => {
+        mainStudyGroupList.innerHTML = "";
+
+        let count = 0;
+
+        snapshot.forEach((docItem) => {
+          const post = docItem.data();
+
+          if (post.category !== "study") return;
+          if (!post.studyInfo) return;
+
+          count++;
+
+          if (count > 3) return;
+
+          const studyInfo = post.studyInfo;
+          const currentMembers = studyInfo.currentMembers || 1;
+          const maxMembers = studyInfo.maxMembers || 1;
+          const isClosed =
+            currentMembers >= maxMembers || studyInfo.status === "마감";
+
+          const isMyPost = checkMyPost(post, user);
+
+          let buttonHtml = "";
+
+          if (isClosed) {
+            buttonHtml = `<button disabled>모집 마감</button>`;
+          } else if (isMyPost) {
+            buttonHtml = `<button disabled>내가 작성한 글</button>`;
+          } else {
+            buttonHtml = `<button onclick="joinMainStudy('${docItem.id}')">참여하기</button>`;
+          }
+
+          const cardHtml = `
+            <div class="group-card">
+              <span class="group-tag">${escapeHtml(studyInfo.place || "스터디 모집")}</span>
+              <h3>${escapeHtml(post.title || "제목 없음")}</h3>
+              <p>장소: ${escapeHtml(studyInfo.place || "-")}</p>
+              <p>시간: ${escapeHtml(studyInfo.schedule || "-")}</p>
+              <p>인원: ${escapeHtml(currentMembers)} / ${escapeHtml(maxMembers)}명</p>
+              <p>상태: ${isClosed ? "마감" : "모집중"}</p>
+              ${buttonHtml}
+              <button class="detail-btn" onclick="viewStudyPost('${docItem.id}')">상세보기</button>
+            </div>
+          `;
+
+          mainStudyGroupList.insertAdjacentHTML("beforeend", cardHtml);
+        });
+
+        if (count === 0) {
+          mainStudyGroupList.innerHTML = `
+            <p class="empty-study-message">
+              등록된 스터디 모집 글이 없습니다.
+            </p>
+          `;
+        }
+      });
     }
 
     function clearMarkers() {
@@ -317,17 +464,16 @@
             userData.region ||
             `${userData.sido || ""} ${userData.sigungu || ""} ${userData.dong || ""}`.trim();
 
-        if (!region) {
-          mapLabel.textContent = "지역 설정 후 주변 스터디카페가 표시됩니다.";
-          return;
-        }
+          if (!region) {
+            mapLabel.textContent = "지역 설정 후 주변 스터디카페가 표시됩니다.";
+          } else {
+            currentRegion = region;
 
-        currentRegion = region;
-
-        if (map && ps) {
-          searchStudyCafe(currentRegion);
+            if (map && ps) {
+              searchStudyCafe(currentRegion);
+            }
+          }
         }
-      }
       } else {
         welcomeText.textContent = "";
         authBtn.textContent = "로그인";
@@ -335,6 +481,8 @@
         authBtn.onclick = null;
         mapLabel.textContent = "로그인 후 회원가입 지역 기준으로 주변 스터디카페가 표시됩니다.";
       }
+
+      renderMainStudyGroups(user);
     });
 
     const checkInterval = setInterval(() => {
