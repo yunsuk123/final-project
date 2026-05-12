@@ -127,6 +127,12 @@
       border-bottom: 1px solid #e8eaff;
       padding-bottom: 6px;
     }
+
+    .seat-hint {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #888;
+    }
   </style>
 </head>
 <body>
@@ -147,7 +153,6 @@
         <button type="button" class="addr-btn" onclick="searchAddress()">주소 검색</button>
       </div>
       <input type="text" id="addrDetail" placeholder="상세주소 (호수, 층 등)" style="margin-top:8px" />
-      <!-- 좌표 hidden -->
       <input type="hidden" id="addrLat" />
       <input type="hidden" id="addrLng" />
 
@@ -172,6 +177,18 @@
       <label for="totalSeats">총 좌석 수</label>
       <input type="number" id="totalSeats" placeholder="예: 50" min="1" required />
 
+      <div class="price-row" style="margin-top:16px;">
+        <div class="price-group">
+          <label for="seatsA">당일권 자유석 (A구역)</label>
+          <input type="number" id="seatsA" placeholder="예: 30" min="0" required />
+        </div>
+        <div class="price-group">
+          <label for="seatsB">기간권 고정석 (B구역)</label>
+          <input type="number" id="seatsB" placeholder="예: 20" min="0" required />
+        </div>
+      </div>
+      <p class="seat-hint">A구역 + B구역 = 총 좌석 수와 맞춰주세요.</p>
+
       <button type="submit" class="submit-btn">업장 등록 완료</button>
       <p id="cafeMessage" class="message"></p>
     </form>
@@ -179,7 +196,6 @@
     <a class="logout-link" id="logoutBtn">로그아웃</a>
   </div>
 
-  <!-- 카카오 주소 API -->
   <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
   <script type="module">
@@ -187,7 +203,6 @@
     import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // 로그인 상태 확인 - admin만 접근 가능
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         alert("로그인이 필요합니다.");
@@ -202,7 +217,6 @@
         return;
       }
 
-      // 이미 등록된 업장 있으면 불러오기
       const cafeDoc = await getDoc(doc(db, "cafes", user.uid));
       if (cafeDoc.exists()) {
         const d = cafeDoc.data();
@@ -215,32 +229,41 @@
         document.getElementById("priceDaily").value = d.price?.daily || "";
         document.getElementById("priceWeekly").value = d.price?.weekly || "";
         document.getElementById("totalSeats").value = d.totalSeats || "";
+        document.getElementById("seatsA").value = d.seatsA || ""; // ✅ 추가
+        document.getElementById("seatsB").value = d.seatsB || ""; // ✅ 추가
         document.querySelector(".submit-btn").textContent = "업장 정보 수정";
       }
     });
 
-    // 폼 제출
     document.getElementById("cafeForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const user = auth.currentUser;
       if (!user) return;
 
-      const cafeName    = document.getElementById("cafeName").value.trim();
-      const address     = document.getElementById("addrMain").value.trim();
+      const cafeName      = document.getElementById("cafeName").value.trim();
+      const address       = document.getElementById("addrMain").value.trim();
       const addressDetail = document.getElementById("addrDetail").value.trim();
-      const lat         = parseFloat(document.getElementById("addrLat").value);
-      const lng         = parseFloat(document.getElementById("addrLng").value);
-      const bizNumber   = document.getElementById("bizNumber").value.trim();
-      const priceDaily  = parseInt(document.getElementById("priceDaily").value);
-      const priceWeekly = parseInt(document.getElementById("priceWeekly").value);
-      const totalSeats  = parseInt(document.getElementById("totalSeats").value);
+      const lat           = parseFloat(document.getElementById("addrLat").value);
+      const lng           = parseFloat(document.getElementById("addrLng").value);
+      const bizNumber     = document.getElementById("bizNumber").value.trim();
+      const priceDaily    = parseInt(document.getElementById("priceDaily").value);
+      const priceWeekly   = parseInt(document.getElementById("priceWeekly").value);
+      const totalSeats    = parseInt(document.getElementById("totalSeats").value);
+      const seatsA        = parseInt(document.getElementById("seatsA").value); // ✅ 추가
+      const seatsB        = parseInt(document.getElementById("seatsB").value); // ✅ 추가
 
       const msg = document.getElementById("cafeMessage");
       msg.className = "message";
 
       if (!address) {
         msg.textContent = "주소를 검색해주세요.";
+        return;
+      }
+
+      // ✅ 추가: A+B 합계 검증
+      if (seatsA + seatsB !== totalSeats) {
+        msg.textContent = `A구역(${seatsA}) + B구역(${seatsB}) = ${seatsA + seatsB}석이 총 좌석 수(${totalSeats})와 다릅니다.`;
         return;
       }
 
@@ -255,6 +278,8 @@
           bizNumber,
           price: { daily: priceDaily, weekly: priceWeekly },
           totalSeats,
+          seatsA,   // ✅ 추가
+          seatsB,   // ✅ 추가
           availableSeats: totalSeats,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
@@ -268,13 +293,11 @@
       }
     });
 
-    // 로그아웃
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await signOut(auth);
       location.href = "login.html";
     });
 
-    // 사업자 번호 자동 하이픈
     document.getElementById("bizNumber").addEventListener("input", (e) => {
       let v = e.target.value.replace(/\D/g, "");
       if (v.length > 3 && v.length <= 5) v = v.slice(0,3) + "-" + v.slice(3);
@@ -283,15 +306,12 @@
     });
   </script>
 
-  <!-- 카카오 주소 검색 (모듈 밖에 선언해야 onclick에서 접근 가능) -->
   <script>
     function searchAddress() {
       new daum.Postcode({
         oncomplete: function(data) {
           const fullAddr = data.roadAddress || data.jibunAddress;
           document.getElementById("addrMain").value = fullAddr;
-
-          // 주소 → 좌표 변환 (카카오 지도 API 필요)
           if (window.kakao && kakao.maps) {
             const geocoder = new kakao.maps.services.Geocoder();
             geocoder.addressSearch(fullAddr, function(result, status) {
@@ -306,7 +326,6 @@
     }
   </script>
 
-  <!-- 카카오 지도 API (좌표 변환용, 앱키 입력 필요) -->
   <script type="text/javascript"
     src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6ce8a915000c6718bf65ac51e6e0c214&libraries=services">
   </script>
