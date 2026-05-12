@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>업장 등록 | Study Cafe</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Pretendard", "Malgun Gothic", sans-serif;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #eef3ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 0;
+    }
+    .box {
+      width: 500px;
+      background: #fff;
+      padding: 42px 36px;
+      border-radius: 18px;
+      box-shadow: 0 16px 35px rgba(74, 108, 247, 0.12);
+    }
+    h1 {
+      text-align: center;
+      color: #5968f2;
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+    .sub-title {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin: 16px 0 7px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #333;
+    }
+    input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid #d6ddff;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 15px;
+      outline: none;
+      background: #fff;
+    }
+    input:focus { border-color: #5968f2; }
+    input:read-only { background: #f4f6ff; color: #555; cursor: default; }
+
+    .addr-row {
+      display: flex;
+      gap: 8px;
+    }
+    .addr-row input { flex: 1; }
+    .addr-btn {
+      height: 50px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 10px;
+      background: #5968f2;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-top: 0;
+    }
+    .addr-btn:hover { background: #4656e8; }
+
+    .price-row {
+      display: flex;
+      gap: 12px;
+    }
+    .price-row .price-group { flex: 1; }
+    .price-row label { margin-top: 0; }
+
+    .submit-btn {
+      width: 100%;
+      height: 52px;
+      margin-top: 30px;
+      border: none;
+      border-radius: 10px;
+      background: #5968f2;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .submit-btn:hover { background: #4656e8; }
+
+    .message {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 14px;
+      min-height: 20px;
+      color: #d93025;
+    }
+    .message.success { color: #1a8a3c; }
+
+    .logout-link {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      color: #888;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .logout-link:hover { color: #5968f2; }
+
+    .section-divider {
+      margin: 24px 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #5968f2;
+      border-bottom: 1px solid #e8eaff;
+      padding-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Study Cafe</h1>
+    <p class="sub-title">업장 정보 등록</p>
+
+    <form id="cafeForm">
+
+      <div class="section-divider">📍 업장 기본 정보</div>
+
+      <label for="cafeName">상호명</label>
+      <input type="text" id="cafeName" placeholder="스터디카페 상호명을 입력하세요" required />
+
+      <label>주소</label>
+      <div class="addr-row">
+        <input type="text" id="addrMain" placeholder="주소 검색 버튼을 눌러주세요" readonly required />
+        <button type="button" class="addr-btn" onclick="searchAddress()">주소 검색</button>
+      </div>
+      <input type="text" id="addrDetail" placeholder="상세주소 (호수, 층 등)" style="margin-top:8px" />
+      <!-- 좌표 hidden -->
+      <input type="hidden" id="addrLat" />
+      <input type="hidden" id="addrLng" />
+
+      <label for="bizNumber">사업자 등록번호</label>
+      <input type="text" id="bizNumber" placeholder="000-00-00000" maxlength="12" required />
+
+      <div class="section-divider">💰 가격 정보</div>
+
+      <div class="price-row">
+        <div class="price-group">
+          <label for="priceDaily">당일권 (원)</label>
+          <input type="number" id="priceDaily" placeholder="예: 5000" min="0" required />
+        </div>
+        <div class="price-group">
+          <label for="priceWeekly">주간권 (원)</label>
+          <input type="number" id="priceWeekly" placeholder="예: 25000" min="0" required />
+        </div>
+      </div>
+
+      <div class="section-divider">🪑 좌석 정보</div>
+
+      <label for="totalSeats">총 좌석 수</label>
+      <input type="number" id="totalSeats" placeholder="예: 50" min="1" required />
+
+      <button type="submit" class="submit-btn">업장 등록 완료</button>
+      <p id="cafeMessage" class="message"></p>
+    </form>
+
+    <a class="logout-link" id="logoutBtn">로그아웃</a>
+  </div>
+
+  <!-- 카카오 주소 API -->
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // 로그인 상태 확인 - admin만 접근 가능
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("로그인이 필요합니다.");
+        location.href = "login.html";
+        return;
+      }
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const role = userDoc.exists() ? userDoc.data().role : "user";
+      if (role !== "admin") {
+        alert("접근 권한이 없습니다.");
+        location.href = "index.html";
+        return;
+      }
+
+      // 이미 등록된 업장 있으면 불러오기
+      const cafeDoc = await getDoc(doc(db, "cafes", user.uid));
+      if (cafeDoc.exists()) {
+        const d = cafeDoc.data();
+        document.getElementById("cafeName").value = d.cafeName || "";
+        document.getElementById("addrMain").value = d.address || "";
+        document.getElementById("addrDetail").value = d.addressDetail || "";
+        document.getElementById("addrLat").value = d.lat || "";
+        document.getElementById("addrLng").value = d.lng || "";
+        document.getElementById("bizNumber").value = d.bizNumber || "";
+        document.getElementById("priceDaily").value = d.price?.daily || "";
+        document.getElementById("priceWeekly").value = d.price?.weekly || "";
+        document.getElementById("totalSeats").value = d.totalSeats || "";
+        document.querySelector(".submit-btn").textContent = "업장 정보 수정";
+      }
+    });
+
+    // 폼 제출
+    document.getElementById("cafeForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const cafeName    = document.getElementById("cafeName").value.trim();
+      const address     = document.getElementById("addrMain").value.trim();
+      const addressDetail = document.getElementById("addrDetail").value.trim();
+      const lat         = parseFloat(document.getElementById("addrLat").value);
+      const lng         = parseFloat(document.getElementById("addrLng").value);
+      const bizNumber   = document.getElementById("bizNumber").value.trim();
+      const priceDaily  = parseInt(document.getElementById("priceDaily").value);
+      const priceWeekly = parseInt(document.getElementById("priceWeekly").value);
+      const totalSeats  = parseInt(document.getElementById("totalSeats").value);
+
+      const msg = document.getElementById("cafeMessage");
+      msg.className = "message";
+
+      if (!address) {
+        msg.textContent = "주소를 검색해주세요.";
+        return;
+      }
+
+      try {
+        await setDoc(doc(db, "cafes", user.uid), {
+          ownerUid: user.uid,
+          cafeName,
+          address,
+          addressDetail,
+          lat,
+          lng,
+          bizNumber,
+          price: { daily: priceDaily, weekly: priceWeekly },
+          totalSeats,
+          availableSeats: totalSeats,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+
+        msg.className = "message success";
+        msg.textContent = "업장 등록이 완료되었습니다!";
+      } catch (err) {
+        console.error(err);
+        msg.textContent = "등록 중 오류가 발생했습니다.";
+      }
+    });
+
+    // 로그아웃
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      location.href = "login.html";
+    });
+
+    // 사업자 번호 자동 하이픈
+    document.getElementById("bizNumber").addEventListener("input", (e) => {
+      let v = e.target.value.replace(/\D/g, "");
+      if (v.length > 3 && v.length <= 5) v = v.slice(0,3) + "-" + v.slice(3);
+      else if (v.length > 5) v = v.slice(0,3) + "-" + v.slice(3,5) + "-" + v.slice(5,10);
+      e.target.value = v;
+    });
+  </script>
+
+  <!-- 카카오 주소 검색 (모듈 밖에 선언해야 onclick에서 접근 가능) -->
+  <script>
+    function searchAddress() {
+      new daum.Postcode({
+        oncomplete: function(data) {
+          const fullAddr = data.roadAddress || data.jibunAddress;
+          document.getElementById("addrMain").value = fullAddr;
+
+          // 주소 → 좌표 변환 (카카오 지도 API 필요)
+          if (window.kakao && kakao.maps) {
+            const geocoder = new kakao.maps.services.Geocoder();
+            geocoder.addressSearch(fullAddr, function(result, status) {
+              if (status === kakao.maps.services.Status.OK) {
+                document.getElementById("addrLat").value = result[0].y;
+                document.getElementById("addrLng").value = result[0].x;
+              }
+            });
+          }
+        }
+      }).open();
+    }
+  </script>
+
+  <!-- 카카오 지도 API (좌표 변환용, 앱키 입력 필요) -->
+  <script type="text/javascript"
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6ce8a915000c6718bf65ac51e6e0c214&libraries=services">
+  </script>
+</body>
+</html>

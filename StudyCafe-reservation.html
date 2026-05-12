@@ -8,7 +8,6 @@
   <script src="https://js.tosspayments.com/v1/payment"></script>
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6ce8a915000c6718bf65ac51e6e0c214&libraries=services&autoload=false"></script>
   <style>
-    /* 기존 스타일 유지 */
     * { box-sizing: border-box; }
     body { background: #f7f8fc; font-family: 'Noto Sans KR', sans-serif; }
     .step-bar { display:flex; justify-content:center; align-items:center; padding:32px 0 24px; }
@@ -34,6 +33,8 @@
     .cafe-card p  { font-size:13px; color:#666; margin-bottom:4px; }
     .cafe-select-btn { margin-top:12px; width:100%; padding:10px; background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border:none; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; }
     .cafe-select-btn:hover { opacity:0.88; }
+    .cafe-card.firebase-cafe { border-color:#e53935; background:#fff5f5; }
+    .cafe-card.firebase-cafe h3 { color:#e53935; }
     .selected-cafe-info { background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border-radius:14px; padding:16px 20px; margin-bottom:20px; }
     .selected-cafe-info h3 { font-size:17px; font-weight:800; margin-bottom:4px; }
     .selected-cafe-info p  { font-size:13px; opacity:0.85; }
@@ -159,10 +160,10 @@
         <div class="legend-item"><div class="legend-box occupied"></div> 이용 중</div>
       </div>
 
-      <div class="seat-area-label">당일권 자유석 (A구역) — 2시간 4,000원, 4시간 7,000원</div>
+      <div class="seat-area-label" id="labelZoneA">당일권 자유석 (A구역) — 2시간 4,000원, 4시간 7,000원</div>
       <div class="seat-grid" id="seatGridA"></div>
 
-      <div class="seat-area-label">기간권 고정석 (B구역) — 2주 70,000원, 4주 120,000원</div>
+      <div class="seat-area-label" id="labelZoneB">기간권 고정석 (B구역) — 2주 70,000원, 4주 120,000원</div>
       <div class="seat-grid" id="seatGridB"></div>
 
       <div class="seat-summary">
@@ -220,7 +221,7 @@
 <script type="module">
   import { auth, db } from "./firebase.js";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { doc, getDoc, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; // ✅ getDocs 추가
 
   // --- 가격표 정의 ---
   const PRICE_TABLE = {
@@ -260,6 +261,18 @@
     if (!window._rsv.cafe) return;
     document.getElementById("selectedCafeName").textContent = window._rsv.cafe.name;
     document.getElementById("selectedCafeAddr").textContent = window._rsv.cafe.address;
+
+    // ✅ 추가: Firebase 등록 업장이면 가격 라벨 업데이트
+    if (window._rsv.cafe.price) {
+      document.getElementById("labelZoneA").textContent =
+        `당일권 자유석 (A구역) — 당일권 ${(window._rsv.cafe.price.daily || 0).toLocaleString()}원`;
+      document.getElementById("labelZoneB").textContent =
+        `기간권 고정석 (B구역) — 주간권 ${(window._rsv.cafe.price.weekly || 0).toLocaleString()}원`;
+    } else {
+      document.getElementById("labelZoneA").textContent = "당일권 자유석 (A구역) — 2시간 4,000원, 4시간 7,000원";
+      document.getElementById("labelZoneB").textContent = "기간권 고정석 (B구역) — 2주 70,000원, 4주 120,000원";
+    }
+
     buildSeats();
     initTimePickers();
     updateSeatSummary();
@@ -308,7 +321,6 @@
       el.classList.add("selected");
       window._rsv.seat = { id, zone };
       
-      // 구역에 따라 시간 선택 UI 전환
       if (zone === "A") {
         document.getElementById("timeRowA").style.display = "flex";
         document.getElementById("timeRowB").style.display = "none";
@@ -331,10 +343,12 @@
 
     if (r.seat.zone === "A") {
       const diff = r.endHour - r.startHour;
-      price = PRICE_TABLE.ZONE_A[String(diff)] || 0;
+      // ✅ 추가: Firebase 등록 업장이면 등록된 당일권 가격 사용
+      price = r.cafe?.price?.daily || PRICE_TABLE.ZONE_A[String(diff)] || 0;
       label = `${r.date} / ${r.startHour}:00~${r.endHour}:00 (${diff}시간)`;
     } else {
-      price = PRICE_TABLE.ZONE_B[String(r.week)] || 0;
+      // ✅ 추가: Firebase 등록 업장이면 등록된 주간권 가격 사용
+      price = r.cafe?.price?.weekly || PRICE_TABLE.ZONE_B[String(r.week)] || 0;
       label = `${r.date} 시작 / ${r.week}주 이용`;
     }
 
@@ -351,7 +365,6 @@
     const endSel = document.getElementById("pickEnd");
     const today = new Date().toISOString().split("T")[0];
 
-    // 당일권 피커
     startSel.innerHTML = ""; endSel.innerHTML = "";
     for (let h=0; h<=23; h++) startSel.innerHTML += `<option value="${h}">${h}:00</option>`;
     for (let h=1; h<=24; h++) endSel.innerHTML += `<option value="${h}">${h}:00</option>`;
@@ -372,7 +385,6 @@
     endSel.onchange = syncData;
     document.getElementById("pickDate").onchange = syncData;
 
-    // 기간권 피커
     document.getElementById("pickWeek").onchange = (e) => {
       window._rsv.week = parseInt(e.target.value);
       updateSeatSummary();
@@ -415,27 +427,103 @@
     if (!user) { alert("로그인 후 이용 가능합니다."); location.href="login.html"; return; }
     window._rsv.user = user;
 
-    // 카카오맵 및 지점 검색 로직 (제공해주신 코드 활용)
     const userDoc = await getDoc(doc(db, "users", user.uid));
-    const region = userDoc.exists() ? userDoc.data().region : "서울";
-    
-    kakao.maps.load(() => {
-      map = new kakao.maps.Map(document.getElementById("reservation-map"), { center: new kakao.maps.LatLng(37.566, 126.978), level: 5 });
-      ps = new kakao.maps.services.Places();
-      ps.keywordSearch(`${region} 스터디카페`, (data) => {
-        renderCafeList(data, region);
+    const userData = userDoc.exists() ? userDoc.data() : {};
+    const region = userData.region || "서울";
+
+    kakao.maps.load(async () => {
+      map = new kakao.maps.Map(document.getElementById("reservation-map"), {
+        center: new kakao.maps.LatLng(37.566, 126.978), level: 5
       });
+      ps = new kakao.maps.services.Places();
+
+      // ✅ 추가: URL에 cafeId 있으면 Firebase 등록 업장으로 바로 이동
+      const params = new URLSearchParams(location.search);
+      const cafeId = params.get("cafeId");
+
+      if (cafeId) {
+        const cafeSnap = await getDoc(doc(db, "cafes", cafeId));
+        if (cafeSnap.exists()) {
+          const cafe = cafeSnap.data();
+          window._rsv.cafe = {
+            id: cafeId,
+            name: cafe.cafeName,
+            address: `${cafe.address} ${cafe.addressDetail || ""}`.trim(),
+            price: cafe.price,
+            totalSeats: cafe.totalSeats
+          };
+
+          // 지도 해당 위치로 이동
+          if (cafe.lat && cafe.lng) {
+            const pos = new kakao.maps.LatLng(cafe.lat, cafe.lng);
+            map.setCenter(pos);
+            map.setLevel(3);
+            new kakao.maps.Marker({ map, position: pos });
+          }
+
+          // 카페 카드 표시
+          const list = document.getElementById("cafeList");
+          list.innerHTML = "";
+          const card = document.createElement("div");
+          card.className = "cafe-card firebase-cafe";
+          card.innerHTML = `
+            <h3>⭐ ${cafe.cafeName} <span style="font-size:11px;background:#e53935;color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px;">등록 업장</span></h3>
+            <p>${cafe.address} ${cafe.addressDetail || ""}</p>
+            <p>당일권: ${(cafe.price?.daily || 0).toLocaleString()}원 / 주간권: ${(cafe.price?.weekly || 0).toLocaleString()}원</p>
+            <p>총 좌석: ${cafe.totalSeats || 0}석</p>
+            <button class="cafe-select-btn">이 지점 선택</button>
+          `;
+          card.querySelector(".cafe-select-btn").onclick = () => goToStep2();
+          list.appendChild(card);
+          document.getElementById("reservationDesc").textContent = `${cafe.cafeName} 예약`;
+        }
+      } else {
+        // ✅ 추가: Firebase 등록 업장 먼저 상단에 표시 후 카카오 검색 결과 추가
+        const list = document.getElementById("cafeList");
+        list.innerHTML = "";
+
+        // Firebase 등록 업장 먼저 불러오기
+        const cafeSnapshot = await getDocs(collection(db, "cafes"));
+        cafeSnapshot.forEach(docItem => {
+          const cafe = docItem.data();
+          const card = document.createElement("div");
+          card.className = "cafe-card firebase-cafe";
+          card.innerHTML = `
+            <h3>⭐ ${cafe.cafeName} <span style="font-size:11px;background:#e53935;color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px;">등록 업장</span></h3>
+            <p>${cafe.address} ${cafe.addressDetail || ""}</p>
+            <p>당일권: ${(cafe.price?.daily || 0).toLocaleString()}원 / 주간권: ${(cafe.price?.weekly || 0).toLocaleString()}원</p>
+            <p>총 좌석: ${cafe.totalSeats || 0}석</p>
+            <button class="cafe-select-btn">지점 선택</button>
+          `;
+          card.querySelector(".cafe-select-btn").onclick = () => {
+            window._rsv.cafe = {
+              id: docItem.id,
+              name: cafe.cafeName,
+              address: `${cafe.address} ${cafe.addressDetail || ""}`.trim(),
+              price: cafe.price,
+              totalSeats: cafe.totalSeats
+            };
+            goToStep2();
+          };
+          list.appendChild(card);
+        });
+
+        // 카카오 키워드 검색 결과도 추가
+        ps.keywordSearch(`${region} 스터디카페`, (data) => {
+          renderCafeList(data, region);
+        });
+      }
     });
   });
 
   function renderCafeList(data, region) {
     const list = document.getElementById("cafeList");
-    list.innerHTML = "";
+    // 기존 Firebase 카드 아래에 카카오 결과 추가
     data.slice(0, 8).forEach(place => {
       const card = document.createElement("div");
       card.className = "cafe-card";
       card.innerHTML = `<h3>${place.place_name}</h3><p>${place.address_name}</p><button class="cafe-select-btn">지점 선택</button>`;
-      card.onclick = () => {
+      card.querySelector(".cafe-select-btn").onclick = () => {
         window._rsv.cafe = { name: place.place_name, address: place.address_name };
         goToStep2();
       };

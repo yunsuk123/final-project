@@ -11,117 +11,128 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const signupForm = document.getElementById("signupForm");
-const message = document.getElementById("message");
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const allowedDomains = ["gmail.com", "naver.com", "daum.net", "kakao.com"];
 
 async function isBlockedEmail(email) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const blockedRef = doc(db, "blockedEmails", normalizedEmail);
-  const blockedSnap = await getDoc(blockedRef);
+  const blockedSnap = await getDoc(doc(db, "blockedEmails", email));
   return blockedSnap.exists();
 }
 
-signupForm.addEventListener("submit", async (e) => {
+function showMessage(elId, text, isSuccess = false) {
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.className = "message" + (isSuccess ? " success" : "");
+}
+
+// ── 일반 사용자 가입 ──
+document.getElementById("userSignupForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim().toLowerCase();
-  const password = document.getElementById("password").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
+  const name     = document.getElementById("userName").value.trim();
+  const email    = document.getElementById("userEmail").value.trim().toLowerCase();
+  const password = document.getElementById("userPassword").value;
+  const confirm  = document.getElementById("userConfirmPassword").value;
+  const sido     = document.getElementById("sido").value.trim();
+  const sigungu  = document.getElementById("sigungu").value.trim();
+  const dong     = document.getElementById("dong").value.trim();
 
-  const sido = document.getElementById("sido").value.trim();
-  const sigungu = document.getElementById("sigungu").value.trim();
-  const dong = document.getElementById("dong").value.trim();
+  showMessage("userMessage", "");
 
-  const region = `${sido} ${sigungu} ${dong}`.trim();
-
-  message.textContent = "";
-
-  if (!name || !email || !password || !confirmPassword || !sido || !sigungu || !dong) {
-    message.textContent = "모든 항목을 입력해주세요.";
-    return;
+  if (!name || !email || !password || !confirm || !sido || !sigungu || !dong) {
+    return showMessage("userMessage", "모든 항목을 입력해주세요.");
   }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-  if (!emailRegex.test(email)) {
-    message.textContent = "올바른 이메일 형식이 아닙니다.";
-    return;
+  if (!emailRegex.test(email) || !allowedDomains.includes(email.split("@")[1])) {
+    return showMessage("userMessage", "올바른 이메일 형식이 아닙니다.");
   }
-
-  const allowedDomains = [
-    "gmail.com",
-    "naver.com",
-    "daum.net",
-    "kakao.com"
-  ];
-
-  const domain = email.split("@")[1];
-
-  if (!allowedDomains.includes(domain)) {
-    message.textContent = "올바른 이메일 형식이 아닙니다.";
-    return;
+  if (password !== confirm) {
+    return showMessage("userMessage", "비밀번호가 일치하지 않습니다.");
   }
-
-  if (password !== confirmPassword) {
-    message.textContent = "비밀번호가 일치하지 않습니다.";
-    return;
-  }
-
   if (password.length < 6) {
-    message.textContent = "비밀번호는 6자 이상이어야 합니다.";
-    return;
+    return showMessage("userMessage", "비밀번호는 6자 이상이어야 합니다.");
   }
 
   try {
-    const blocked = await isBlockedEmail(email);
-
-    if (blocked) {
-      message.textContent = "관리자에 의해 제한된 이메일입니다.";
-      return;
+    if (await isBlockedEmail(email)) {
+      return showMessage("userMessage", "관리자에 의해 제한된 이메일입니다.");
     }
 
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
     await sendEmailVerification(user);
-
     await setDoc(doc(db, "users", user.uid), {
-      uid: user.uid,
-      name: name,
-      email: email,
-
-      sido: sido,
-      sigungu: sigungu,
-      dong: dong,
-      region: region,
-
-      createdAt: serverTimestamp(),
+      uid: user.uid, name, email,
+      sido, sigungu, dong,
+      region: `${sido} ${sigungu} ${dong}`,
       role: "user",
-      emailVerified: user.emailVerified
+      emailVerified: false,
+      createdAt: serverTimestamp()
     });
-
     await signOut(auth);
 
-    message.textContent = "회원가입 완료! 이메일 인증 후 로그인하세요.";
-    signupForm.reset();
-
+    showMessage("userMessage", "회원가입 완료! 이메일 인증 후 로그인하세요.", true);
+    document.getElementById("userSignupForm").reset();
     const sigunguSelect = document.getElementById("sigungu");
     sigunguSelect.innerHTML = '<option value="">시/군/구 선택</option>';
     sigunguSelect.disabled = true;
 
   } catch (error) {
-    console.error("회원가입 에러 코드:", error.code);
-    console.error("회원가입 에러 메시지:", error.message);
+    const msg = {
+      "auth/email-already-in-use": "이미 사용중인 이메일입니다.",
+      "auth/invalid-email": "올바른 이메일 형식이 아닙니다.",
+      "auth/weak-password": "비밀번호는 6자 이상이어야 합니다."
+    }[error.code] || "회원가입 중 오류가 발생했습니다.";
+    showMessage("userMessage", msg);
+  }
+});
 
-    if (error.code === "auth/email-already-in-use") {
-      message.textContent = "이미 사용중인 이메일입니다.";
-    } else if (error.code === "auth/invalid-email") {
-      message.textContent = "올바른 이메일 형식이 아닙니다.";
-    } else if (error.code === "auth/weak-password") {
-      message.textContent = "비밀번호는 6자 이상이어야 합니다.";
-    } else {
-      message.textContent = "회원가입 중 오류가 발생했습니다.";
+// ── 관리자 가입 ──
+document.getElementById("adminSignupForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name     = document.getElementById("adminName").value.trim();
+  const email    = document.getElementById("adminEmail").value.trim().toLowerCase();
+  const password = document.getElementById("adminPassword").value;
+  const confirm  = document.getElementById("adminConfirmPassword").value;
+
+  showMessage("adminMessage", "");
+
+  if (!name || !email || !password || !confirm) {
+    return showMessage("adminMessage", "모든 항목을 입력해주세요.");
+  }
+  if (!emailRegex.test(email) || !allowedDomains.includes(email.split("@")[1])) {
+    return showMessage("adminMessage", "올바른 이메일 형식이 아닙니다.");
+  }
+  if (password !== confirm) {
+    return showMessage("adminMessage", "비밀번호가 일치하지 않습니다.");
+  }
+  if (password.length < 6) {
+    return showMessage("adminMessage", "비밀번호는 6자 이상이어야 합니다.");
+  }
+
+  try {
+    if (await isBlockedEmail(email)) {
+      return showMessage("adminMessage", "관리자에 의해 제한된 이메일입니다.");
     }
+
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(user);
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid, name, email,
+      role: "admin",
+      emailVerified: false,
+      createdAt: serverTimestamp()
+    });
+    await signOut(auth);
+
+    showMessage("adminMessage", "관리자 가입 완료! 이메일 인증 후 로그인하세요.", true);
+    document.getElementById("adminSignupForm").reset();
+
+  } catch (error) {
+    const msg = {
+      "auth/email-already-in-use": "이미 사용중인 이메일입니다.",
+      "auth/invalid-email": "올바른 이메일 형식이 아닙니다.",
+      "auth/weak-password": "비밀번호는 6자 이상이어야 합니다."
+    }[error.code] || "회원가입 중 오류가 발생했습니다.";
+    showMessage("adminMessage", msg);
   }
 });

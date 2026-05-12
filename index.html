@@ -69,6 +69,12 @@
           </div>
         </div>
 
+        <!-- ✅ 추가: 범례 -->
+        <div style="display:flex; gap:16px; margin-bottom:8px; font-size:12px; font-weight:600; color:#555;">
+          <span>🔵 주변 스터디카페</span>
+          <span>🔴 등록 업장</span>
+        </div>
+
         <div id="hero-map"></div>
 
         <div class="map-bottom-box">
@@ -114,7 +120,8 @@
       onSnapshot,
       doc,
       getDoc,
-      updateDoc
+      updateDoc,
+      getDocs  // ✅ 추가
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const authBtn = document.getElementById("authBtn");
@@ -127,6 +134,7 @@
     let geocoder = null;
     let currentRegion = "";
     let markers = [];
+    let firebaseMarkers = []; // ✅ 추가
     let activeInfoWindow = null;
 
     let lastAppliedRegion = "";  // 실제로 검색 완료된 지역 저장
@@ -393,6 +401,7 @@
       if (status !== kakao.maps.services.Status.OK || data.length === 0) {
         console.error("장소 검색 실패 또는 결과 없음:", status);
         mapLabel.textContent = `${currentRegion} 주변 스터디카페 검색 결과가 없습니다. 동 이름을 다시 확인해주세요.`;
+        loadFirebaseCafes(); // ✅ 추가: 카카오 결과 없어도 Firebase 마커는 표시
         return;
       }
 
@@ -437,6 +446,65 @@
       });
 
       map.setBounds(bounds);
+      loadFirebaseCafes(); // ✅ 추가: 카카오 검색 끝나면 Firebase 마커도 표시
+    }
+
+    // ✅ 추가: Firebase 등록 업장 마커 표시 함수
+    async function loadFirebaseCafes() {
+      if (!map) return;
+      try {
+        const snapshot = await getDocs(collection(db, "cafes"));
+
+        // 기존 Firebase 마커 제거
+        firebaseMarkers.forEach(m => m.setMap(null));
+        firebaseMarkers = [];
+
+        snapshot.forEach(docItem => {
+          const cafe = docItem.data();
+          if (!cafe.lat || !cafe.lng) return;
+
+          const position = new kakao.maps.LatLng(cafe.lat, cafe.lng);
+
+          // 빨간 별 마커
+          const markerImage = new kakao.maps.MarkerImage(
+            "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
+            new kakao.maps.Size(24, 35)
+          );
+
+          const marker = new kakao.maps.Marker({
+            map: map,
+            position: position,
+            image: markerImage,
+            title: cafe.cafeName
+          });
+
+          firebaseMarkers.push(marker);
+
+          const infowindow = new kakao.maps.InfoWindow({
+            content: `
+              <div style="padding:10px 14px;font-size:13px;min-width:200px;">
+                <div style="font-weight:800;color:#e53935;margin-bottom:6px;">⭐ ${cafe.cafeName}</div>
+                <div style="font-size:11px;color:#666;margin-bottom:6px;">${cafe.address} ${cafe.addressDetail || ""}</div>
+                <div style="font-size:12px;color:#333;margin-bottom:2px;">당일권: ${(cafe.price?.daily || 0).toLocaleString()}원</div>
+                <div style="font-size:12px;color:#333;margin-bottom:2px;">주간권: ${(cafe.price?.weekly || 0).toLocaleString()}원</div>
+                <div style="font-size:12px;color:#333;margin-bottom:8px;">잔여 좌석: ${cafe.availableSeats || 0} / ${cafe.totalSeats || 0}석</div>
+                <a href="StudyCafe-reservation.html?cafeId=${docItem.id}"
+                   style="display:block;text-align:center;background:#4a6cf7;color:#fff;padding:7px 0;border-radius:8px;font-weight:700;font-size:12px;text-decoration:none;">
+                  좌석 예약하기
+                </a>
+              </div>
+            `
+          });
+
+          kakao.maps.event.addListener(marker, "click", () => {
+            if (activeInfoWindow) activeInfoWindow.close();
+            infowindow.open(map, marker);
+            activeInfoWindow = infowindow;
+          });
+        });
+      } catch(e) {
+        console.error("Firebase 카페 로드 오류:", e);
+      }
     }
 
     function startKakaoMap() {
@@ -465,6 +533,8 @@
         if (currentRegion) {
           searchStudyCafe(currentRegion);
         }
+
+        loadFirebaseCafes(); // ✅ 추가: 지도 초기화 직후 Firebase 마커 표시
       });
     }
 
@@ -509,6 +579,7 @@
         authBtn.href = "login.html";
         authBtn.onclick = null;
         mapLabel.textContent = "로그인 후 회원가입 지역 기준으로 주변 스터디카페가 표시됩니다.";
+        if (map) loadFirebaseCafes(); // ✅ 추가: 비로그인도 등록 업장은 표시
       }
 
       renderMainStudyGroups(user);
