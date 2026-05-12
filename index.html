@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="index.css">
 
   <script type="text/javascript"
-    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ab34450ee73c368883934f250da91d70&libraries=services&autoload=false">
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6ce8a915000c6718bf65ac51e6e0c214&libraries=services&autoload=false">
   </script>
 </head>
 <body>
@@ -129,9 +129,10 @@
     let markers = [];
     let activeInfoWindow = null;
 
-    let lastSearchKeyword = "";
+    let lastAppliedRegion = "";  // 실제로 검색 완료된 지역 저장
     let isSearchingCafe = false;
     let searchTimer = null;
+    let isMapInitialized = false; // 지도 중복 초기화 방지
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -352,50 +353,39 @@
     }
 
     function searchStudyCafe(region) {
-  if (!map || !ps) {
-    console.error("카카오맵이 아직 준비되지 않았습니다.");
-    return;
-  }
+      // 1. 지도/서비스 미준비 시 즉시 중단
+      if (!map || !ps) return;
+      if (!region) return;
 
-  if (!region) {
-    console.error("사용자 지역 정보가 없습니다.");
-    return;
-  }
+      // 2. 이미 같은 지역 검색 완료됐으면 중단
+      if (lastAppliedRegion === region) return;
 
-  currentRegion = region;
+      // 3. 현재 검색 진행 중이면 중단
+      if (isSearchingCafe) return;
 
-  const keyword = `${region} 스터디카페`;
+      // 4. 빠른 연속 호출은 debounce로 묶기
+      clearTimeout(searchTimer);
 
-  
-  if (lastSearchKeyword === keyword) {
-    console.log("이미 검색한 지역:", keyword);
-    return;
-  }
+      searchTimer = setTimeout(() => {
+        // debounce 사이에 조건이 바뀔 수 있으므로 재확인
+        if (lastAppliedRegion === region || isSearchingCafe) return;
 
-  
-  if (isSearchingCafe) {
-    console.log("현재 검색 진행 중");
-    return;
-  }
+        isSearchingCafe = true;
+        currentRegion = region;
+        mapLabel.textContent = `${region} 주변 스터디카페를 표시합니다.`;
 
-  clearTimeout(searchTimer);
+        moveMapToRegion(region);
 
-  searchTimer = setTimeout(() => {
-    isSearchingCafe = true;
-    lastSearchKeyword = keyword;
-
-    mapLabel.textContent = `${region} 주변 스터디카페를 표시합니다.`;
-
-    moveMapToRegion(region);
-
-    ps.keywordSearch(keyword, (data, status) => {
-      placesSearchCB(data, status);
-
-      isSearchingCafe = false;
-    });
-
-  }, 500);
-}
+        ps.keywordSearch(`${region} 스터디카페`, (data, status) => {
+          try {
+            placesSearchCB(data, status);
+            lastAppliedRegion = region; // 성공했을 때만 기록
+          } finally {
+            isSearchingCafe = false; // 에러 나도 반드시 해제
+          }
+        });
+      }, 500);
+    }
 
     function placesSearchCB(data, status) {
       clearMarkers();
@@ -449,31 +439,34 @@
       map.setBounds(bounds);
     }
 
-    let isMapStarted = false;
-
-  function startKakaoMap() {
-    if (typeof window.kakao === "undefined") {
-      console.error("카카오 SDK 로드 실패");
-      return;
-  }
-
-    kakao.maps.load(() => {
-      const mapContainer = document.getElementById("hero-map");
-
-      const mapOption = {
-        center: new kakao.maps.LatLng(37.566826, 126.9786567),
-        level: 5
-      };
-
-      map = new kakao.maps.Map(mapContainer, mapOption);
-      ps = new kakao.maps.services.Places();
-      geocoder = new kakao.maps.services.Geocoder();
-
-      if (currentRegion) {
-        searchStudyCafe(currentRegion);
+    function startKakaoMap() {
+      // 이미 초기화됐으면 재실행 금지
+      if (isMapInitialized) return;
+      if (typeof window.kakao === "undefined") {
+        console.error("카카오 SDK 로드 실패");
+        return;
       }
-  });
-}
+
+      isMapInitialized = true; // 먼저 세팅해서 중복 진입 차단
+
+      kakao.maps.load(() => {
+        const mapContainer = document.getElementById("hero-map");
+
+        const mapOption = {
+          center: new kakao.maps.LatLng(37.566826, 126.9786567),
+          level: 5
+        };
+
+        map = new kakao.maps.Map(mapContainer, mapOption);
+        ps = new kakao.maps.services.Places();
+        geocoder = new kakao.maps.services.Geocoder();
+
+        // 지도 준비 완료 후, 이미 받아둔 지역 있으면 검색
+        if (currentRegion) {
+          searchStudyCafe(currentRegion);
+        }
+      });
+    }
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -502,9 +495,10 @@
           if (!region) {
             mapLabel.textContent = "지역 설정 후 주변 스터디카페가 표시됩니다.";
           } else {
-            currentRegion = region;
-
-            if (map && ps) {
+            // 지역이 실제로 바뀐 경우에만 재검색
+            if (region !== currentRegion) {
+              currentRegion = region;
+              lastAppliedRegion = ""; // 새 지역이므로 초기화
               searchStudyCafe(currentRegion);
             }
           }
@@ -520,9 +514,9 @@
       renderMainStudyGroups(user);
     });
 
-   window.addEventListener("load", () => {
-  startKakaoMap();
-});
+    window.addEventListener("load", () => {
+      startKakaoMap();
+    });
   </script>
 </body>
 </html>
