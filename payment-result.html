@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>결제 결과</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f7f8fc; font-family: 'Noto Sans KR', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .card { background: #fff; border-radius: 22px; box-shadow: 0 10px 30px rgba(74,108,247,0.10); padding: 40px 32px; max-width: 460px; width: 100%; text-align: center; }
+    .icon { font-size: 60px; margin-bottom: 16px; }
+    .title { font-size: 24px; font-weight: 800; color: #222; margin-bottom: 8px; }
+    .sub { font-size: 14px; color: #888; margin-bottom: 28px; }
+    .detail-box { background: #f0f2ff; border-radius: 14px; padding: 20px 24px; text-align: left; margin-bottom: 28px; }
+    .detail-row { display: flex; justify-content: space-between; font-size: 14px; color: #444; padding: 7px 0; border-bottom: 1px solid #e0e4f7; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .val { font-weight: 800; color: #4a6cf7; }
+    .btn-primary { display: block; width: 100%; padding: 15px; background: linear-gradient(135deg,#4a6cf7,#6d8dff); color: #fff; border: none; border-radius: 13px; font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; text-align: center; }
+    .btn-outline { display: block; width: 100%; padding: 13px; background: #fff; color: #4a6cf7; border: 2px solid #4a6cf7; border-radius: 13px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; margin-top: 10px; }
+    .fail .btn-primary { background: linear-gradient(135deg,#e24b4a,#f07070); }
+    .fail .btn-outline { color: #e24b4a; border-color: #e24b4a; }
+  </style>
+</head>
+<body>
+
+<div class="card" id="resultCard">
+  <div class="icon" id="resultIcon"></div>
+  <div class="title" id="resultTitle"></div>
+  <div class="sub" id="resultSub"></div>
+  <div class="detail-box" id="detailBox"></div>
+  <a href="index.html" class="btn-primary" id="btnMain">메인으로 돌아가기</a>
+  <a href="reservation.html" class="btn-outline" id="btnRetry" style="display:none">다시 예약하기</a>
+</div>
+
+<script type="module">
+  import { auth, db } from "./firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { collection, addDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const params   = new URLSearchParams(location.search);
+  const isFail   = params.get("fail") === "true";
+  const icon     = document.getElementById("resultIcon");
+  const title    = document.getElementById("resultTitle");
+  const sub      = document.getElementById("resultSub");
+  const detail   = document.getElementById("detailBox");
+  const btnRetry = document.getElementById("btnRetry");
+
+  const methodLabel = {
+    card:"신용/체크카드", kakao:"카카오페이",
+    naver:"네이버페이", toss:"토스페이",
+    bank:"계좌이체", point:"포인트"
+  };
+
+  if (isFail) {
+    document.getElementById("resultCard").classList.add("fail");
+    icon.textContent  = "❌";
+    title.textContent = "결제에 실패했습니다.";
+    sub.textContent   = "결제가 취소되었거나 오류가 발생했습니다.";
+    detail.innerHTML  = `
+      <div class="detail-row"><span>오류 코드</span><span class="val">${params.get("code") || "-"}</span></div>
+      <div class="detail-row"><span>오류 메시지</span><span class="val">${decodeURIComponent(params.get("message") || "알 수 없는 오류")}</span></div>
+    `;
+    btnRetry.style.display = "block";
+
+  } else {
+    const cafe   = decodeURIComponent(params.get("cafe")  || "-");
+    const seat   = decodeURIComponent(params.get("seat")  || "-");
+    const zone   = params.get("zone") === "A" ? "일반석" : "프리미엄석";
+    const date   = params.get("date")  || "-";
+    const start  = params.get("start") || "-";
+    const end    = params.get("end")   || "-";
+    const total  = parseInt(params.get("total") || "0");
+    const method = params.get("method") || "-";
+    const paymentKey = params.get("paymentKey") || "-";
+    const orderId    = params.get("orderId")    || "-";
+
+    icon.textContent  = "✅";
+    title.textContent = "예약이 완료되었습니다!";
+    sub.textContent   = "즐거운 스터디 되세요 😊";
+
+    detail.innerHTML = `
+      <div class="detail-row"><span>지점</span><span class="val">${cafe}</span></div>
+      <div class="detail-row"><span>좌석</span><span class="val">${seat} (${zone})</span></div>
+      <div class="detail-row"><span>날짜</span><span class="val">${date}</span></div>
+      <div class="detail-row"><span>시간</span><span class="val">${start}:00 ~ ${end}:00</span></div>
+      <div class="detail-row"><span>결제 금액</span><span class="val">${total.toLocaleString()}원</span></div>
+      <div class="detail-row"><span>결제 수단</span><span class="val">${methodLabel[method] || method}</span></div>
+      <div class="detail-row"><span>주문 번호</span><span class="val" style="font-size:12px">${orderId}</span></div>
+    `;
+
+    /* Firestore에 예약 저장 */
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        await addDoc(collection(db, "reservations"), {
+          uid: user.uid,
+          email: user.email,
+          cafeName: cafe,
+          seatId: seat,
+          seatZone: params.get("zone"),
+          date,
+          startHour: parseInt(start),
+          endHour: parseInt(end),
+          hours: parseInt(end) - parseInt(start),
+          totalPrice: total,
+          payMethod: method,
+          paymentKey,
+          orderId,
+          status: "confirmed",
+          createdAt: serverTimestamp()
+        });
+      } catch(e) {
+        console.error("Firestore 저장 오류:", e);
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
