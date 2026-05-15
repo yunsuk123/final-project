@@ -367,25 +367,10 @@
       margin-bottom: 6px;
     }
 
-    .tag.blue {
-      background: #eef2ff;
-      color: #4a6cf7;
-    }
-
-    .tag.green {
-      background: #eafaf0;
-      color: #1e9d57;
-    }
-
-    .tag.orange {
-      background: #fff4e7;
-      color: #f39a28;
-    }
-
-    .tag.red {
-      background: #ffeaea;
-      color: #e54848;
-    }
+    .tag.blue { background: #eef2ff; color: #4a6cf7; }
+    .tag.green { background: #eafaf0; color: #1e9d57; }
+    .tag.orange { background: #fff4e7; color: #f39a28; }
+    .tag.red { background: #ffeaea; color: #e54848; }
 
     .actions {
       display: flex;
@@ -406,9 +391,7 @@
       min-width: 760px;
     }
 
-    thead {
-      background: #f7f9ff;
-    }
+    thead { background: #f7f9ff; }
 
     th, td {
       padding: 16px;
@@ -417,29 +400,12 @@
       font-size: 14px;
     }
 
-    th {
-      font-weight: 800;
-      color: #444;
-    }
+    th { font-weight: 800; color: #444; }
+    td { color: #555; }
 
-    td {
-      color: #555;
-    }
-
-    .status-done {
-      color: #1db954;
-      font-weight: 700;
-    }
-
-    .status-wait {
-      color: #f5a623;
-      font-weight: 700;
-    }
-
-    .status-cancel {
-      color: #ff4d4f;
-      font-weight: 700;
-    }
+    .status-done { color: #1db954; font-weight: 700; }
+    .status-wait { color: #f5a623; font-weight: 700; }
+    .status-cancel { color: #ff4d4f; font-weight: 700; }
 
     footer {
       background: #1f2430;
@@ -456,38 +422,18 @@
       flex-wrap: wrap;
     }
 
-    .footer-wrap p {
-      font-size: 14px;
-    }
+    .footer-wrap p { font-size: 14px; }
 
     @media (max-width: 980px) {
-      .mypage-layout {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        position: static;
-      }
+      .mypage-layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
     }
 
     @media (max-width: 768px) {
-      .navbar {
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .nav-menu {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .hero-left h1 {
-        font-size: 28px;
-      }
-
-      .panel h2 {
-        font-size: 22px;
-      }
+      .navbar { flex-direction: column; gap: 14px; }
+      .nav-menu { flex-wrap: wrap; justify-content: center; }
+      .hero-left h1 { font-size: 28px; }
+      .panel h2 { font-size: 22px; }
     }
   </style>
 </head>
@@ -513,24 +459,12 @@
           <h1>마이페이지</h1>
           <p>내 정보, 활동 내역, 예약 및 결제 내역을 한눈에 관리하세요.</p>
         </div>
-
         <div class="profile-summary">
-          <div class="summary-card">
-            <h3>내 게시글</h3>
-            <p>3</p>
-          </div>
-          <div class="summary-card">
-            <h3>예약 내역</h3>
-            <p>2</p>
-          </div>
-          <div class="summary-card">
-            <h3>결제 내역</h3>
-            <p>2</p>
-          </div>
-          <div class="summary-card">
-            <h3>스터디 그룹</h3>
-            <p>2</p>
-          </div>
+          <!-- ✅ 수정: 하드코딩 숫자 → JS에서 동적으로 채움 -->
+          <div class="summary-card"><h3>내 게시글</h3><p id="summaryPosts">-</p></div>
+          <div class="summary-card"><h3>예약 내역</h3><p id="summaryReservations">-</p></div>
+          <div class="summary-card"><h3>결제 내역</h3><p id="summaryPayments">-</p></div>
+          <div class="summary-card"><h3>스터디 그룹</h3><p id="summaryGroups">-</p></div>
         </div>
       </div>
     </div>
@@ -549,40 +483,24 @@
       </aside>
 
       <div class="content-area">
-        
+
+        <!-- 내 정보 -->
         <div id="profile" class="tab-content active">
           <div class="panel">
             <h2>내 정보</h2>
             <p class="panel-desc">회원 기본 정보를 확인할 수 있습니다.</p>
             <div class="info-grid">
-              <div class="info-item">
-                <h4>이름</h4>
-                <p id="userName">로딩 중...</p>
-              </div>
-              <div class="info-item">
-                <h4>이메일</h4>
-                <p id="userEmail">로딩 중...</p>
-              </div>
-              <div class="info-item">
-                <h4>가입일</h4>
-                <p id="userCreatedAt">로딩 중...</p>
-              </div>
-              <div class="info-item">
-                <h4>이메일 인증 상태</h4>
-                <p id="userVerified" class="verified">확인 중...</p>
-              </div>
-              <div class="info-item">
-                <h4>현재 지역</h4>
-                <p id="userRegion">지역 미설정</p>
-              </div>
+              <div class="info-item"><h4>이름</h4><p id="userName">로딩 중...</p></div>
+              <div class="info-item"><h4>이메일</h4><p id="userEmail">로딩 중...</p></div>
+              <div class="info-item"><h4>가입일</h4><p id="userCreatedAt">로딩 중...</p></div>
+              <div class="info-item"><h4>이메일 인증 상태</h4><p id="userVerified" class="verified">확인 중...</p></div>
+              <div class="info-item"><h4>현재 지역</h4><p id="userRegion">지역 미설정</p></div>
             </div>
           </div>
 
-          
           <div class="panel" style="margin-top: 24px;">
             <h2>지역 설정</h2>
             <p class="panel-desc">스터디카페 추천과 예약 페이지에 사용할 지역을 설정하세요.</p>
-
             <div class="form-grid">
               <div class="form-group">
                 <label for="sido">시/도</label>
@@ -607,46 +525,39 @@
                   <option value="제주특별자치도">제주특별자치도</option>
                 </select>
               </div>
-
               <div class="form-group">
                 <label for="sigungu">시/군/구</label>
                 <input type="text" id="sigungu" placeholder="예: 성북구, 양주시">
               </div>
-
               <div class="form-group">
                 <label for="dong">동/읍/면</label>
                 <input type="text" id="dong" placeholder="예: 정릉동, 고읍동">
               </div>
             </div>
-
             <button type="button" class="submit-btn" onclick="updateRegion()">지역 저장</button>
           </div>
         </div>
 
-        
+        <!-- 비밀번호 변경 -->
         <div id="password" class="tab-content">
           <div class="panel">
             <h2>비밀번호 변경</h2>
             <p class="panel-desc">보안을 위해 현재 비밀번호 확인 후 새 비밀번호로 변경하세요.</p>
-
             <form onsubmit="changePassword(event)">
               <div class="form-grid">
                 <div class="form-group">
                   <label for="currentPassword">현재 비밀번호</label>
                   <input type="password" id="currentPassword" placeholder="현재 비밀번호를 입력하세요">
                 </div>
-
                 <div class="form-group">
                   <label for="newPassword">새 비밀번호</label>
                   <input type="password" id="newPassword" placeholder="새 비밀번호를 입력하세요">
                 </div>
-
                 <div class="form-group">
                   <label for="confirmPassword">새 비밀번호 확인</label>
                   <input type="password" id="confirmPassword" placeholder="새 비밀번호를 다시 입력하세요">
                 </div>
               </div>
-
               <button type="submit" class="submit-btn">비밀번호 변경</button>
             </form>
           </div>
@@ -657,7 +568,6 @@
           <div class="panel">
             <h2>내가 쓴 게시글</h2>
             <p class="panel-desc">커뮤니티에 작성한 게시글 목록입니다.</p>
-
             <div class="card-list" id="myPostList"></div>
             <p id="emptyPostMessage" class="panel-desc" style="display:none; margin-top:16px;">
               작성한 게시글이 없습니다.
@@ -665,12 +575,11 @@
           </div>
         </div>
 
-        
+        <!-- ✅ 수정: 예약 내역 tbody에 id 추가, thead 컬럼 수정 -->
         <div id="reservations" class="tab-content">
           <div class="panel">
             <h2>좌석 예약 내역</h2>
             <p class="panel-desc">예약한 좌석과 이용 시간, 예약 상태를 확인할 수 있습니다.</p>
-
             <div class="table-wrap">
               <table>
                 <thead>
@@ -679,68 +588,59 @@
                     <th>좌석</th>
                     <th>예약일</th>
                     <th>이용 시간</th>
-                    <th>결제 상태</th>
-                    <th>예약 상태</th>
+                    <th>결제 금액</th>
+                    <th>결제 수단</th>
+                    <th>상태</th>
                     <th>관리</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    
-                  </tr>
-                  <tr>
-                    
-                  </tr>
+                <!-- ✅ id 추가 -->
+                <tbody id="reservationTableBody">
+                  <tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px;">불러오는 중...</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
-        <!-- 결제 내역 -->
+        <!-- ✅ 수정: 결제 내역 tbody에 id 추가, thead 컬럼 수정 -->
         <div id="payments" class="tab-content">
           <div class="panel">
             <h2>결제 내역</h2>
             <p class="panel-desc">좌석 예약 및 스터디룸 결제 내역을 확인할 수 있습니다.</p>
-
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>결제일</th>
                     <th>지점</th>
-                    <th>상품</th>
+                    <th>좌석</th>
                     <th>결제 금액</th>
                     <th>결제 수단</th>
                     <th>상태</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    
-                  </tr>
-                  <tr>
-                    
-                  </tr>
+                <!-- ✅ id 추가 -->
+                <tbody id="paymentTableBody">
+                  <tr><td colspan="6" style="text-align:center;color:#aaa;padding:24px;">불러오는 중...</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
-        
+        <!-- 참여 스터디 그룹 -->
         <div id="groups" class="tab-content">
           <div class="panel">
             <h2>참여 스터디 그룹</h2>
             <p class="panel-desc">현재 참여 중인 스터디 그룹과 채팅방 이동 기능을 제공합니다.</p>
-
             <div class="card-list" id="joinedStudyList"></div>
-
             <p id="emptyJoinedStudyMessage" class="panel-desc" style="display:none; margin-top:16px;">
               참여 중인 스터디 그룹이 없습니다.
             </p>
           </div>
         </div>
+
       </div>
     </div>
   </section>
@@ -766,9 +666,7 @@
         button.getAttribute("onclick").includes(tabId)
       );
 
-      if (clickedButton) {
-        clickedButton.classList.add("active");
-      }
+      if (clickedButton) clickedButton.classList.add("active");
     }
   </script>
 

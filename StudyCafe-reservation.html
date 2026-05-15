@@ -6,7 +6,7 @@
   <title>스터디카페 좌석 예약</title>
   <link rel="stylesheet" href="index.css">
   <script src="https://js.tosspayments.com/v1/payment"></script>
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6ce8a915000c6718bf65ac51e6e0c214&libraries=services&autoload=false"></script>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a6efaad6d59989fe5bb8adfe6f4039a3&libraries=services&autoload=false"></script>
   <style>
     * { box-sizing: border-box; }
     body { background: #f7f8fc; font-family: 'Noto Sans KR', sans-serif; }
@@ -221,9 +221,8 @@
 <script type="module">
   import { auth, db } from "./firebase.js";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { doc, getDoc, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; // ✅ getDocs 추가
+  import { doc, getDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // --- 가격표 정의 ---
   const PRICE_TABLE = {
     ZONE_A: { "2": 4000, "4": 7000 },
     ZONE_B: { "2": 70000, "4": 120000 }
@@ -235,8 +234,7 @@
     week:2, payMethod:null, finalPrice: 0 
   };
 
-  let map=null, ps=null, geocoder=null, activeIW=null;
-  let isMapInitialized = false;
+  let map=null, ps=null;
 
   function setStepUI(step) {
     [1,2,3].forEach(n => {
@@ -262,7 +260,6 @@
     document.getElementById("selectedCafeName").textContent = window._rsv.cafe.name;
     document.getElementById("selectedCafeAddr").textContent = window._rsv.cafe.address;
 
-    // ✅ 추가: Firebase 등록 업장이면 가격 라벨 업데이트
     if (window._rsv.cafe.price) {
       document.getElementById("labelZoneA").textContent =
         `당일권 자유석 (A구역) — 당일권 ${(window._rsv.cafe.price.daily || 0).toLocaleString()}원`;
@@ -273,8 +270,11 @@
       document.getElementById("labelZoneB").textContent = "기간권 고정석 (B구역) — 2주 70,000원, 4주 120,000원";
     }
 
-    buildSeats();
+    const today = new Date().toISOString().split("T")[0];
+    window._rsv.date = today;
+
     initTimePickers();
+    buildSeats();
     updateSeatSummary();
     document.getElementById("step1").style.display = "none";
     document.getElementById("step2").style.display = "block";
@@ -302,14 +302,52 @@
     setStepUI(3);
   };
 
-  // --- 좌석 생성 ---
-  function buildSeats() {
+  async function buildSeats() {
     const gridA = document.getElementById("seatGridA");
     const gridB = document.getElementById("seatGridB");
-    gridA.innerHTML = ""; gridB.innerHTML = "";
-    
-    for (let i=1; i<=24; i++) gridA.appendChild(makeSeat(`A${i}`, "A"));
-    for (let i=1; i<=16; i++) gridB.appendChild(makeSeat(`B${i}`, "B"));
+    gridA.innerHTML = "<div style='color:#aaa;font-size:13px;padding:10px;'>좌석 불러오는 중...</div>";
+    gridB.innerHTML = "";
+
+    const countA = window._rsv.cafe?.seatsA || 24;
+    const countB = window._rsv.cafe?.seatsB || 16;
+
+    const occupiedSeats = new Set();
+    try {
+      const q = query(
+        collection(db, "reservations"),
+        where("cafeId", "==", window._rsv.cafe.id),
+        where("date", "==", window._rsv.date),
+        where("status", "==", "active")
+      );
+      const snap = await getDocs(q);
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.zone === "B") {
+          occupiedSeats.add(data.seatId);
+        } else {
+          const resStart = data.startHour;
+          const resEnd = data.endHour;
+          const myStart = window._rsv.startHour;
+          const myEnd = window._rsv.endHour;
+          const isOverlap = myStart < resEnd && myEnd > resStart;
+          if (isOverlap) occupiedSeats.add(data.seatId);
+        }
+      });
+    } catch(e) {
+      console.warn("예약 조회 실패:", e);
+    }
+
+    gridA.innerHTML = "";
+    for (let i=1; i<=countA; i++) {
+      const seat = makeSeat(`A${i}`, "A");
+      if (occupiedSeats.has(`A${i}`)) seat.classList.add("occupied");
+      gridA.appendChild(seat);
+    }
+    for (let i=1; i<=countB; i++) {
+      const seat = makeSeat(`B${i}`, "B");
+      if (occupiedSeats.has(`B${i}`)) seat.classList.add("occupied");
+      gridB.appendChild(seat);
+    }
   }
 
   function makeSeat(id, zone) {
@@ -317,10 +355,10 @@
     el.className = "seat";
     el.textContent = id;
     el.onclick = () => {
+      if (el.classList.contains("occupied")) return;
       document.querySelectorAll(".seat").forEach(s => s.classList.remove("selected"));
       el.classList.add("selected");
       window._rsv.seat = { id, zone };
-      
       if (zone === "A") {
         document.getElementById("timeRowA").style.display = "flex";
         document.getElementById("timeRowB").style.display = "none";
@@ -333,7 +371,6 @@
     return el;
   }
 
-  // --- 금액 계산 및 요약 업데이트 ---
   function updateSeatSummary() {
     const r = window._rsv;
     if (!r.seat) return;
@@ -343,11 +380,9 @@
 
     if (r.seat.zone === "A") {
       const diff = r.endHour - r.startHour;
-      // ✅ 추가: Firebase 등록 업장이면 등록된 당일권 가격 사용
       price = r.cafe?.price?.daily || PRICE_TABLE.ZONE_A[String(diff)] || 0;
       label = `${r.date} / ${r.startHour}:00~${r.endHour}:00 (${diff}시간)`;
     } else {
-      // ✅ 추가: Firebase 등록 업장이면 등록된 주간권 가격 사용
       price = r.cafe?.price?.weekly || PRICE_TABLE.ZONE_B[String(r.week)] || 0;
       label = `${r.date} 시작 / ${r.week}주 이용`;
     }
@@ -355,11 +390,10 @@
     r.finalPrice = price;
     document.getElementById("selectedSeatLabel").textContent = `${r.seat.id} (${r.seat.zone === "A" ? "자유석" : "고정석"})`;
     document.getElementById("selectedTimeLabel").textContent = label;
-    document.getElementById("selectedPriceLabel").textContent = price > 0 ? `${price.toLocaleString()}원` : "가격 정보 없음 (2/4 단위 선택)";
+    document.getElementById("selectedPriceLabel").textContent = price > 0 ? `${price.toLocaleString()}원` : "가격 정보 없음";
     document.getElementById("goToPayBtn").disabled = (price === 0);
   }
 
-  // --- 시간/날짜 피커 초기화 ---
   function initTimePickers() {
     const startSel = document.getElementById("pickStart");
     const endSel = document.getElementById("pickEnd");
@@ -368,34 +402,43 @@
     startSel.innerHTML = ""; endSel.innerHTML = "";
     for (let h=0; h<=23; h++) startSel.innerHTML += `<option value="${h}">${h}:00</option>`;
     for (let h=1; h<=24; h++) endSel.innerHTML += `<option value="${h}">${h}:00</option>`;
-    
+
     startSel.value = "9"; endSel.value = "11";
     document.getElementById("pickDate").value = today;
     document.getElementById("pickDateB").value = today;
     window._rsv.date = today;
 
-    const syncData = () => {
+    startSel.onchange = () => {
       window._rsv.startHour = parseInt(startSel.value);
       window._rsv.endHour = parseInt(endSel.value);
-      window._rsv.date = document.getElementById("pickDate").value;
+      window._rsv.seat = null;
+      buildSeats();
       updateSeatSummary();
     };
-
-    startSel.onchange = syncData;
-    endSel.onchange = syncData;
-    document.getElementById("pickDate").onchange = syncData;
-
+    endSel.onchange = () => {
+      window._rsv.endHour = parseInt(endSel.value);
+      window._rsv.seat = null;
+      buildSeats();
+      updateSeatSummary();
+    };
+    document.getElementById("pickDate").onchange = () => {
+      window._rsv.date = document.getElementById("pickDate").value;
+      window._rsv.seat = null;
+      buildSeats();
+      updateSeatSummary();
+    };
     document.getElementById("pickWeek").onchange = (e) => {
       window._rsv.week = parseInt(e.target.value);
       updateSeatSummary();
     };
     document.getElementById("pickDateB").onchange = (e) => {
       window._rsv.date = e.target.value;
+      window._rsv.seat = null;
+      buildSeats();
       updateSeatSummary();
     };
   }
 
-  // --- 결제 관련 ---
   window.selectPayMethod = function(el, method) {
     document.querySelectorAll(".pay-method").forEach(m => m.classList.remove("selected"));
     el.classList.add("selected");
@@ -407,22 +450,78 @@
     if (!document.getElementById("agreeCheck").checked) return alert("동의가 필요합니다.");
 
     const r = window._rsv;
-    const tossPayments = window.TossPayments("test_ck_XZYkKL4MrjYdyY0YLENRVOzJwlEW");
-    
+    const payBtn = document.getElementById("payBtn");
+    payBtn.disabled = true;
+    payBtn.textContent = "처리 중...";
+
     try {
-      await tossPayments.requestPayment(r.payMethod, {
-        amount: r.finalPrice,
-        orderId: "ORDER-" + Date.now(),
-        orderName: `${r.cafe.name} ${r.seat.id} 예약`,
-        successUrl: window.location.origin + "/payment-success.html",
-        failUrl: window.location.origin + "/payment-fail.html",
+      const dupQ = query(
+        collection(db, "reservations"),
+        where("cafeId", "==", r.cafe.id),
+        where("seatId", "==", r.seat.id),
+        where("date", "==", r.date),
+        where("status", "==", "active")
+      );
+      const dupSnap = await getDocs(dupQ);
+
+      if (!dupSnap.empty) {
+        let isConflict = false;
+        dupSnap.forEach(d => {
+          const data = d.data();
+          if (data.zone === "B") {
+            isConflict = true;
+          } else {
+            const isOverlap = r.startHour < data.endHour && r.endHour > data.startHour;
+            if (isOverlap) isConflict = true;
+          }
+        });
+
+        if (isConflict) {
+          alert("이미 예약된 좌석입니다. 다른 좌석이나 시간을 선택해주세요.");
+          payBtn.disabled = false;
+          payBtn.textContent = "결제 완료하기";
+          goToStep2();
+          return;
+        }
+      }
+
+      await addDoc(collection(db, "reservations"), {
+        cafeId: r.cafe.id,
+        cafeName: r.cafe.name,
+        userId: r.user.uid,
+        seatId: r.seat.id,
+        zone: r.seat.zone,
+        date: r.date,
+        startHour: r.startHour,
+        endHour: r.endHour,
+        week: r.week,
+        price: r.finalPrice,
+        payMethod: r.payMethod,
+        status: "active",
+        createdAt: serverTimestamp()
       });
+
+      document.getElementById("step3").style.display = "none";
+      document.getElementById("step-done").style.display = "block";
+      setStepUI(3);
+
+      document.getElementById("doneDetail").innerHTML = `
+        <div class="done-box">
+          <p><span>지점</span><span>${r.cafe.name}</span></p>
+          <p><span>좌석</span><span>${r.seat.id} (${r.seat.zone === "A" ? "자유석" : "고정석"})</span></p>
+          <p><span>이용 일정</span><span>${r.date}</span></p>
+          <p><span>결제 금액</span><span>${r.finalPrice.toLocaleString()}원</span></p>
+          <p><span>결제 수단</span><span>${r.payMethod}</span></p>
+        </div>
+      `;
     } catch(e) {
-      alert("결제 오류가 발생했습니다.");
+      console.error(e);
+      alert("예약 처리 중 오류가 발생했습니다.");
+      payBtn.disabled = false;
+      payBtn.textContent = "결제 완료하기";
     }
   };
 
-  // --- 초기화 (로그인/지도) ---
   onAuthStateChanged(auth, async (user) => {
     if (!user) { alert("로그인 후 이용 가능합니다."); location.href="login.html"; return; }
     window._rsv.user = user;
@@ -430,6 +529,7 @@
     const userDoc = await getDoc(doc(db, "users", user.uid));
     const userData = userDoc.exists() ? userDoc.data() : {};
     const region = userData.region || "서울";
+    const sigungu = userData.sigungu || ""; // ✅ 추가
 
     kakao.maps.load(async () => {
       map = new kakao.maps.Map(document.getElementById("reservation-map"), {
@@ -437,7 +537,6 @@
       });
       ps = new kakao.maps.services.Places();
 
-      // ✅ 추가: URL에 cafeId 있으면 Firebase 등록 업장으로 바로 이동
       const params = new URLSearchParams(location.search);
       const cafeId = params.get("cafeId");
 
@@ -450,10 +549,11 @@
             name: cafe.cafeName,
             address: `${cafe.address} ${cafe.addressDetail || ""}`.trim(),
             price: cafe.price,
-            totalSeats: cafe.totalSeats
+            totalSeats: cafe.totalSeats,
+            seatsA: cafe.seatsA || 0,
+            seatsB: cafe.seatsB || 0
           };
 
-          // 지도 해당 위치로 이동
           if (cafe.lat && cafe.lng) {
             const pos = new kakao.maps.LatLng(cafe.lat, cafe.lng);
             map.setCenter(pos);
@@ -461,7 +561,6 @@
             new kakao.maps.Marker({ map, position: pos });
           }
 
-          // 카페 카드 표시
           const list = document.getElementById("cafeList");
           list.innerHTML = "";
           const card = document.createElement("div");
@@ -478,14 +577,16 @@
           document.getElementById("reservationDesc").textContent = `${cafe.cafeName} 예약`;
         }
       } else {
-        // ✅ 추가: Firebase 등록 업장 먼저 상단에 표시 후 카카오 검색 결과 추가
         const list = document.getElementById("cafeList");
         list.innerHTML = "";
 
-        // Firebase 등록 업장 먼저 불러오기
         const cafeSnapshot = await getDocs(collection(db, "cafes"));
         cafeSnapshot.forEach(docItem => {
           const cafe = docItem.data();
+
+          // ✅ 수정: 사용자 sigungu가 카페 주소에 포함될 때만 표시
+          if (sigungu && !cafe.address.includes(sigungu)) return;
+
           const card = document.createElement("div");
           card.className = "cafe-card firebase-cafe";
           card.innerHTML = `
@@ -501,14 +602,15 @@
               name: cafe.cafeName,
               address: `${cafe.address} ${cafe.addressDetail || ""}`.trim(),
               price: cafe.price,
-              totalSeats: cafe.totalSeats
+              totalSeats: cafe.totalSeats,
+              seatsA: cafe.seatsA || 0,
+              seatsB: cafe.seatsB || 0
             };
             goToStep2();
           };
           list.appendChild(card);
         });
 
-        // 카카오 키워드 검색 결과도 추가
         ps.keywordSearch(`${region} 스터디카페`, (data) => {
           renderCafeList(data, region);
         });
@@ -518,8 +620,10 @@
 
   function renderCafeList(data, region) {
     const list = document.getElementById("cafeList");
-    // 기존 Firebase 카드 아래에 카카오 결과 추가
     data.slice(0, 8).forEach(place => {
+      const markerPos = new kakao.maps.LatLng(place.y, place.x);
+      new kakao.maps.Marker({ map, position: markerPos });
+      if (data.indexOf(place) === 0) { map.setCenter(markerPos); map.setLevel(5); }
       const card = document.createElement("div");
       card.className = "cafe-card";
       card.innerHTML = `<h3>${place.place_name}</h3><p>${place.address_name}</p><button class="cafe-select-btn">지점 선택</button>`;
