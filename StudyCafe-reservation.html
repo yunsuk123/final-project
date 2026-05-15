@@ -529,7 +529,7 @@
     const userDoc = await getDoc(doc(db, "users", user.uid));
     const userData = userDoc.exists() ? userDoc.data() : {};
     const region = userData.region || "서울";
-    const sigungu = userData.sigungu || ""; // ✅ 추가
+    const sigungu = userData.sigungu || "";
 
     kakao.maps.load(async () => {
       map = new kakao.maps.Map(document.getElementById("reservation-map"), {
@@ -558,7 +558,11 @@
             const pos = new kakao.maps.LatLng(cafe.lat, cafe.lng);
             map.setCenter(pos);
             map.setLevel(3);
-            new kakao.maps.Marker({ map, position: pos });
+            const markerImage = new kakao.maps.MarkerImage(
+              "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
+              new kakao.maps.Size(24, 35)
+            );
+            new kakao.maps.Marker({ map, position: pos, image: markerImage });
           }
 
           const list = document.getElementById("cafeList");
@@ -584,8 +588,32 @@
         cafeSnapshot.forEach(docItem => {
           const cafe = docItem.data();
 
-          // ✅ 수정: 사용자 sigungu가 카페 주소에 포함될 때만 표시
+          // ✅ 지역 필터링
           if (sigungu && !cafe.address.includes(sigungu)) return;
+
+          // ✅ 지도에 노란 별 마커 추가
+          if (cafe.lat && cafe.lng) {
+            const pos = new kakao.maps.LatLng(cafe.lat, cafe.lng);
+            const markerImage = new kakao.maps.MarkerImage(
+              "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
+              new kakao.maps.Size(24, 35)
+            );
+            const marker = new kakao.maps.Marker({ map, position: pos, image: markerImage });
+
+            const infowindow = new kakao.maps.InfoWindow({
+              content: `
+                <div style="padding:8px 12px;font-size:13px;min-width:160px;">
+                  <div style="font-weight:800;color:#e53935;margin-bottom:4px;">⭐ ${cafe.cafeName}</div>
+                  <div style="font-size:11px;color:#666;">${cafe.address} ${cafe.addressDetail || ""}</div>
+                  <div style="font-size:11px;color:#333;margin-top:4px;">당일권: ${(cafe.price?.daily || 0).toLocaleString()}원 / 주간권: ${(cafe.price?.weekly || 0).toLocaleString()}원</div>
+                </div>
+              `
+            });
+
+            kakao.maps.event.addListener(marker, "click", () => {
+              infowindow.open(map, marker);
+            });
+          }
 
           const card = document.createElement("div");
           card.className = "cafe-card firebase-cafe";
