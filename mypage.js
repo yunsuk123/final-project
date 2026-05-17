@@ -73,7 +73,6 @@ function renderMyPosts(user) {
       if (isMyPost(post, user)) myPosts.push({ id: docItem.id, ...post });
     });
 
-    // ✅ 내 게시글 수 업데이트
     const summaryPosts = document.getElementById("summaryPosts");
     if (summaryPosts) summaryPosts.textContent = myPosts.length;
 
@@ -127,7 +126,6 @@ function renderJoinedStudies(user) {
       if (isAuthor || myApproved) joinedStudies.push({ id: docItem.id, ...post, isAuthor });
     });
 
-    // ✅ 스터디 그룹 수 업데이트
     const summaryGroups = document.getElementById("summaryGroups");
     if (summaryGroups) summaryGroups.textContent = joinedStudies.length;
 
@@ -161,16 +159,16 @@ function renderJoinedStudies(user) {
   });
 }
 
-// ✅ 예약 내역 불러오기
 async function renderReservations(user) {
   const tbody = document.getElementById("reservationTableBody");
   const payTbody = document.getElementById("paymentTableBody");
   if (!tbody) return;
 
   try {
+    // ✅ 수정 1: userId → uid
     const q = query(
       collection(db, "reservations"),
-      where("userId", "==", user.uid)
+      where("uid", "==", user.uid)
     );
     const snap = await getDocs(q);
 
@@ -180,7 +178,9 @@ async function renderReservations(user) {
       return bTime - aTime;
     });
 
-    const activeCount = docs.filter(d => d.data().status === "active").length;
+    const activeCount = docs.filter(d =>
+      d.data().status === "active" || d.data().status === "confirmed"
+    ).length;
     const summaryRes = document.getElementById("summaryReservations");
     const summaryPay = document.getElementById("summaryPayments");
     if (summaryRes) summaryRes.textContent = activeCount;
@@ -199,8 +199,11 @@ async function renderReservations(user) {
       const d = docItem.data();
       const resId = docItem.id;
       const timeInfo = d.zone === "A" ? `${d.startHour}:00 ~ ${d.endHour}:00` : `${d.week}주 이용권`;
-      const statusClass = d.status === "active" ? "status-done" : "status-cancel";
-      const statusText = d.status === "active" ? "예약중" : "취소됨";
+
+      // ✅ 수정 2: confirmed도 예약중으로 표시
+      const isActive = d.status === "active" || d.status === "confirmed";
+      const statusClass = isActive ? "status-done" : "status-cancel";
+      const statusText = isActive ? "예약중" : "취소됨";
 
       tbody.innerHTML += `
         <tr>
@@ -208,10 +211,10 @@ async function renderReservations(user) {
           <td>${d.seatId || "-"} (${d.zone === "A" ? "자유석" : "고정석"})</td>
           <td>${d.date || "-"}</td>
           <td>${timeInfo}</td>
-          <td>${(d.price || 0).toLocaleString()}원</td>
+          <td>${(d.price || d.totalPrice || 0).toLocaleString()}원</td>
           <td>${d.payMethod || "-"}</td>
           <td class="${statusClass}">${statusText}</td>
-          <td>${d.status === "active"
+          <td>${isActive
             ? `<button class="danger-btn" onclick="cancelReservation('${resId}')">취소</button>`
             : "-"
           }</td>
@@ -224,7 +227,7 @@ async function renderReservations(user) {
             <td>${formatDate(d.createdAt)}</td>
             <td>${d.cafeName || "-"}</td>
             <td>${d.seatId || "-"}</td>
-            <td>${(d.price || 0).toLocaleString()}원</td>
+            <td>${(d.price || d.totalPrice || 0).toLocaleString()}원</td>
             <td>${d.payMethod || "-"}</td>
             <td class="${statusClass}">${statusText}</td>
           </tr>
@@ -237,7 +240,6 @@ async function renderReservations(user) {
   }
 }
 
-// ✅ 예약 취소
 window.cancelReservation = async function(resId) {
   const ok = confirm("예약을 취소하시겠습니까?\n취소 후 해당 좌석은 다른 사람이 예약할 수 있습니다.");
   if (!ok) return;

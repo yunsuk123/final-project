@@ -46,10 +46,13 @@
   const detail   = document.getElementById("detailBox");
   const btnRetry = document.getElementById("btnRetry");
 
+  // ✅ 수정 1: 한글 키로 변경
   const methodLabel = {
-    card:"신용/체크카드", kakao:"카카오페이",
-    naver:"네이버페이", toss:"토스페이",
-    bank:"계좌이체", point:"포인트"
+    "카드": "신용/체크카드",
+    "카카오페이": "카카오페이",
+    "네이버페이": "네이버페이",
+    "토스페이": "토스페이",
+    "계좌이체": "계좌이체"
   };
 
   if (isFail) {
@@ -64,14 +67,14 @@
     btnRetry.style.display = "block";
 
   } else {
-    const cafe   = decodeURIComponent(params.get("cafe")  || "-");
-    const seat   = decodeURIComponent(params.get("seat")  || "-");
-    const zone   = params.get("zone") === "A" ? "일반석" : "프리미엄석";
-    const date   = params.get("date")  || "-";
-    const start  = params.get("start") || "-";
-    const end    = params.get("end")   || "-";
-    const total  = parseInt(params.get("total") || "0");
-    const method = params.get("method") || "-";
+    const cafe       = decodeURIComponent(params.get("cafe")  || "-");
+    const seat       = decodeURIComponent(params.get("seat")  || "-");
+    const zone       = params.get("zone") === "A" ? "일반석" : "프리미엄석";
+    const date       = params.get("date")  || "-";
+    const start      = params.get("start") || "-";
+    const end        = params.get("end")   || "-";
+    const total      = parseInt(params.get("total") || "0");
+    const method     = params.get("method") || "-";
     const paymentKey = params.get("paymentKey") || "-";
     const orderId    = params.get("orderId")    || "-";
 
@@ -96,14 +99,17 @@
         await addDoc(collection(db, "reservations"), {
           uid: user.uid,
           email: user.email,
+          cafeId: params.get("cafeId") || "",   // ✅ 수정 2: cafeId 추가
           cafeName: cafe,
           seatId: seat,
           seatZone: params.get("zone"),
+          zone: params.get("zone"),             // ✅ 수정 2: zone 추가
           date,
           startHour: parseInt(start),
           endHour: parseInt(end),
           hours: parseInt(end) - parseInt(start),
           totalPrice: total,
+          price: total,                         // ✅ 수정 2: price 추가
           payMethod: method,
           paymentKey,
           orderId,

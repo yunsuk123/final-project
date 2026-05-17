@@ -317,7 +317,7 @@
         collection(db, "reservations"),
         where("cafeId", "==", window._rsv.cafe.id),
         where("date", "==", window._rsv.date),
-        where("status", "==", "active")
+        where("status", "in", ["active", "confirmed"])
       );
       const snap = await getDocs(q);
       snap.forEach(d => {
@@ -446,81 +446,87 @@
   };
 
   window.doPay = async function() {
-    if (!window._rsv.payMethod) return alert("결제 수단을 선택하세요.");
-    if (!document.getElementById("agreeCheck").checked) return alert("동의가 필요합니다.");
+  if (!window._rsv.payMethod) return alert("결제 수단을 선택하세요.");
+  if (!document.getElementById("agreeCheck").checked) return alert("동의가 필요합니다.");
 
-    const r = window._rsv;
-    const payBtn = document.getElementById("payBtn");
-    payBtn.disabled = true;
-    payBtn.textContent = "처리 중...";
+  const r = window._rsv;
+  const payBtn = document.getElementById("payBtn");
+  payBtn.disabled = true;
+  payBtn.textContent = "처리 중...";
 
-    try {
-      const dupQ = query(
-        collection(db, "reservations"),
-        where("cafeId", "==", r.cafe.id),
-        where("seatId", "==", r.seat.id),
-        where("date", "==", r.date),
-        where("status", "==", "active")
-      );
-      const dupSnap = await getDocs(dupQ);
-
-      if (!dupSnap.empty) {
-        let isConflict = false;
-        dupSnap.forEach(d => {
-          const data = d.data();
-          if (data.zone === "B") {
-            isConflict = true;
-          } else {
-            const isOverlap = r.startHour < data.endHour && r.endHour > data.startHour;
-            if (isOverlap) isConflict = true;
-          }
-        });
-
-        if (isConflict) {
-          alert("이미 예약된 좌석입니다. 다른 좌석이나 시간을 선택해주세요.");
-          payBtn.disabled = false;
-          payBtn.textContent = "결제 완료하기";
-          goToStep2();
-          return;
-        }
-      }
-
-      await addDoc(collection(db, "reservations"), {
-        cafeId: r.cafe.id,
-        cafeName: r.cafe.name,
-        userId: r.user.uid,
-        seatId: r.seat.id,
-        zone: r.seat.zone,
-        date: r.date,
-        startHour: r.startHour,
-        endHour: r.endHour,
-        week: r.week,
-        price: r.finalPrice,
-        payMethod: r.payMethod,
-        status: "active",
-        createdAt: serverTimestamp()
+  // 1. 중복 예약 체크
+  try {
+    const dupQ = query(
+      collection(db, "reservations"),
+      where("cafeId", "==", r.cafe.id),
+      where("seatId", "==", r.seat.id),
+      where("date", "==", r.date),
+      where("status", "in", ["active", "confirmed"])
+    );
+    const dupSnap = await getDocs(dupQ);
+    if (!dupSnap.empty) {
+      let isConflict = false;
+      dupSnap.forEach(d => {
+        const data = d.data();
+        if (data.zone === "B") isConflict = true;
+        else if (r.startHour < data.endHour && r.endHour > data.startHour) isConflict = true;
       });
-
-      document.getElementById("step3").style.display = "none";
-      document.getElementById("step-done").style.display = "block";
-      setStepUI(3);
-
-      document.getElementById("doneDetail").innerHTML = `
-        <div class="done-box">
-          <p><span>지점</span><span>${r.cafe.name}</span></p>
-          <p><span>좌석</span><span>${r.seat.id} (${r.seat.zone === "A" ? "자유석" : "고정석"})</span></p>
-          <p><span>이용 일정</span><span>${r.date}</span></p>
-          <p><span>결제 금액</span><span>${r.finalPrice.toLocaleString()}원</span></p>
-          <p><span>결제 수단</span><span>${r.payMethod}</span></p>
-        </div>
-      `;
-    } catch(e) {
-      console.error(e);
-      alert("예약 처리 중 오류가 발생했습니다.");
-      payBtn.disabled = false;
-      payBtn.textContent = "결제 완료하기";
+      if (isConflict) {
+        alert("이미 예약된 좌석입니다. 다른 좌석이나 시간을 선택해주세요.");
+        payBtn.disabled = false;
+        payBtn.textContent = "결제 완료하기";
+        goToStep2();
+        return;
+      }
     }
+  } catch(e) {
+    console.warn("중복 체크 실패:", e);
+  }
+
+  // 2. 결제 수단 매핑
+  const methodMap = {
+    "카드": "카드",
+    "카카오페이": "카카오페이",
+    "네이버페이": "네이버페이",
+    "토스페이": "토스페이",
+    "계좌이체": "계좌이체"
   };
+
+  // 3. 토스페이먼츠 결제창 호출
+  try {
+    const tossPayments = window.TossPayments("test_ck_XZYkKL4MrjYdyY0YLENRV0zJwlEW");
+    const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    const successUrl = new URL(`https://final-project-17108.web.app/payment-result.html`);
+    successUrl.searchParams.set("cafe",   encodeURIComponent(r.cafe.name));
+    successUrl.searchParams.set("seat",   r.seat.id);
+    successUrl.searchParams.set("zone",   r.seat.zone);
+    successUrl.searchParams.set("date",   r.date);
+    successUrl.searchParams.set("start",  r.startHour);
+    successUrl.searchParams.set("end",    r.endHour);
+    successUrl.searchParams.set("week",   r.week);
+    successUrl.searchParams.set("total",  r.finalPrice);
+    successUrl.searchParams.set("method", r.payMethod);
+    successUrl.searchParams.set("cafeId", r.cafe.id);
+
+    await tossPayments.requestPayment(methodMap[r.payMethod], {
+      amount:        r.finalPrice,
+      orderId:       orderId,
+      orderName:     `${r.cafe.name} ${r.seat.id}좌석 예약`,
+      customerName:  r.user.displayName || r.user.email || "고객",
+      successUrl:    successUrl.toString(),
+      failUrl: `https://final-project-17108.web.app/payment-result.html?fail=true`,
+    });
+
+  } catch(e) {
+    console.error(e);
+    if (e.code !== "USER_CANCEL") {
+      alert("결제 중 오류: " + e.message);
+    }
+    payBtn.disabled = false;
+    payBtn.textContent = "결제 완료하기";
+  }
+};
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { alert("로그인 후 이용 가능합니다."); location.href="login.html"; return; }
