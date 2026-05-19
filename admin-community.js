@@ -20,7 +20,10 @@ if (sessionStorage.getItem("isAdmin") !== "true") {
 }
 
 const totalPostsEl = document.getElementById("totalPosts");
+<<<<<<< Updated upstream
 const openStudyPostsEl = document.getElementById("openStudyPosts");
+=======
+>>>>>>> Stashed changes
 const todayPostsEl = document.getElementById("todayPosts");
 const postTableBody = document.getElementById("postTableBody");
 const adminLogoutBtn = document.getElementById("adminLogoutBtn");
@@ -199,7 +202,10 @@ async function loadPosts() {
     const snapshot = await getDocs(postsQuery);
 
     let totalPosts = 0;
+<<<<<<< Updated upstream
     let openStudyPosts = 0;
+=======
+>>>>>>> Stashed changes
     let todayPosts = 0;
     let html = "";
 
@@ -215,6 +221,14 @@ async function loadPosts() {
       const data = docSnap.data();
       const postId = docSnap.id;
 
+<<<<<<< Updated upstream
+=======
+      const categoryText = getCategoryLabel(data.category);
+      const categoryClass = getCategoryClass(data.category);
+
+        if (categoryText === "스터디 모집") return;
+
+>>>>>>> Stashed changes
       totalPosts++;
 
       if (isToday(data.createdAt)) {

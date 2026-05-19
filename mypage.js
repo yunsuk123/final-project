@@ -198,14 +198,52 @@ async function renderReservations(user) {
     docs.forEach(docItem => {
       const d = docItem.data();
       const resId = docItem.id;
+<<<<<<< Updated upstream
       const timeInfo = d.zone === "A" ? `${d.startHour}:00 ~ ${d.endHour}:00` : `${d.week}주 이용권`;
       const statusClass = d.status === "active" ? "status-done" : "status-cancel";
       const statusText = d.status === "active" ? "예약중" : "취소됨";
+=======
+      // 이용권 타입별 이용 시간 표시 (구버전/신버전 모두 호환)
+      const rType = d.reservationType || (d.zone === "A" ? "daily" : "period");
+      let timeInfo = "-";
+      if (rType === "daily") {
+        // 신버전: hours / 구버전: startHour~endHour
+        if (d.hours) {
+          timeInfo = `${d.hours}시간 이용`;
+        } else if (d.startHour !== undefined && d.endHour !== undefined) {
+          timeInfo = `${d.startHour}:00 ~ ${d.endHour}:00`;
+        }
+      } else if (rType === "period" || rType === "fixed") {
+        // 신버전: days / 구버전: weeks
+        if (d.days) {
+          timeInfo = `${d.days}일 이용권`;
+        } else if (d.weeks) {
+          timeInfo = `${d.weeks}주 이용권`;
+        } else if (d.week) {
+          timeInfo = `${d.week}주 이용권`;
+        }
+      } else if (rType === "room") {
+        timeInfo = d.hours ? `${d.hours}시간 이용` : "-";
+      } else if (rType === "locker") {
+        timeInfo = d.days ? `${d.days}일 이용` : "-";
+      }
+
+      // ✅ 수정 2: confirmed도 예약중으로 표시
+      const isActive = d.status === "active" || d.status === "confirmed";
+      const statusClass = isActive ? "status-done" : "status-cancel";
+      const statusText = isActive ? "예약중" : "취소됨";
+>>>>>>> Stashed changes
 
       tbody.innerHTML += `
         <tr>
           <td>${d.cafeName || "-"}</td>
-          <td>${d.seatId || "-"} (${d.zone === "A" ? "자유석" : "고정석"})</td>
+          <td>${d.seatId || "-"} (${
+            d.reservationType === "room"   ? "스터디룸" :
+            d.reservationType === "locker" ? "사물함"   :
+            d.reservationType === "fixed"  ? "고정석"   :
+            d.zone === "B"                 ? "고정석"   :
+            d.zone === "A"                 ? "자유석"   : "-"
+          })</td>
           <td>${d.date || "-"}</td>
           <td>${timeInfo}</td>
           <td>${(d.price || 0).toLocaleString()}원</td>
