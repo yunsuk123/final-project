@@ -10,8 +10,8 @@ let cafeMap = {};
 let trendChartInst = null;
 let cafeChartInst  = null;
 
-// ── 금액 읽기 헬퍼 ──
-const getAmt = r => r.amount || r.finalPrice || r.totalPrice || r.price || 0;
+// ── 금액 읽기 헬퍼 ── ✅ totalPrice 우선순위 변경
+const getAmt = r => r.totalPrice || r.finalPrice || r.amount || r.price || 0;
 
 // ── 셀렉트 초기화 ──
 function initSelects() {
@@ -42,7 +42,10 @@ async function fetchAll() {
   cafeMap = {};
   const cafeSel = document.getElementById("cafeSel");
 
-  // ✅ onchange 잠깐 끄기 (옵션 추가 중 중복 호출 방지)
+  // ✅ 현재 선택값 저장
+  const prevSelected = cafeSel.value;
+
+  // ✅ onchange 잠깐 끄기
   cafeSel.onchange = null;
 
   while (cafeSel.options.length > 1) cafeSel.remove(1);
@@ -54,6 +57,11 @@ async function fetchAll() {
     opt.textContent = d.data().cafeName || d.id;
     cafeSel.appendChild(opt);
   });
+
+  // ✅ 이전 선택값 복원
+  if (prevSelected && [...cafeSel.options].some(o => o.value === prevSelected)) {
+    cafeSel.value = prevSelected;
+  }
 
   // ✅ onchange 다시 켜기
   cafeSel.onchange = () => loadData();
@@ -77,7 +85,7 @@ function filterReservations() {
 
   return allReservations.filter(r => {
     if (!r.date) return false;
-    const d = new Date(r.date);
+    const d = new Date(r.date + "T00:00:00"); // ✅ UTC 버그 수정
     if (d.getFullYear() !== year) return false;
     if (mode === "daily" && d.getMonth() + 1 !== month) return false;
 
@@ -120,7 +128,7 @@ function buildTrendChart(filtered) {
   if (mode === "monthly") {
     for (let m = 1; m <= 12; m++) { labels.push(`${m}월`); dataMap[m] = 0; }
     filtered.forEach(r => {
-      const m = new Date(r.date).getMonth() + 1;
+      const m = new Date(r.date + "T00:00:00").getMonth() + 1; // ✅ UTC 버그 수정
       dataMap[m] += getAmt(r);
     });
     document.getElementById("trendTitle").textContent = `${year}년 월별 매출 추이`;
@@ -130,7 +138,7 @@ function buildTrendChart(filtered) {
     const days = new Date(year, month, 0).getDate();
     for (let d = 1; d <= days; d++) { labels.push(`${d}일`); dataMap[d] = 0; }
     filtered.forEach(r => {
-      const d = new Date(r.date).getDate();
+      const d = new Date(r.date + "T00:00:00").getDate(); // ✅ UTC 버그 수정
       dataMap[d] += getAmt(r);
     });
     document.getElementById("trendTitle").textContent = `${year}년 ${month}월 일별 매출 추이`;
