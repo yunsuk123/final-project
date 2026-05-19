@@ -41,12 +41,22 @@ async function fetchAll() {
   const cafeSnap = await getDocs(collection(db, "cafes"));
   cafeMap = {};
   const cafeSel = document.getElementById("cafeSel");
+
+  // ✅ onchange 잠깐 끄기 (옵션 추가 중 중복 호출 방지)
+  cafeSel.onchange = null;
+
   while (cafeSel.options.length > 1) cafeSel.remove(1);
 
   cafeSnap.forEach(d => {
     cafeMap[d.id] = d.data().cafeName || d.id;
-    cafeSel.innerHTML += `<option value="${d.id}">${d.data().cafeName || d.id}</option>`;
+    const opt = document.createElement("option");
+    opt.value = d.id;
+    opt.textContent = d.data().cafeName || d.id;
+    cafeSel.appendChild(opt);
   });
+
+  // ✅ onchange 다시 켜기
+  cafeSel.onchange = () => loadData();
 
   const rSnap = await getDocs(
     query(
@@ -71,7 +81,6 @@ function filterReservations() {
     if (d.getFullYear() !== year) return false;
     if (mode === "daily" && d.getMonth() + 1 !== month) return false;
 
-    // ✅ cafeId로 먼저 비교, 없으면 cafeName으로 비교
     if (cafeId !== "all") {
       const matchById   = r.cafeId === cafeId;
       const matchByName = r.cafeName === cafeMap[cafeId];
