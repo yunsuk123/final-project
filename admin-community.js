@@ -20,7 +20,7 @@ if (sessionStorage.getItem("isAdmin") !== "true") {
 }
 
 const totalPostsEl = document.getElementById("totalPosts");
-const openStudyPostsEl = document.getElementById("openStudyPosts");
+// ✅ openStudyPostsEl 제거
 const todayPostsEl = document.getElementById("todayPosts");
 const postTableBody = document.getElementById("postTableBody");
 const adminLogoutBtn = document.getElementById("adminLogoutBtn");
@@ -96,47 +96,6 @@ function getCategoryClass(category) {
   return "";
 }
 
-function getPostStatus(data) {
-  const category = String(data.category || "").toLowerCase();
-
-  const isStudy =
-    category === "study" ||
-    category.includes("스터디");
-
-  if (!isStudy) {
-    return {
-      text: "-",
-      className: ""
-    };
-  }
-
-  const currentMembers = data.studyInfo?.currentMembers || 1;
-  const maxMembers = data.studyInfo?.maxMembers || 1;
-  const studyStatus = String(data.studyInfo?.status || "").trim();
-
-  const status = String(data.status || "").toLowerCase();
-  const recruitStatus = String(data.recruitStatus || "").toLowerCase();
-
-  const isClosed =
-    currentMembers >= maxMembers ||
-    studyStatus === "마감" ||
-    status === "closed" ||
-    recruitStatus === "closed" ||
-    data.isClosed === true;
-
-  if (isClosed) {
-    return {
-      text: "모집 마감",
-      className: "status-closed"
-    };
-  }
-
-  return {
-    text: "모집중",
-    className: "status-open"
-  };
-}
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -199,15 +158,14 @@ async function loadPosts() {
     const snapshot = await getDocs(postsQuery);
 
     let totalPosts = 0;
-    let openStudyPosts = 0;
+    // ✅ openStudyPosts 제거
     let todayPosts = 0;
     let html = "";
 
     if (snapshot.empty) {
       totalPostsEl.textContent = "0";
-      openStudyPostsEl.textContent = "0";
       todayPostsEl.textContent = "0";
-      postTableBody.innerHTML = "<tr><td colspan='6' class='empty-message'>게시글 데이터가 없습니다.</td></tr>";
+      postTableBody.innerHTML = "<tr><td colspan='5' class='empty-message'>게시글 데이터가 없습니다.</td></tr>";
       return;
     }
 
@@ -215,18 +173,16 @@ async function loadPosts() {
       const data = docSnap.data();
       const postId = docSnap.id;
 
+      const categoryText = getCategoryLabel(data.category);
+      const categoryClass = getCategoryClass(data.category);
+
+      // ✅ 스터디 모집 글 제외
+      if (categoryText === "스터디 모집") return;
+
       totalPosts++;
 
       if (isToday(data.createdAt)) {
         todayPosts++;
-      }
-
-      const statusInfo = getPostStatus(data);
-      const categoryText = getCategoryLabel(data.category);
-      const categoryClass = getCategoryClass(data.category);
-
-      if (categoryText === "스터디 모집" && statusInfo.text === "모집중") {
-        openStudyPosts++;
       }
 
       html += `
@@ -242,7 +198,6 @@ async function loadPosts() {
           </td>
           <td>${escapeHtml(data.author || data.writer || data.nickname || "알 수 없음")}</td>
           <td>${escapeHtml(formatDate(data.createdAt))}</td>
-          <td class="${statusInfo.className}">${escapeHtml(statusInfo.text)}</td>
           <td>
             <button
               class="delete-btn"
@@ -257,15 +212,13 @@ async function loadPosts() {
     });
 
     totalPostsEl.textContent = String(totalPosts);
-    openStudyPostsEl.textContent = String(openStudyPosts);
     todayPostsEl.textContent = String(todayPosts);
-    postTableBody.innerHTML = html;
+    postTableBody.innerHTML = html || "<tr><td colspan='5' class='empty-message'>게시글 데이터가 없습니다.</td></tr>";
   } catch (error) {
     console.error("게시글 목록 불러오기 실패:", error);
     totalPostsEl.textContent = "오류";
-    openStudyPostsEl.textContent = "오류";
     todayPostsEl.textContent = "오류";
-    postTableBody.innerHTML = "<tr><td colspan='6' class='empty-message'>게시글 정보를 불러오지 못했습니다.</td></tr>";
+    postTableBody.innerHTML = "<tr><td colspan='5' class='empty-message'>게시글 정보를 불러오지 못했습니다.</td></tr>";
   }
 }
 

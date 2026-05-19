@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>커뮤니티 관리 | Study Spot</title>
+  <title>스터디 그룹 관리 | Study Spot</title>
   <style>
     * {
       margin: 0;
@@ -168,48 +168,6 @@
       margin-bottom: 18px;
     }
 
-    .notice-form {
-      display: grid;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .notice-form input,
-    .notice-form textarea {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #dfe5ff;
-      border-radius: 12px;
-      font-size: 14px;
-      outline: none;
-    }
-
-    .notice-form input:focus,
-    .notice-form textarea:focus {
-      border-color: #4a6cf7;
-    }
-
-    .notice-form textarea {
-      height: 130px;
-      resize: vertical;
-    }
-
-    .notice-form button {
-      width: 160px;
-      border: none;
-      background: #4a6cf7;
-      color: #fff;
-      padding: 13px 16px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .notice-form button:hover {
-      background: #3655d6;
-    }
-
     .table-wrap {
       overflow-x: auto;
       border-radius: 14px;
@@ -220,7 +178,7 @@
       width: 100%;
       border-collapse: collapse;
       background: #fff;
-      min-width: 1000px;
+      min-width: 900px;
     }
 
     th, td {
@@ -263,23 +221,8 @@
       border-radius: 999px;
       font-size: 12px;
       font-weight: 700;
-      background: #eef2ff;
-      color: #4a6cf7;
-    }
-
-    .category-study {
       background: #ede9fe;
       color: #7c3aed;
-    }
-
-    .category-review {
-      background: #fff7ed;
-      color: #f97316;
-    }
-
-    .category-notice {
-      background: #fee2e2;
-      color: #dc2626;
     }
 
     .status-open {
@@ -330,10 +273,6 @@
       .topbar h2 {
         font-size: 28px;
       }
-
-      .notice-form button {
-        width: 100%;
-      }
     }
   </style>
 </head>
@@ -349,13 +288,13 @@
 
       <div class="menu">
         <a href="admin.html"><button type="button">관리자 홈</button></a>
-        <a href="admin-community.html"><button type="button" class="active">커뮤니티 관리</button></a>
+        <a href="admin-study.html"><button type="button" class="active">스터디 그룹 관리</button></a>
       </div>
     </aside>
 
     <main class="content">
       <div class="topbar">
-        <h2>커뮤니티 관리</h2>
+        <h2>스터디 그룹 관리</h2>
         <div class="top-actions">
           <a href="admin.html" class="secondary">관리자 홈</a>
           <button id="adminLogoutBtn" type="button">로그아웃</button>
@@ -364,44 +303,36 @@
 
       <div class="dashboard-grid">
         <div class="card">
-          <h3>전체 게시글 수</h3>
-          <p id="totalPosts">불러오는 중...</p>
+          <h3>전체 스터디 수</h3>
+          <p id="totalStudy">불러오는 중...</p>
         </div>
-      
         <div class="card">
-          <h3>오늘 작성 글 수</h3>
-          <p id="todayPosts">불러오는 중...</p>
+          <h3>모집중 스터디 수</h3>
+          <p id="openStudy">불러오는 중...</p>
+        </div>
+        <div class="card">
+          <h3>모집 마감 스터디 수</h3>
+          <p id="closedStudy">불러오는 중...</p>
         </div>
       </div>
 
       <div class="panel">
-        <h3>공지사항 작성</h3>
-        <p>관리자가 작성한 공지사항은 사용자 커뮤니티의 공지사항 탭에 표시됩니다.</p>
-
-        <div class="notice-form">
-          <input type="text" id="noticeTitle" placeholder="공지 제목을 입력하세요">
-          <textarea id="noticeContent" placeholder="공지 내용을 입력하세요"></textarea>
-          <button type="button" id="createNoticeBtn">공지 등록</button>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h3>최근 게시글 목록</h3>
-        <p>사용자 커뮤니티에 작성된 posts 컬렉션 기준으로 표시됩니다.</p>
+        <h3>스터디 모집 글 목록</h3>
+        <p>사용자가 작성한 스터디 모집 글을 관리합니다.</p>
 
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>카테고리</th>
                 <th>제목 / 내용</th>
                 <th>작성자</th>
                 <th>작성일</th>
+                <th>모집 현황</th>
                 <th>상태</th>
                 <th>관리</th>
               </tr>
             </thead>
-            <tbody id="postTableBody">
+            <tbody id="studyTableBody">
               <tr>
                 <td colspan="6">불러오는 중...</td>
               </tr>
@@ -412,6 +343,6 @@
     </main>
   </div>
 
-  <script type="module" src="admin-community.js"></script>
+  <script type="module" src="admin-study.js"></script>
 </body>
 </html>

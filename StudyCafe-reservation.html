@@ -278,6 +278,7 @@
     updateSeatSummary();
     document.getElementById("step1").style.display = "none";
     document.getElementById("step2").style.display = "block";
+    document.getElementById("step3").style.display = "none";
     setStepUI(2);
   };
 
@@ -406,6 +407,8 @@
     startSel.value = "9"; endSel.value = "11";
     document.getElementById("pickDate").value = today;
     document.getElementById("pickDateB").value = today;
+    document.getElementById("pickDate").min = today;
+  document.getElementById("pickDateB").min = today;
     window._rsv.date = today;
 
     startSel.onchange = () => {
