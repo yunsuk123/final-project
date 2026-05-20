@@ -73,6 +73,7 @@ function renderMyPosts(user) {
       if (isMyPost(post, user)) myPosts.push({ id: docItem.id, ...post });
     });
 
+    // ✅ 내 게시글 수 업데이트
     const summaryPosts = document.getElementById("summaryPosts");
     if (summaryPosts) summaryPosts.textContent = myPosts.length;
 
@@ -126,6 +127,7 @@ function renderJoinedStudies(user) {
       if (isAuthor || myApproved) joinedStudies.push({ id: docItem.id, ...post, isAuthor });
     });
 
+    // ✅ 스터디 그룹 수 업데이트
     const summaryGroups = document.getElementById("summaryGroups");
     if (summaryGroups) summaryGroups.textContent = joinedStudies.length;
 
@@ -159,16 +161,16 @@ function renderJoinedStudies(user) {
   });
 }
 
+// ✅ 예약 내역 불러오기
 async function renderReservations(user) {
   const tbody = document.getElementById("reservationTableBody");
   const payTbody = document.getElementById("paymentTableBody");
   if (!tbody) return;
 
   try {
-    // ✅ 수정 1: userId → uid
     const q = query(
       collection(db, "reservations"),
-      where("uid", "==", user.uid)
+      where("userId", "==", user.uid)
     );
     const snap = await getDocs(q);
 
@@ -178,9 +180,7 @@ async function renderReservations(user) {
       return bTime - aTime;
     });
 
-    const activeCount = docs.filter(d =>
-      d.data().status === "active" || d.data().status === "confirmed"
-    ).length;
+    const activeCount = docs.filter(d => d.data().status === "active").length;
     const summaryRes = document.getElementById("summaryReservations");
     const summaryPay = document.getElementById("summaryPayments");
     if (summaryRes) summaryRes.textContent = activeCount;
@@ -198,7 +198,30 @@ async function renderReservations(user) {
     docs.forEach(docItem => {
       const d = docItem.data();
       const resId = docItem.id;
-      const timeInfo = d.zone === "A" ? `${d.startHour}:00 ~ ${d.endHour}:00` : `${d.week}주 이용권`;
+      // 이용권 타입별 이용 시간 표시 (구버전/신버전 모두 호환)
+      const rType = d.reservationType || (d.zone === "A" ? "daily" : "period");
+      let timeInfo = "-";
+      if (rType === "daily") {
+        // 신버전: hours / 구버전: startHour~endHour
+        if (d.hours) {
+          timeInfo = `${d.hours}시간 이용`;
+        } else if (d.startHour !== undefined && d.endHour !== undefined) {
+          timeInfo = `${d.startHour}:00 ~ ${d.endHour}:00`;
+        }
+      } else if (rType === "period" || rType === "fixed") {
+        // 신버전: days / 구버전: weeks
+        if (d.days) {
+          timeInfo = `${d.days}일 이용권`;
+        } else if (d.weeks) {
+          timeInfo = `${d.weeks}주 이용권`;
+        } else if (d.week) {
+          timeInfo = `${d.week}주 이용권`;
+        }
+      } else if (rType === "room") {
+        timeInfo = d.hours ? `${d.hours}시간 이용` : "-";
+      } else if (rType === "locker") {
+        timeInfo = d.days ? `${d.days}일 이용` : "-";
+      }
 
       // ✅ 수정 2: confirmed도 예약중으로 표시
       const isActive = d.status === "active" || d.status === "confirmed";
@@ -208,13 +231,19 @@ async function renderReservations(user) {
       tbody.innerHTML += `
         <tr>
           <td>${d.cafeName || "-"}</td>
-          <td>${d.seatId || "-"} (${d.zone === "A" ? "자유석" : "고정석"})</td>
+          <td>${d.seatId || "-"} (${
+            d.reservationType === "room"   ? "스터디룸" :
+            d.reservationType === "locker" ? "사물함"   :
+            d.reservationType === "fixed"  ? "고정석"   :
+            d.zone === "B"                 ? "고정석"   :
+            d.zone === "A"                 ? "자유석"   : "-"
+          })</td>
           <td>${d.date || "-"}</td>
           <td>${timeInfo}</td>
-          <td>${(d.price || d.totalPrice || 0).toLocaleString()}원</td>
+          <td>${(d.price || 0).toLocaleString()}원</td>
           <td>${d.payMethod || "-"}</td>
           <td class="${statusClass}">${statusText}</td>
-          <td>${isActive
+          <td>${d.status === "active"
             ? `<button class="danger-btn" onclick="cancelReservation('${resId}')">취소</button>`
             : "-"
           }</td>
@@ -227,7 +256,7 @@ async function renderReservations(user) {
             <td>${formatDate(d.createdAt)}</td>
             <td>${d.cafeName || "-"}</td>
             <td>${d.seatId || "-"}</td>
-            <td>${(d.price || d.totalPrice || 0).toLocaleString()}원</td>
+            <td>${(d.price || 0).toLocaleString()}원</td>
             <td>${d.payMethod || "-"}</td>
             <td class="${statusClass}">${statusText}</td>
           </tr>
@@ -240,6 +269,7 @@ async function renderReservations(user) {
   }
 }
 
+// ✅ 예약 취소
 window.cancelReservation = async function(resId) {
   const ok = confirm("예약을 취소하시겠습니까?\n취소 후 해당 좌석은 다른 사람이 예약할 수 있습니다.");
   if (!ok) return;

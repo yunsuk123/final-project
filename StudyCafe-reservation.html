@@ -32,20 +32,42 @@
     .cafe-card h3 { font-size:15px; font-weight:800; color:#4a6cf7; margin-bottom:6px; }
     .cafe-card p  { font-size:13px; color:#666; margin-bottom:4px; }
     .cafe-select-btn { margin-top:12px; width:100%; padding:10px; background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border:none; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; }
-    .cafe-select-btn:hover { opacity:0.88; }
     .cafe-card.firebase-cafe { border-color:#e53935; background:#fff5f5; }
     .cafe-card.firebase-cafe h3 { color:#e53935; }
     .selected-cafe-info { background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border-radius:14px; padding:16px 20px; margin-bottom:20px; }
     .selected-cafe-info h3 { font-size:17px; font-weight:800; margin-bottom:4px; }
     .selected-cafe-info p  { font-size:13px; opacity:0.85; }
-    .time-section { margin-bottom:24px; }
-    .time-section h4 { font-size:15px; font-weight:700; color:#333; margin-bottom:12px; }
-    .time-picker-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .time-picker-row label { font-size:13px; font-weight:600; color:#555; }
-    .time-picker-row select,
-    .time-picker-row input[type="date"] { padding:8px 14px; border:2px solid #e0e4f7; border-radius:10px; font-size:14px; font-weight:600; color:#333; outline:none; background:#f7f8fc; }
-    .time-picker-row select:focus,
-    .time-picker-row input[type="date"]:focus { border-color:#4a6cf7; background:#fff; }
+
+    /* 이용권 타입 선택 탭 */
+    .type-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .type-tab {
+      padding:9px 18px; border-radius:10px; border:2px solid #e0e4f7;
+      font-size:13px; font-weight:700; color:#666; cursor:pointer; background:#f7f8fc; transition:all 0.15s;
+    }
+    .type-tab:hover { border-color:#4a6cf7; color:#4a6cf7; }
+    .type-tab.active { border-color:#4a6cf7; background:#4a6cf7; color:#fff; }
+    .type-tab.hidden { display:none; }
+
+    /* 옵션 선택 */
+    .option-section { margin-bottom:20px; }
+    .option-section h4 { font-size:14px; font-weight:700; color:#333; margin-bottom:10px; }
+    .option-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
+    .option-btn {
+      padding:12px 10px; border-radius:12px; border:2px solid #e0e4f7;
+      font-size:13px; font-weight:700; color:#555; cursor:pointer; background:#f7f8fc;
+      text-align:center; transition:all 0.15s;
+    }
+    .option-btn:hover { border-color:#4a6cf7; color:#4a6cf7; background:#fff; }
+    .option-btn.selected { border-color:#4a6cf7; background:#4a6cf7; color:#fff; }
+    .option-btn .opt-price { font-size:11px; font-weight:600; margin-top:3px; opacity:0.85; }
+
+    /* 날짜 선택 */
+    .date-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+    .date-row label { font-size:13px; font-weight:600; color:#555; }
+    .date-row input[type="date"] { padding:8px 14px; border:2px solid #e0e4f7; border-radius:10px; font-size:14px; font-weight:600; outline:none; }
+    .date-row input[type="date"]:focus { border-color:#4a6cf7; }
+
+    /* 좌석 */
     .seat-legend { display:flex; gap:18px; margin-bottom:14px; flex-wrap:wrap; }
     .legend-item { display:flex; align-items:center; gap:6px; font-size:13px; color:#555; }
     .legend-box  { width:20px; height:20px; border-radius:6px; }
@@ -54,13 +76,15 @@
     .legend-box.occupied  { background:#e5e5e5; }
     .seat-area-label { font-size:13px; font-weight:700; color:#888; margin:16px 0 8px; }
     .seat-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:8px; margin-bottom:8px; }
-    .seat { aspect-ratio:1; border-radius:8px; border:2px solid #c5ceff; background:#e8ecff; font-size:11px; font-weight:700; color:#4a6cf7; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; user-select:none; }
+    .seat { aspect-ratio:1; border-radius:8px; border:2px solid #c5ceff; background:#e8ecff; font-size:11px; font-weight:700; color:#4a6cf7; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; }
     .seat:hover:not(.occupied) { background:#c5ceff; transform:scale(1.08); }
-    .seat.selected { background:#4a6cf7; border-color:#4a6cf7; color:#fff; box-shadow:0 3px 10px rgba(74,108,247,0.4); transform:scale(1.08); }
+    .seat.selected { background:#4a6cf7; border-color:#4a6cf7; color:#fff; box-shadow:0 3px 10px rgba(74,108,247,0.4); }
     .seat.occupied { background:#e5e5e5; border-color:#ddd; color:#bbb; cursor:not-allowed; }
+
     .seat-summary { background:#f0f2ff; border-radius:12px; padding:14px 18px; margin-top:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
     .seat-summary-text { font-size:14px; color:#444; font-weight:600; }
     .seat-summary-text span { color:#4a6cf7; font-weight:800; }
+
     .order-summary { background:#f7f8fc; border-radius:14px; padding:20px; margin-bottom:20px; }
     .order-row { display:flex; justify-content:space-between; font-size:14px; color:#555; padding:8px 0; border-bottom:1px solid #eee; }
     .order-row:last-child { border-bottom:none; }
@@ -69,34 +93,29 @@
     .pay-methods { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
     .pay-method { border:2px solid #e0e4f7; border-radius:12px; padding:14px 8px; text-align:center; cursor:pointer; transition:all 0.2s; font-size:13px; font-weight:700; color:#555; }
     .pay-method .pay-icon { font-size:22px; display:block; margin-bottom:6px; }
-    .pay-method:hover     { border-color:#4a6cf7; color:#4a6cf7; }
+    .pay-method:hover { border-color:#4a6cf7; color:#4a6cf7; }
     .pay-method.selected { border-color:#4a6cf7; background:#f0f2ff; color:#4a6cf7; }
     .agree-box { background:#f7f8fc; border-radius:12px; padding:16px; margin-bottom:20px; }
     .agree-box label { display:flex; align-items:center; gap:10px; font-size:14px; color:#444; cursor:pointer; }
     .agree-box input[type="checkbox"] { width:18px; height:18px; accent-color:#4a6cf7; }
-    .btn-primary { width:100%; padding:16px; background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:800; cursor:pointer; transition:opacity 0.2s,transform 0.15s; }
-    .btn-primary:hover     { opacity:0.9; transform:translateY(-1px); }
-    .btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+    .btn-primary { width:100%; padding:16px; background:linear-gradient(135deg,#4a6cf7,#6d8dff); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:800; cursor:pointer; transition:opacity 0.2s; }
+    .btn-primary:hover { opacity:0.9; }
+    .btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
     .btn-outline { width:100%; padding:13px; background:#fff; color:#4a6cf7; border:2px solid #4a6cf7; border-radius:14px; font-size:15px; font-weight:700; cursor:pointer; margin-top:10px; }
-    .btn-outline:hover { background:#f0f2ff; }
     #step-done { text-align:center; padding:40px 20px; }
     .done-icon  { font-size:64px; margin-bottom:16px; }
     .done-title { font-size:26px; font-weight:800; color:#222; margin-bottom:8px; }
     .done-sub   { font-size:15px; color:#777; margin-bottom:30px; }
-    .done-box { background:#f0f2ff; border-radius:16px; padding:20px 28px; display:inline-block; text-align:left; margin-bottom:28px; min-width:280px; }
-    .done-box p { font-size:14px; color:#444; padding:6px 0; border-bottom:1px solid #e0e4f7; display:flex; justify-content:space-between; }
-    .done-box p:last-child { border-bottom:none; }
-    .done-box span { font-weight:800; color:#4a6cf7; }
-    .back-link { display:block; text-align:center; margin-top:14px; color:#4a6cf7; font-weight:700; text-decoration:none; font-size:14px; }
     .loading-msg { text-align:center; padding:40px; color:#888; font-size:15px; }
+    .no-option-msg { text-align:center; padding:20px; color:#aaa; font-size:13px; background:#f7f8fc; border-radius:10px; }
     @media (max-width:600px) {
       .seat-grid { grid-template-columns:repeat(6,1fr); }
       .pay-methods { grid-template-columns:repeat(2,1fr); }
+      .option-grid { grid-template-columns:repeat(2,1fr); }
     }
   </style>
 </head>
 <body>
-
 <section style="max-width:800px; margin:0 auto; padding:0 20px 60px;">
 
   <div class="step-bar">
@@ -107,7 +126,7 @@
     <div class="step-line" id="line1"></div>
     <div class="step-item">
       <div class="step-circle" id="sc2">2</div>
-      <div class="step-label" id="sl2">좌석 선택</div>
+      <div class="step-label" id="sl2">이용권 선택</div>
     </div>
     <div class="step-line" id="line2"></div>
     <div class="step-item">
@@ -116,6 +135,7 @@
     </div>
   </div>
 
+  <!-- STEP 1: 지점 선택 -->
   <div id="step1">
     <div class="rsv-card">
       <div class="rsv-title">📍 지점 선택</div>
@@ -125,66 +145,117 @@
         <div class="loading-msg">🔍 스터디카페를 검색 중입니다...</div>
       </div>
     </div>
-    <a href="index.html" class="back-link">← 메인으로 돌아가기</a>
+    <a href="index.html" style="display:block;text-align:center;margin-top:14px;color:#4a6cf7;font-weight:700;text-decoration:none;font-size:14px">← 메인으로 돌아가기</a>
   </div>
 
+  <!-- STEP 2: 이용권 선택 -->
   <div id="step2">
     <div class="rsv-card">
-      <div class="rsv-title">🪑 좌석 선택</div>
-      <div class="rsv-sub">원하는 좌석과 시간을 선택해주세요.</div>
+      <div class="rsv-title">🎟️ 이용권 선택</div>
+      <div class="rsv-sub">이용 유형을 먼저 선택하고 옵션을 설정하세요.</div>
+
       <div class="selected-cafe-info">
         <h3 id="selectedCafeName">-</h3>
         <p id="selectedCafeAddr">-</p>
       </div>
 
-      <div class="time-section">
-        <h4>📅 이용 정보 설정</h4>
-        <div class="time-picker-row" id="timeRowA">
-          <label>날짜</label><input type="date" id="pickDate">
-          <label>시작</label><select id="pickStart"></select>
-          <label>종료</label><select id="pickEnd"></select>
-        </div>
-        <div class="time-picker-row" id="timeRowB" style="display:none;">
-          <label>시작일</label><input type="date" id="pickDateB">
-          <label>이용 기간</label>
-          <select id="pickWeek">
-            <option value="2">2주 (14일)</option>
-            <option value="4">4주 (28일)</option>
-          </select>
+      <!-- 이용권 타입 탭 -->
+      <div class="type-tabs" id="typeTabs">
+        <button class="type-tab" id="tab-daily"  onclick="selectType('daily')">⏱️ 당일권</button>
+        <button class="type-tab" id="tab-period" onclick="selectType('period')">📅 기간권</button>
+        <button class="type-tab" id="tab-fixed"  onclick="selectType('fixed')">🪑 고정석</button>
+        <button class="type-tab" id="tab-room"   onclick="selectType('room')">🏠 스터디룸</button>
+        <button class="type-tab" id="tab-locker" onclick="selectType('locker')">🔒 사물함</button>
+      </div>
+
+      <!-- 날짜 -->
+      <div class="date-row">
+        <label>📅 날짜</label>
+        <input type="date" id="pickDate" />
+      </div>
+
+      <!-- 당일권 옵션 -->
+      <div class="option-section" id="opt-daily" style="display:none">
+        <h4>이용 시간 선택</h4>
+        <div class="option-grid" id="daily-opts"></div>
+      </div>
+
+      <!-- 기간권 옵션 -->
+      <div class="option-section" id="opt-period" style="display:none">
+        <h4>이용 기간 선택</h4>
+        <div class="option-grid" id="period-opts"></div>
+      </div>
+
+      <!-- 고정석 옵션 -->
+      <div class="option-section" id="opt-fixed" style="display:none">
+        <h4>이용 기간 선택</h4>
+        <div class="option-grid" id="fixed-opts"></div>
+      </div>
+
+      <!-- 스터디룸 옵션 -->
+      <div class="option-section" id="opt-room" style="display:none">
+        <h4>룸 유형 선택</h4>
+        <div class="option-grid" id="room-type-opts"></div>
+        <div id="room-time-section" style="display:none;margin-top:14px">
+          <h4>이용 시간 선택</h4>
+          <div class="option-grid" id="room-time-opts"></div>
         </div>
       </div>
 
-      <div class="seat-legend">
-        <div class="legend-item"><div class="legend-box available"></div> 이용 가능</div>
-        <div class="legend-item"><div class="legend-box selected"></div> 선택됨</div>
-        <div class="legend-item"><div class="legend-box occupied"></div> 이용 중</div>
+      <!-- 사물함 옵션 -->
+      <div class="option-section" id="opt-locker" style="display:none">
+        <h4>이용 기간 선택</h4>
+        <div class="option-grid" id="locker-opts"></div>
       </div>
 
-      <div class="seat-area-label" id="labelZoneA">당일권 자유석 (A구역) — 2시간 4,000원, 4시간 7,000원</div>
-      <div class="seat-grid" id="seatGridA"></div>
+      <!-- 좌석 그리드 (당일권/기간권/고정석) -->
+      <div id="seat-section" style="display:none">
+        <div class="seat-legend">
+          <div class="legend-item"><div class="legend-box available"></div> 이용 가능</div>
+          <div class="legend-item"><div class="legend-box selected"></div> 선택됨</div>
+          <div class="legend-item"><div class="legend-box occupied"></div> 이용 중</div>
+        </div>
+        <div class="seat-area-label" id="labelZoneA" style="display:none">A구역 (당일권 자유석)</div>
+        <div class="seat-grid" id="seatGridA"></div>
+        <div class="seat-area-label" id="labelZoneB" style="display:none">B구역 (기간권 고정석)</div>
+        <div class="seat-grid" id="seatGridB"></div>
+        <div class="seat-area-label" id="labelZoneFixed" style="display:none">고정석 구역</div>
+        <div class="seat-grid" id="seatGridFixed"></div>
+      </div>
 
-      <div class="seat-area-label" id="labelZoneB">기간권 고정석 (B구역) — 2주 70,000원, 4주 120,000원</div>
-      <div class="seat-grid" id="seatGridB"></div>
+      <!-- 룸 번호 선택 -->
+      <div id="room-seat-section" style="display:none">
+        <div class="seat-area-label">룸 선택</div>
+        <div class="seat-grid" id="seatGridRoom"></div>
+      </div>
+
+      <!-- 사물함 번호 선택 -->
+      <div id="locker-seat-section" style="display:none">
+        <div class="seat-area-label">사물함 번호 선택</div>
+        <div class="seat-grid" id="seatGridLocker"></div>
+      </div>
 
       <div class="seat-summary">
-        <div class="seat-summary-text">선택 좌석: <span id="selectedSeatLabel">없음</span></div>
-        <div class="seat-summary-text">이용 정보: <span id="selectedTimeLabel">-</span></div>
-        <div class="seat-summary-text">결제 금액: <span id="selectedPriceLabel">0원</span></div>
+        <div class="seat-summary-text">선택: <span id="selectedSeatLabel">없음</span></div>
+        <div class="seat-summary-text">이용: <span id="selectedTimeLabel">-</span></div>
+        <div class="seat-summary-text">금액: <span id="selectedPriceLabel">0원</span></div>
       </div>
     </div>
     <button class="btn-primary" id="goToPayBtn" onclick="goToStep3()" disabled>결제하기 →</button>
     <button class="btn-outline" onclick="goToStep1()">← 지점 다시 선택</button>
   </div>
 
+  <!-- STEP 3: 결제 -->
   <div id="step3">
     <div class="rsv-card">
       <div class="rsv-title">💳 결제</div>
       <div class="rsv-sub">예약 내용을 확인하고 결제해주세요.</div>
       <div class="order-summary">
-        <div class="order-row"><span>지점</span><span id="pay_cafe">-</span></div>
-        <div class="order-row"><span>좌석</span><span id="pay_seat">-</span></div>
-        <div class="order-row"><span>이용 일정</span><span id="pay_date">-</span></div>
-        <div class="order-row"><span>이용 상세</span><span id="pay_time">-</span></div>
+        <div class="order-row"><span>지점</span>    <span id="pay_cafe">-</span></div>
+        <div class="order-row"><span>이용권</span>  <span id="pay_type">-</span></div>
+        <div class="order-row"><span>좌석/룸</span> <span id="pay_seat">-</span></div>
+        <div class="order-row"><span>날짜</span>    <span id="pay_date">-</span></div>
+        <div class="order-row"><span>이용</span>    <span id="pay_time">-</span></div>
         <div class="order-row total"><span>결제 금액</span><span id="pay_total">-</span></div>
       </div>
       <h4 style="font-size:15px;font-weight:700;color:#333;margin-bottom:12px;">결제 수단 선택</h4>
@@ -196,13 +267,10 @@
         <div class="pay-method" onclick="selectPayMethod(this,'계좌이체')"><span class="pay-icon">🏦</span>계좌이체</div>
       </div>
       <div class="agree-box">
-        <label>
-          <input type="checkbox" id="agreeCheck">
-          이용약관 및 개인정보처리방침에 동의합니다.
-        </label>
+        <label><input type="checkbox" id="agreeCheck"> 이용약관 및 개인정보처리방침에 동의합니다.</label>
       </div>
       <button class="btn-primary" id="payBtn" onclick="doPay()">결제 완료하기</button>
-      <button class="btn-outline" onclick="goToStep2()">← 좌석 다시 선택</button>
+      <button class="btn-outline" onclick="goToStep2()">← 이용권 다시 선택</button>
     </div>
   </div>
 
@@ -211,7 +279,6 @@
       <div class="done-icon">✅</div>
       <div class="done-title">예약이 완료되었습니다!</div>
       <div class="done-sub">즐거운 스터디 되세요 😊</div>
-      <div id="doneDetail"></div>
       <button class="btn-primary" onclick="location.href='index.html'">메인으로 돌아가기</button>
     </div>
   </div>
@@ -221,27 +288,32 @@
 <script type="module">
   import { auth, db } from "./firebase.js";
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { doc, getDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { doc, getDoc, collection, addDoc, getDocs, query, where, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const PRICE_TABLE = {
-    ZONE_A: { "2": 4000, "4": 7000 },
-    ZONE_B: { "2": 70000, "4": 120000 }
+  // ── 예약 상태 전역 객체 ──
+  window._rsv = {
+    user: null, cafe: null, seat: null,
+    type: null,       // 'daily'|'period'|'fixed'|'room'|'locker'
+    date: "",
+    optionKey: null,  // 선택된 시간(h) 또는 기간(일)
+    optionPrice: 0,
+    roomType: null,   // 룸 유형 인덱스
+    payMethod: null,
+    finalPrice: 0,
+    // 결제 후 저장용 메타
+    reservationType: null,
+    days: null,
+    hours: null
   };
 
-  window._rsv = { 
-    user:null, cafe:null, seat:null, 
-    date:"", startHour:9, endHour:11, 
-    week:2, payMethod:null, finalPrice: 0 
-  };
+  let map = null, ps = null;
 
-  let map=null, ps=null;
-
+  // ── 스텝 UI ──
   function setStepUI(step) {
     [1,2,3].forEach(n => {
-      const c = document.getElementById(`sc${n}`);
-      const l = document.getElementById(`sl${n}`);
-      c.className = "step-circle" + (n < step ? " done" : n === step ? " active" : "");
-      l.className = "step-label"  + (n < step ? " done" : n === step ? " active" : "");
+      document.getElementById(`sc${n}`).className = "step-circle" + (n < step ? " done" : n === step ? " active" : "");
+      document.getElementById(`sl${n}`).className = "step-label"  + (n < step ? " done" : n === step ? " active" : "");
     });
     [1,2].forEach(n => {
       document.getElementById(`line${n}`).className = "step-line" + (n < step ? " done" : "");
@@ -257,190 +329,319 @@
 
   window.goToStep2 = function() {
     if (!window._rsv.cafe) return;
-    document.getElementById("selectedCafeName").textContent = window._rsv.cafe.name;
-    document.getElementById("selectedCafeAddr").textContent = window._rsv.cafe.address;
+    const cafe = window._rsv.cafe;
+    document.getElementById("selectedCafeName").textContent = cafe.name;
+    document.getElementById("selectedCafeAddr").textContent = cafe.address;
 
-    if (window._rsv.cafe.price) {
-      document.getElementById("labelZoneA").textContent =
-        `당일권 자유석 (A구역) — 당일권 ${(window._rsv.cafe.price.daily || 0).toLocaleString()}원`;
-      document.getElementById("labelZoneB").textContent =
-        `기간권 고정석 (B구역) — 주간권 ${(window._rsv.cafe.price.weekly || 0).toLocaleString()}원`;
-    } else {
-      document.getElementById("labelZoneA").textContent = "당일권 자유석 (A구역) — 2시간 4,000원, 4시간 7,000원";
-      document.getElementById("labelZoneB").textContent = "기간권 고정석 (B구역) — 2주 70,000원, 4주 120,000원";
-    }
-
+    // 날짜 기본값
     const today = new Date().toISOString().split("T")[0];
+    document.getElementById("pickDate").value = today;
+    document.getElementById("pickDate").min   = today;
     window._rsv.date = today;
+    document.getElementById("pickDate").onchange = e => { window._rsv.date = e.target.value; };
 
-    initTimePickers();
-    buildSeats();
-    updateSeatSummary();
+    // 타입 탭 표시 여부
+    const data = cafe.rawData || {};
+    document.getElementById("tab-daily").classList.toggle("hidden",  !(data.dailyPrice?.length > 0));
+    document.getElementById("tab-period").classList.toggle("hidden", !(data.periodPrice?.length > 0));
+    document.getElementById("tab-fixed").classList.toggle("hidden",  !(data.fixedSeat?.enabled));
+    document.getElementById("tab-room").classList.toggle("hidden",   !(data.rooms?.enabled && data.rooms.list?.length > 0));
+    document.getElementById("tab-locker").classList.toggle("hidden", !(data.locker?.enabled));
+
+    // 첫 번째 보이는 탭 자동 선택
+    const firstVisible = ["daily","period","fixed","room","locker"]
+      .find(t => !document.getElementById("tab-"+t).classList.contains("hidden"));
+    if (firstVisible) selectType(firstVisible);
+
     document.getElementById("step1").style.display = "none";
     document.getElementById("step2").style.display = "block";
-    document.getElementById("step3").style.display = "none";
     setStepUI(2);
   };
 
+  // ── 이용권 타입 선택 ──
+  window.selectType = function(type) {
+    window._rsv.type = type;
+    window._rsv.seat = null;
+    window._rsv.optionKey = null;
+    window._rsv.optionPrice = 0;
+    window._rsv.finalPrice = 0;
+    window._rsv.roomType = null;
+
+    // 탭 활성화
+    ["daily","period","fixed","room","locker"].forEach(t => {
+      document.getElementById("tab-"+t).classList.toggle("active", t === type);
+    });
+
+    // 옵션 섹션 토글
+    ["daily","period","fixed","room","locker"].forEach(t => {
+      document.getElementById("opt-"+t).style.display = t === type ? "block" : "none";
+    });
+
+    // 좌석 섹션 토글
+    document.getElementById("seat-section").style.display        = ["daily","period","fixed"].includes(type) ? "block" : "none";
+    document.getElementById("room-seat-section").style.display   = type === "room"   ? "block" : "none";
+    document.getElementById("locker-seat-section").style.display = type === "locker" ? "block" : "none";
+
+    // 구역 라벨
+    document.getElementById("labelZoneA").style.display     = type === "daily"  ? "block" : "none";
+    document.getElementById("labelZoneB").style.display     = type === "period" ? "block" : "none";
+    document.getElementById("labelZoneFixed").style.display = type === "fixed"  ? "block" : "none";
+
+    const data = window._rsv.cafe?.rawData || {};
+
+    // 옵션 버튼 렌더
+    if (type === "daily") {
+      renderOpts("daily-opts", data.dailyPrice || [], r => `${r.key}시간`, r => r.price, r => {
+        window._rsv.optionKey   = r.key;
+        window._rsv.optionPrice = r.price;
+        window._rsv.hours       = r.key;
+        buildSeatsForZone("A");
+        updateSummary();
+      });
+    } else if (type === "period") {
+      renderOpts("period-opts", data.periodPrice || [], r => `${r.key}일`, r => r.price, r => {
+        window._rsv.optionKey   = r.key;
+        window._rsv.optionPrice = r.price;
+        window._rsv.days        = r.key;
+        buildSeatsForZone("B");
+        updateSummary();
+      });
+    } else if (type === "fixed") {
+      renderOpts("fixed-opts", data.fixedSeat?.priceList || [], r => `${r.key}일`, r => r.price, r => {
+        window._rsv.optionKey   = r.key;
+        window._rsv.optionPrice = r.price;
+        window._rsv.days        = r.key;
+        buildSeatsForZone("Fixed");
+        updateSummary();
+      });
+    } else if (type === "room") {
+      const list = data.rooms?.list || [];
+      renderRoomTypeOpts(list);
+    } else if (type === "locker") {
+      const lockerPrices = data.locker?.priceList || [];
+      const lockerCount  = data.locker?.count || 10;
+      renderOpts("locker-opts", lockerPrices, r => `${r.key}일`, r => r.price, r => {
+        window._rsv.optionKey   = r.key;
+        window._rsv.optionPrice = r.price;
+        window._rsv.days        = r.key;
+        buildLockerSeats(lockerCount);
+        updateSummary();
+      });
+    }
+
+    updateSummary();
+  };
+
+  // ── 옵션 버튼 렌더 헬퍼 ──
+  function renderOpts(containerId, list, labelFn, priceFn, onSelect) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!list || list.length === 0) {
+      el.innerHTML = '<div class="no-option-msg">업장에서 설정한 옵션이 없습니다.</div>';
+      return;
+    }
+    el.innerHTML = list.map((r, i) => `
+      <div class="option-btn" id="${containerId}-opt-${i}" onclick="_selectOpt('${containerId}',${i})">
+        ${labelFn(r)}
+        <div class="opt-price">${priceFn(r).toLocaleString()}원</div>
+      </div>
+    `).join("");
+    // 클릭 핸들러 저장
+    el._optData = list;
+    el._onSelect = onSelect;
+  }
+
+  window._selectOpt = function(containerId, idx) {
+    const el = document.getElementById(containerId);
+    if (!el || !el._optData) return;
+    el.querySelectorAll(".option-btn").forEach((b,i) => b.classList.toggle("selected", i === idx));
+    el._onSelect(el._optData[idx]);
+  };
+
+  // ── 룸 유형 옵션 ──
+  function renderRoomTypeOpts(list) {
+    const el = document.getElementById("room-type-opts");
+    if (!list || list.length === 0) {
+      el.innerHTML = '<div class="no-option-msg">등록된 룸 유형이 없습니다.</div>';
+      return;
+    }
+    el.innerHTML = list.map((r, i) => `
+      <div class="option-btn" id="room-type-opt-${i}" onclick="selectRoomType(${i})">
+        ${r.persons}인실
+        <div class="opt-price">시간당 ${(r.pricePerHour || 0).toLocaleString()}원</div>
+      </div>
+    `).join("");
+    el._roomList = list;
+  }
+
+  window.selectRoomType = function(idx) {
+    const el = document.getElementById("room-type-opts");
+    el.querySelectorAll(".option-btn").forEach((b,i) => b.classList.toggle("selected", i === idx));
+    window._rsv.roomType = idx;
+    window._rsv.optionKey = null;
+    window._rsv.optionPrice = 0;
+
+    const list = window._rsv.cafe?.rawData?.rooms?.list || [];
+    const room = list[idx];
+    if (!room) return;
+
+    // 룸 시간 옵션
+    const timeSection = document.getElementById("room-time-section");
+    const timeOpts    = room.timePrice || [];
+
+    if (timeOpts.length > 0) {
+      timeSection.style.display = "block";
+      renderOpts("room-time-opts", timeOpts, r => `${r.hours}시간`, r => r.price, r => {
+        window._rsv.optionKey   = r.hours;
+        window._rsv.optionPrice = r.price;
+        window._rsv.hours       = r.hours;
+        buildRoomSeats(room.count || 1, idx);
+        updateSummary();
+      });
+    } else {
+      // 시간 옵션 없으면 1시간 단가로 직접 입력 or 그냥 perHour 사용
+      timeSection.style.display = "none";
+      window._rsv.optionKey   = 1;
+      window._rsv.optionPrice = room.pricePerHour || 0;
+      window._rsv.hours       = 1;
+      buildRoomSeats(room.count || 1, idx);
+      updateSummary();
+    }
+  };
+
+  // ── 좌석 빌드 ──
+  async function buildSeatsForZone(zone) {
+    const gridId = zone === "A" ? "seatGridA" : zone === "B" ? "seatGridB" : "seatGridFixed";
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.innerHTML = "<div style='color:#aaa;font-size:13px;padding:10px;'>좌석 불러오는 중...</div>";
+
+    const cafe = window._rsv.cafe;
+    const count = zone === "A" ? (cafe.seatsA || 0) : zone === "B" ? (cafe.seatsB || 0) : (cafe.rawData?.fixedSeat?.count || 0);
+    const occupied = await getOccupiedSeats(zone);
+
+    grid.innerHTML = "";
+    for (let i = 1; i <= count; i++) {
+      const id = zone + i;
+      const el = document.createElement("div");
+      el.className = "seat" + (occupied.has(id) ? " occupied" : "");
+      el.textContent = id;
+      if (!occupied.has(id)) {
+        el.onclick = () => {
+          document.querySelectorAll(".seat").forEach(s => s.classList.remove("selected"));
+          el.classList.add("selected");
+          window._rsv.seat = { id, zone: zone === "A" ? "A" : "B" };
+          updateSummary();
+        };
+      }
+      grid.appendChild(el);
+    }
+  }
+
+  function buildRoomSeats(count, typeIdx) {
+    const grid = document.getElementById("seatGridRoom");
+    grid.innerHTML = "";
+    for (let i = 1; i <= count; i++) {
+      const id = `R${typeIdx+1}-${i}`;
+      const el = document.createElement("div");
+      el.className = "seat";
+      el.textContent = `룸${i}`;
+      el.onclick = () => {
+        document.querySelectorAll("#seatGridRoom .seat").forEach(s => s.classList.remove("selected"));
+        el.classList.add("selected");
+        window._rsv.seat = { id, zone: "room" };
+        updateSummary();
+      };
+      grid.appendChild(el);
+    }
+  }
+
+  function buildLockerSeats(count) {
+    const grid = document.getElementById("seatGridLocker");
+    grid.innerHTML = "";
+    for (let i = 1; i <= count; i++) {
+      const id = `L${i}`;
+      const el = document.createElement("div");
+      el.className = "seat";
+      el.textContent = id;
+      el.onclick = () => {
+        document.querySelectorAll("#seatGridLocker .seat").forEach(s => s.classList.remove("selected"));
+        el.classList.add("selected");
+        window._rsv.seat = { id, zone: "locker" };
+        updateSummary();
+      };
+      grid.appendChild(el);
+    }
+  }
+
+  async function getOccupiedSeats(zone) {
+    const occupied = new Set();
+    const cafe = window._rsv.cafe;
+    if (!cafe?.id) return occupied;
+    try {
+      const q = query(
+        collection(db, "reservations"),
+        where("cafeId", "==", cafe.id),
+        where("date",   "==", window._rsv.date),
+        where("status", "in", ["active", "confirmed"])
+      );
+      const snap = await getDocs(q);
+      snap.forEach(d => {
+        const r = d.data();
+        if ((zone === "A" && r.zone === "A") || (zone !== "A" && r.zone === "B")) {
+          occupied.add(r.seatId);
+        }
+      });
+    } catch(e) { console.warn("예약 조회 실패:", e); }
+    return occupied;
+  }
+
+  // ── 요약 업데이트 ──
+  function updateSummary() {
+    const r = window._rsv;
+    const price = r.optionPrice || 0;
+    r.finalPrice = price;
+
+    let seatLabel = r.seat ? r.seat.id : "없음";
+    let timeLabel = "-";
+
+    if (r.type === "daily" && r.optionKey) {
+      timeLabel = `${r.optionKey}시간 이용`;
+    } else if (["period","fixed"].includes(r.type) && r.optionKey) {
+      timeLabel = `${r.optionKey}일 이용`;
+    } else if (r.type === "room" && r.optionKey) {
+      const list = r.cafe?.rawData?.rooms?.list || [];
+      const room = list[r.roomType];
+      timeLabel = room ? `${room.persons}인실 ${r.optionKey}시간` : `${r.optionKey}시간`;
+    } else if (r.type === "locker" && r.optionKey) {
+      timeLabel = `${r.optionKey}일 이용`;
+    }
+
+    document.getElementById("selectedSeatLabel").textContent  = seatLabel;
+    document.getElementById("selectedTimeLabel").textContent  = timeLabel;
+    document.getElementById("selectedPriceLabel").textContent = price > 0 ? `${price.toLocaleString()}원` : "옵션을 선택하세요";
+    document.getElementById("goToPayBtn").disabled = !(r.seat && price > 0);
+  }
+
+  // ── STEP 3 이동 ──
   window.goToStep3 = function() {
     const r = window._rsv;
     if (!r.seat || r.finalPrice === 0) return;
-
+    const typeLabels = { daily:"당일권", period:"기간권", fixed:"고정석", room:"스터디룸", locker:"사물함" };
     document.getElementById("pay_cafe").textContent = r.cafe.name;
-    document.getElementById("pay_seat").textContent = `${r.seat.id} (${r.seat.zone === "A" ? "자유석" : "고정석"})`;
-    
-    if (r.seat.zone === "A") {
-      document.getElementById("pay_date").textContent = r.date;
-      document.getElementById("pay_time").textContent = `${r.startHour}:00 ~ ${r.endHour}:00 (${r.endHour - r.startHour}시간)`;
-    } else {
-      document.getElementById("pay_date").textContent = `${r.date} 부터`;
-      document.getElementById("pay_time").textContent = `${r.week}주 이용권`;
-    }
-
+    document.getElementById("pay_type").textContent = typeLabels[r.type] || r.type;
+    document.getElementById("pay_seat").textContent = r.seat.id;
+    document.getElementById("pay_date").textContent = r.date;
+    document.getElementById("pay_time").textContent = r.type === "daily"
+      ? `${r.optionKey}시간 이용`
+      : r.type === "room"
+        ? (() => { const rm = r.cafe?.rawData?.rooms?.list?.[r.roomType]; return rm ? `${rm.persons}인실 ${r.optionKey}시간` : `${r.optionKey}시간`; })()
+        : `${r.optionKey}일 이용`;
     document.getElementById("pay_total").textContent = `${r.finalPrice.toLocaleString()}원`;
     document.getElementById("step2").style.display = "none";
     document.getElementById("step3").style.display = "block";
     setStepUI(3);
   };
-
-  async function buildSeats() {
-    const gridA = document.getElementById("seatGridA");
-    const gridB = document.getElementById("seatGridB");
-    gridA.innerHTML = "<div style='color:#aaa;font-size:13px;padding:10px;'>좌석 불러오는 중...</div>";
-    gridB.innerHTML = "";
-
-    const countA = window._rsv.cafe?.seatsA || 24;
-    const countB = window._rsv.cafe?.seatsB || 16;
-
-    const occupiedSeats = new Set();
-    try {
-      const q = query(
-        collection(db, "reservations"),
-        where("cafeId", "==", window._rsv.cafe.id),
-        where("date", "==", window._rsv.date),
-        where("status", "in", ["active", "confirmed"])
-      );
-      const snap = await getDocs(q);
-      snap.forEach(d => {
-        const data = d.data();
-        if (data.zone === "B") {
-          occupiedSeats.add(data.seatId);
-        } else {
-          const resStart = data.startHour;
-          const resEnd = data.endHour;
-          const myStart = window._rsv.startHour;
-          const myEnd = window._rsv.endHour;
-          const isOverlap = myStart < resEnd && myEnd > resStart;
-          if (isOverlap) occupiedSeats.add(data.seatId);
-        }
-      });
-    } catch(e) {
-      console.warn("예약 조회 실패:", e);
-    }
-
-    gridA.innerHTML = "";
-    for (let i=1; i<=countA; i++) {
-      const seat = makeSeat(`A${i}`, "A");
-      if (occupiedSeats.has(`A${i}`)) seat.classList.add("occupied");
-      gridA.appendChild(seat);
-    }
-    for (let i=1; i<=countB; i++) {
-      const seat = makeSeat(`B${i}`, "B");
-      if (occupiedSeats.has(`B${i}`)) seat.classList.add("occupied");
-      gridB.appendChild(seat);
-    }
-  }
-
-  function makeSeat(id, zone) {
-    const el = document.createElement("div");
-    el.className = "seat";
-    el.textContent = id;
-    el.onclick = () => {
-      if (el.classList.contains("occupied")) return;
-      document.querySelectorAll(".seat").forEach(s => s.classList.remove("selected"));
-      el.classList.add("selected");
-      window._rsv.seat = { id, zone };
-      if (zone === "A") {
-        document.getElementById("timeRowA").style.display = "flex";
-        document.getElementById("timeRowB").style.display = "none";
-      } else {
-        document.getElementById("timeRowA").style.display = "none";
-        document.getElementById("timeRowB").style.display = "flex";
-      }
-      updateSeatSummary();
-    };
-    return el;
-  }
-
-  function updateSeatSummary() {
-    const r = window._rsv;
-    if (!r.seat) return;
-
-    let price = 0;
-    let label = "";
-
-    if (r.seat.zone === "A") {
-      const diff = r.endHour - r.startHour;
-      price = r.cafe?.price?.daily || PRICE_TABLE.ZONE_A[String(diff)] || 0;
-      label = `${r.date} / ${r.startHour}:00~${r.endHour}:00 (${diff}시간)`;
-    } else {
-      price = r.cafe?.price?.weekly || PRICE_TABLE.ZONE_B[String(r.week)] || 0;
-      label = `${r.date} 시작 / ${r.week}주 이용`;
-    }
-
-    r.finalPrice = price;
-    document.getElementById("selectedSeatLabel").textContent = `${r.seat.id} (${r.seat.zone === "A" ? "자유석" : "고정석"})`;
-    document.getElementById("selectedTimeLabel").textContent = label;
-    document.getElementById("selectedPriceLabel").textContent = price > 0 ? `${price.toLocaleString()}원` : "가격 정보 없음";
-    document.getElementById("goToPayBtn").disabled = (price === 0);
-  }
-
-  function initTimePickers() {
-    const startSel = document.getElementById("pickStart");
-    const endSel = document.getElementById("pickEnd");
-    const today = new Date().toISOString().split("T")[0];
-
-    startSel.innerHTML = ""; endSel.innerHTML = "";
-    for (let h=0; h<=23; h++) startSel.innerHTML += `<option value="${h}">${h}:00</option>`;
-    for (let h=1; h<=24; h++) endSel.innerHTML += `<option value="${h}">${h}:00</option>`;
-
-    startSel.value = "9"; endSel.value = "11";
-    document.getElementById("pickDate").value = today;
-    document.getElementById("pickDateB").value = today;
-    document.getElementById("pickDate").min = today;
-  document.getElementById("pickDateB").min = today;
-    window._rsv.date = today;
-
-    startSel.onchange = () => {
-      window._rsv.startHour = parseInt(startSel.value);
-      window._rsv.endHour = parseInt(endSel.value);
-      window._rsv.seat = null;
-      buildSeats();
-      updateSeatSummary();
-    };
-    endSel.onchange = () => {
-      window._rsv.endHour = parseInt(endSel.value);
-      window._rsv.seat = null;
-      buildSeats();
-      updateSeatSummary();
-    };
-    document.getElementById("pickDate").onchange = () => {
-      window._rsv.date = document.getElementById("pickDate").value;
-      window._rsv.seat = null;
-      buildSeats();
-      updateSeatSummary();
-    };
-    document.getElementById("pickWeek").onchange = (e) => {
-      window._rsv.week = parseInt(e.target.value);
-      updateSeatSummary();
-    };
-    document.getElementById("pickDateB").onchange = (e) => {
-      window._rsv.date = e.target.value;
-      window._rsv.seat = null;
-      buildSeats();
-      updateSeatSummary();
-    };
-  }
 
   window.selectPayMethod = function(el, method) {
     document.querySelectorAll(".pay-method").forEach(m => m.classList.remove("selected"));
@@ -448,97 +649,80 @@
     window._rsv.payMethod = method;
   };
 
+  // ── 결제 ──
   window.doPay = async function() {
-  if (!window._rsv.payMethod) return alert("결제 수단을 선택하세요.");
-  if (!document.getElementById("agreeCheck").checked) return alert("동의가 필요합니다.");
+    if (!window._rsv.payMethod) return alert("결제 수단을 선택하세요.");
+    if (!document.getElementById("agreeCheck").checked) return alert("동의가 필요합니다.");
 
-  const r = window._rsv;
-  const payBtn = document.getElementById("payBtn");
-  payBtn.disabled = true;
-  payBtn.textContent = "처리 중...";
+    const r = window._rsv;
+    const payBtn = document.getElementById("payBtn");
+    payBtn.disabled = true;
+    payBtn.textContent = "처리 중...";
 
-  // 1. 중복 예약 체크
-  try {
-    const dupQ = query(
-      collection(db, "reservations"),
-      where("cafeId", "==", r.cafe.id),
-      where("seatId", "==", r.seat.id),
-      where("date", "==", r.date),
-      where("status", "in", ["active", "confirmed"])
-    );
-    const dupSnap = await getDocs(dupQ);
-    if (!dupSnap.empty) {
-      let isConflict = false;
-      dupSnap.forEach(d => {
-        const data = d.data();
-        if (data.zone === "B") isConflict = true;
-        else if (r.startHour < data.endHour && r.endHour > data.startHour) isConflict = true;
-      });
-      if (isConflict) {
-        alert("이미 예약된 좌석입니다. 다른 좌석이나 시간을 선택해주세요.");
-        payBtn.disabled = false;
-        payBtn.textContent = "결제 완료하기";
-        goToStep2();
-        return;
-      }
+    // 중복 체크 (당일권/기간권/고정석)
+    if (["daily","period","fixed"].includes(r.type)) {
+      try {
+        const dupQ = query(
+          collection(db, "reservations"),
+          where("cafeId", "==", r.cafe.id),
+          where("seatId", "==", r.seat.id),
+          where("date",   "==", r.date),
+          where("status", "in", ["active","confirmed"])
+        );
+        const dupSnap = await getDocs(dupQ);
+        if (!dupSnap.empty) {
+          alert("이미 예약된 좌석입니다. 다른 좌석을 선택해주세요.");
+          payBtn.disabled = false;
+          payBtn.textContent = "결제 완료하기";
+          goToStep2();
+          return;
+        }
+      } catch(e) { console.warn("중복 체크 실패:", e); }
     }
-  } catch(e) {
-    console.warn("중복 체크 실패:", e);
-  }
 
-  // 2. 결제 수단 매핑
-  const methodMap = {
-    "카드": "카드",
-    "카카오페이": "카카오페이",
-    "네이버페이": "네이버페이",
-    "토스페이": "토스페이",
-    "계좌이체": "계좌이체"
+    try {
+      const tossPayments = window.TossPayments("test_ck_XZYkKL4MrjYdyY0YLENRV0zJwlEW");
+      const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+
+      const successUrl = new URL("https://final-project-17108.web.app/payment-result.html");
+      successUrl.searchParams.set("cafe",      r.cafe.name);
+      successUrl.searchParams.set("seat",      r.seat.id);
+      successUrl.searchParams.set("zone",      r.seat.zone);
+      successUrl.searchParams.set("date",      r.date);
+      successUrl.searchParams.set("type",      r.type);
+      successUrl.searchParams.set("optionKey", r.optionKey);
+      successUrl.searchParams.set("total",     r.finalPrice);
+      successUrl.searchParams.set("method",    r.payMethod);
+      successUrl.searchParams.set("cafeId",    r.cafe.id);
+      // 기간/시간 정보
+      if (r.days)  successUrl.searchParams.set("days",  r.days);
+      if (r.hours) successUrl.searchParams.set("hours", r.hours);
+
+      await tossPayments.requestPayment(r.payMethod, {
+        amount:       r.finalPrice,
+        orderId,
+        orderName:    `${r.cafe.name} ${r.seat.id} 예약`,
+        customerName: r.user.displayName || r.user.email || "고객",
+        successUrl:   successUrl.toString(),
+        failUrl:      "https://final-project-17108.web.app/payment-result.html?fail=true",
+      });
+    } catch(e) {
+      console.error(e);
+      if (e.code !== "USER_CANCEL") alert("결제 중 오류: " + e.message);
+      payBtn.disabled = false;
+      payBtn.textContent = "결제 완료하기";
+    }
   };
 
-  // 3. 토스페이먼츠 결제창 호출
-  try {
-    const tossPayments = window.TossPayments("test_ck_XZYkKL4MrjYdyY0YLENRV0zJwlEW");
-    const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-    const successUrl = new URL(`https://final-project-17108.web.app/payment-result.html`);
-    successUrl.searchParams.set("cafe",   encodeURIComponent(r.cafe.name));
-    successUrl.searchParams.set("seat",   r.seat.id);
-    successUrl.searchParams.set("zone",   r.seat.zone);
-    successUrl.searchParams.set("date",   r.date);
-    successUrl.searchParams.set("start",  r.startHour);
-    successUrl.searchParams.set("end",    r.endHour);
-    successUrl.searchParams.set("week",   r.week);
-    successUrl.searchParams.set("total",  r.finalPrice);
-    successUrl.searchParams.set("method", r.payMethod);
-    successUrl.searchParams.set("cafeId", r.cafe.id);
-
-    await tossPayments.requestPayment(methodMap[r.payMethod], {
-      amount:        r.finalPrice,
-      orderId:       orderId,
-      orderName:     `${r.cafe.name} ${r.seat.id}좌석 예약`,
-      customerName:  r.user.displayName || r.user.email || "고객",
-      successUrl:    successUrl.toString(),
-      failUrl: `https://final-project-17108.web.app/payment-result.html?fail=true`,
-    });
-
-  } catch(e) {
-    console.error(e);
-    if (e.code !== "USER_CANCEL") {
-      alert("결제 중 오류: " + e.message);
-    }
-    payBtn.disabled = false;
-    payBtn.textContent = "결제 완료하기";
-  }
-};
-
+  // ── 인증 & 카페 목록 ──
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { alert("로그인 후 이용 가능합니다."); location.href="login.html"; return; }
+    if (!user) { alert("로그인 후 이용 가능합니다."); location.href = "login.html"; return; }
     window._rsv.user = user;
 
     const userDoc = await getDoc(doc(db, "users", user.uid));
     const userData = userDoc.exists() ? userDoc.data() : {};
-    const region = userData.region || "서울";
-    const sigungu = userData.sigungu || "";
+    const region   = userData.region  || "서울";
+    const sigungu  = userData.sigungu || "";
 
     kakao.maps.load(async () => {
       map = new kakao.maps.Map(document.getElementById("reservation-map"), {
@@ -546,132 +730,80 @@
       });
       ps = new kakao.maps.services.Places();
 
-      const params = new URLSearchParams(location.search);
-      const cafeId = params.get("cafeId");
+      const params  = new URLSearchParams(location.search);
+      const cafeId  = params.get("cafeId");
+      const list    = document.getElementById("cafeList");
 
       if (cafeId) {
         const cafeSnap = await getDoc(doc(db, "cafes", cafeId));
         if (cafeSnap.exists()) {
           const cafe = cafeSnap.data();
-          window._rsv.cafe = {
-            id: cafeId,
-            name: cafe.cafeName,
-            address: `${cafe.address} ${cafe.addressDetail || ""}`.trim(),
-            price: cafe.price,
-            totalSeats: cafe.totalSeats,
-            seatsA: cafe.seatsA || 0,
-            seatsB: cafe.seatsB || 0
-          };
-
+          _addCafeCard(list, { id: cafeId, ...cafe }, true);
+          document.getElementById("reservationDesc").textContent = `${cafe.cafeName} 예약`;
           if (cafe.lat && cafe.lng) {
             const pos = new kakao.maps.LatLng(cafe.lat, cafe.lng);
-            map.setCenter(pos);
-            map.setLevel(3);
-            const markerImage = new kakao.maps.MarkerImage(
-              "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
-              new kakao.maps.Size(24, 35)
-            );
-            new kakao.maps.Marker({ map, position: pos, image: markerImage });
+            map.setCenter(pos); map.setLevel(3);
+            new kakao.maps.Marker({ map, position: pos });
           }
-
-          const list = document.getElementById("cafeList");
-          list.innerHTML = "";
-          const card = document.createElement("div");
-          card.className = "cafe-card firebase-cafe";
-          card.innerHTML = `
-            <h3>⭐ ${cafe.cafeName} <span style="font-size:11px;background:#e53935;color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px;">등록 업장</span></h3>
-            <p>${cafe.address} ${cafe.addressDetail || ""}</p>
-            <p>당일권: ${(cafe.price?.daily || 0).toLocaleString()}원 / 주간권: ${(cafe.price?.weekly || 0).toLocaleString()}원</p>
-            <p>총 좌석: ${cafe.totalSeats || 0}석</p>
-            <button class="cafe-select-btn">이 지점 선택</button>
-          `;
-          card.querySelector(".cafe-select-btn").onclick = () => goToStep2();
-          list.appendChild(card);
-          document.getElementById("reservationDesc").textContent = `${cafe.cafeName} 예약`;
         }
       } else {
-        const list = document.getElementById("cafeList");
         list.innerHTML = "";
-
-        const cafeSnapshot = await getDocs(collection(db, "cafes"));
-        cafeSnapshot.forEach(docItem => {
-          const cafe = docItem.data();
-
-          // ✅ 지역 필터링
-          if (sigungu && !cafe.address.includes(sigungu)) return;
-
-          // ✅ 지도에 노란 별 마커 추가
+        const cafeSnap = await getDocs(collection(db, "cafes"));
+        cafeSnap.forEach(d => {
+          const cafe = d.data();
+          if (sigungu && !cafe.address?.includes(sigungu)) return;
           if (cafe.lat && cafe.lng) {
             const pos = new kakao.maps.LatLng(cafe.lat, cafe.lng);
-            const markerImage = new kakao.maps.MarkerImage(
-              "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
-              new kakao.maps.Size(24, 35)
-            );
-            const marker = new kakao.maps.Marker({ map, position: pos, image: markerImage });
-
-            const infowindow = new kakao.maps.InfoWindow({
-              content: `
-                <div style="padding:8px 12px;font-size:13px;min-width:160px;">
-                  <div style="font-weight:800;color:#e53935;margin-bottom:4px;">⭐ ${cafe.cafeName}</div>
-                  <div style="font-size:11px;color:#666;">${cafe.address} ${cafe.addressDetail || ""}</div>
-                  <div style="font-size:11px;color:#333;margin-top:4px;">당일권: ${(cafe.price?.daily || 0).toLocaleString()}원 / 주간권: ${(cafe.price?.weekly || 0).toLocaleString()}원</div>
-                </div>
-              `
-            });
-
+            const marker = new kakao.maps.Marker({ map, position: pos });
             kakao.maps.event.addListener(marker, "click", () => {
-              infowindow.open(map, marker);
+              new kakao.maps.InfoWindow({
+                content: `<div style="padding:8px 12px;font-size:13px"><b>${cafe.cafeName}</b><br>${cafe.address||""}</div>`
+              }).open(map, marker);
             });
           }
-
-          const card = document.createElement("div");
-          card.className = "cafe-card firebase-cafe";
-          card.innerHTML = `
-            <h3>⭐ ${cafe.cafeName} <span style="font-size:11px;background:#e53935;color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px;">등록 업장</span></h3>
-            <p>${cafe.address} ${cafe.addressDetail || ""}</p>
-            <p>당일권: ${(cafe.price?.daily || 0).toLocaleString()}원 / 주간권: ${(cafe.price?.weekly || 0).toLocaleString()}원</p>
-            <p>총 좌석: ${cafe.totalSeats || 0}석</p>
-            <button class="cafe-select-btn">지점 선택</button>
-          `;
-          card.querySelector(".cafe-select-btn").onclick = () => {
-            window._rsv.cafe = {
-              id: docItem.id,
-              name: cafe.cafeName,
-              address: `${cafe.address} ${cafe.addressDetail || ""}`.trim(),
-              price: cafe.price,
-              totalSeats: cafe.totalSeats,
-              seatsA: cafe.seatsA || 0,
-              seatsB: cafe.seatsB || 0
-            };
-            goToStep2();
-          };
-          list.appendChild(card);
+          _addCafeCard(list, { id: d.id, ...cafe }, true);
         });
-
         ps.keywordSearch(`${region} 스터디카페`, (data) => {
-          renderCafeList(data, region);
+          data.slice(0,6).forEach(place => {
+            const pos = new kakao.maps.LatLng(place.y, place.x);
+            new kakao.maps.Marker({ map, position: pos });
+            const card = document.createElement("div");
+            card.className = "cafe-card";
+            card.innerHTML = `<h3>${place.place_name}</h3><p>${place.address_name}</p><button class="cafe-select-btn">지점 선택</button>`;
+            card.querySelector(".cafe-select-btn").onclick = () => {
+              window._rsv.cafe = { name: place.place_name, address: place.address_name, rawData:{} };
+              goToStep2();
+            };
+            list.appendChild(card);
+          });
         });
       }
     });
   });
 
-  function renderCafeList(data, region) {
-    const list = document.getElementById("cafeList");
-    data.slice(0, 8).forEach(place => {
-      const markerPos = new kakao.maps.LatLng(place.y, place.x);
-      new kakao.maps.Marker({ map, position: markerPos });
-      if (data.indexOf(place) === 0) { map.setCenter(markerPos); map.setLevel(5); }
-      const card = document.createElement("div");
-      card.className = "cafe-card";
-      card.innerHTML = `<h3>${place.place_name}</h3><p>${place.address_name}</p><button class="cafe-select-btn">지점 선택</button>`;
-      card.querySelector(".cafe-select-btn").onclick = () => {
-        window._rsv.cafe = { name: place.place_name, address: place.address_name };
-        goToStep2();
+  function _addCafeCard(list, cafe, isFirebase) {
+    const card = document.createElement("div");
+    card.className = "cafe-card" + (isFirebase ? " firebase-cafe" : "");
+    const daily = cafe.dailyPrice?.[0]?.price || cafe.price?.daily || 0;
+    card.innerHTML = `
+      <h3>${isFirebase ? "⭐ " : ""}${cafe.cafeName || cafe.name}${isFirebase ? ' <span style="font-size:11px;background:#e53935;color:#fff;padding:2px 6px;border-radius:4px;">등록 업장</span>' : ""}</h3>
+      <p>${cafe.address || ""} ${cafe.addressDetail || ""}</p>
+      <p>당일권: ${daily.toLocaleString()}원~ / 총 ${cafe.totalSeats || 0}석</p>
+      <button class="cafe-select-btn">이 지점 선택</button>
+    `;
+    card.querySelector(".cafe-select-btn").onclick = () => {
+      window._rsv.cafe = {
+        id:       cafe.id,
+        name:     cafe.cafeName || cafe.name,
+        address:  `${cafe.address||""} ${cafe.addressDetail||""}`.trim(),
+        seatsA:   cafe.seatsA || 0,
+        seatsB:   cafe.seatsB || 0,
+        rawData:  cafe
       };
-      list.appendChild(card);
-    });
+      goToStep2();
+    };
+    list.appendChild(card);
   }
 </script>
-
 </body>
 </html>
