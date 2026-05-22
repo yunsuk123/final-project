@@ -1,14 +1,8 @@
-// ==========================================
-// firebase.js에서 공유 인스턴스 가져오기 (중복 초기화 제거)
-// ==========================================
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, onSnapshot, updateDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ==========================================
-// 전역 상태
-// ==========================================
-let cafeDocRef = null; // 로그인 후 ownerUid로 동적 설정
+let cafeDocRef = null;
 let ZONE_A = 30;
 let ZONE_B = 20;
 let seats = {};
@@ -17,44 +11,26 @@ let revenue = 0;
 let seatUnsubscribe = null;
 let cafeUnsubscribe = null;
 
-// ==========================================
-// 인증 확인 후 초기화 (권한 오류의 핵심 수정)
-// ==========================================
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        alert("로그인이 필요합니다.");
-        location.href = "login.html";
-        return;
-    }
-
-    // role 확인
+    if (!user) { alert("로그인이 필요합니다."); location.href = "login.html"; return; }
     try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const role = userDoc.exists() ? userDoc.data().role : null;
         if (role !== "admin" && role !== "superAdmin") {
-            alert("접근 권한이 없습니다.");
-            location.href = "index.html";
-            return;
+            alert("접근 권한이 없습니다."); location.href = "index.html"; return;
         }
     } catch (e) {
         console.error("권한 확인 실패:", e);
-        alert("권한 확인 중 오류가 발생했습니다.");
-        location.href = "login.html";
-        return;
+        alert("권한 확인 중 오류가 발생했습니다."); location.href = "login.html"; return;
     }
 
-    // 카페 문서 ID = 로그인한 관리자의 UID
     cafeDocRef = doc(db, "cafes", user.uid);
-
-    // 사이드바 이름 표시
     const brandTitle = document.getElementById('sb-cafe-name');
     if (brandTitle) brandTitle.textContent = "불러오는 중...";
 
-    // 리스너 시작
     listenToCafeInfo();
     listenToSeats();
 
-    // 버튼 이벤트
     const saveBtn = document.getElementById('btn-save');
     if (saveBtn) saveBtn.addEventListener('click', saveCafeInfo);
 
@@ -67,47 +43,33 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// ==========================================
-// 1. 업장 기본 정보 실시간 동기화
-// ==========================================
 function listenToCafeInfo() {
     if (!cafeDocRef) return;
     if (cafeUnsubscribe) cafeUnsubscribe();
-
     cafeUnsubscribe = onSnapshot(cafeDocRef, (docSnap) => {
         if (!docSnap.exists()) {
-            console.log("업장 정보 데이터가 존재하지 않습니다.");
-            // 사이드바에 안내 표시
             const brandTitle = document.getElementById('sb-cafe-name');
             if (brandTitle) brandTitle.textContent = "업장 미등록";
             const sbCafeSub = document.getElementById('sb-cafe-sub');
             if (sbCafeSub) sbCafeSub.textContent = "업장 정보를 먼저 등록해주세요";
             return;
         }
-
         const data = docSnap.data();
-
         ZONE_A = Number(data.seatsA) || 30;
         ZONE_B = Number(data.seatsB) || 20;
-
-        const totalSeats = Number(data.totalSeats) || (ZONE_A + ZONE_B);
-        const priceDay   = data.price ? (data.price.daily   || 0) : 0;
-        const priceWeek  = data.price ? (data.price.weekly  || 0) : 0;
-        const priceMonth = data.price ? (data.price.monthly || 0) : 0;
-        const priceHourly = data.price ? (data.price.hourly || 0) : 0;
+        const totalSeats  = Number(data.totalSeats) || (ZONE_A + ZONE_B);
+        const priceDay    = data.price ? (data.price.daily  || 0) : 0;
+        const priceWeek   = data.price ? (data.price.weekly || 0) : 0;
 
         const sbCafeSub = document.getElementById('sb-cafe-sub');
         if (sbCafeSub) sbCafeSub.textContent = "관리자 페이지";
-
         const brandTitle = document.getElementById('sb-cafe-name');
         if (brandTitle) brandTitle.textContent = data.cafeName || "Study Cafe";
-
         const textPrice = document.getElementById('sb-cafe-price');
         const textSeats = document.getElementById('sb-cafe-seats');
         if (textPrice) textPrice.textContent = `당일권 ${priceDay.toLocaleString()}원 · 주간 ${priceWeek.toLocaleString()}원`;
         if (textSeats) textSeats.textContent = `총 ${totalSeats}석 (A구역 ${ZONE_A} · B구역 ${ZONE_B})`;
 
-        // 설정 폼 바인딩 (새 구조)
         if (document.getElementById('f-name'))   document.getElementById('f-name').value   = data.cafeName      || '';
         if (document.getElementById('f-addr'))   document.getElementById('f-addr').value   = data.address       || '';
         if (document.getElementById('f-addr2'))  document.getElementById('f-addr2').value  = data.addressDetail || '';
@@ -115,12 +77,11 @@ function listenToCafeInfo() {
         if (document.getElementById('f-total'))  document.getElementById('f-total').value  = totalSeats;
         if (document.getElementById('f-zone-a')) document.getElementById('f-zone-a').value = ZONE_A;
         if (document.getElementById('f-zone-b')) document.getElementById('f-zone-b').value = ZONE_B;
-        // 자유 행 테이블 복원 (한 번만 실행)
+
         if (!window._dashFormLoaded) {
             window._dashFormLoaded = true;
             dLoadRows('daily',  data.dailyPrice  || []);
             dLoadRows('period', data.periodPrice || []);
-            // 고정석
             if (data.fixedSeat?.enabled) {
                 const cb = document.getElementById('d-useFixed');
                 if (cb) { cb.checked = true; dToggle('d-fixed-body', true); }
@@ -128,7 +89,6 @@ function listenToCafeInfo() {
                 if (fc) fc.value = data.fixedSeat.count || '';
                 dLoadRows('fixed', data.fixedSeat.priceList || []);
             }
-            // 그룹 룸
             if (data.rooms?.enabled && data.rooms.list?.length > 0) {
                 const cb = document.getElementById('d-useRoom');
                 if (cb) { cb.checked = true; dToggle('d-room-body', true); }
@@ -142,7 +102,6 @@ function listenToCafeInfo() {
                     }
                 });
             }
-            // 사물함
             if (data.locker?.enabled) {
                 const cb = document.getElementById('d-useLocker');
                 if (cb) { cb.checked = true; dToggle('d-locker-body', true); }
@@ -151,33 +110,18 @@ function listenToCafeInfo() {
                 dLoadRows('locker', data.locker.priceList || []);
             }
         }
-
         renderSeats();
         updateStats();
-    }, (error) => {
-        console.error("카페 기본 정보 로드 실패:", error);
-    });
+    }, (error) => { console.error("카페 기본 정보 로드 실패:", error); });
 }
 
-// ==========================================
-// 2. 실시간 좌석 상태 감시 (별도 리스너로 분리)
-// ==========================================
 function listenToSeats() {
     if (!cafeDocRef) return;
     if (seatUnsubscribe) seatUnsubscribe();
-
     seatUnsubscribe = onSnapshot(cafeDocRef, (docSnap) => {
         if (!docSnap.exists()) return;
-
         const remoteSeats = docSnap.data().seats;
-
-        if (!remoteSeats) {
-            // seats 필드가 아직 없으면 초기화
-            resetDefaultSeatsInFirebase();
-            return;
-        }
-
-        // 변경 감지 알림
+        if (!remoteSeats) { resetDefaultSeatsInFirebase(); return; }
         Object.keys(remoteSeats).forEach(id => {
             if (seats[id] && seats[id].status === 'empty' && remoteSeats[id].status === 'occupied') {
                 showToast('success', `🔔 ${id}석 신규 예약`, `${remoteSeats[id].name} 사용자가 좌석을 선택했습니다.`);
@@ -188,21 +132,14 @@ function listenToSeats() {
                 addLog(`${id}석 퇴실 처리`);
             }
         });
-
         seats = remoteSeats;
         renderSeats();
         updateStats();
-    }, (error) => {
-        console.error("Firebase 좌석 연결 에러:", error);
-    });
+    }, (error) => { console.error("Firebase 좌석 연결 에러:", error); });
 }
 
-// ==========================================
-// 3. 업장 설정 저장 (점 표기법으로 중첩 필드 안전 업데이트)
-// ==========================================
 async function saveCafeInfo() {
     if (!cafeDocRef) return;
-
     try {
         const nameVal   = document.getElementById('f-name')?.value  || '';
         const addrVal   = document.getElementById('f-addr')?.value  || '';
@@ -216,23 +153,16 @@ async function saveCafeInfo() {
             alert(`⚠️ A구역(${seatsAVal}) + B구역(${seatsBVal}) = ${seatsAVal + seatsBVal}석이\n총 좌석 수(${totalVal})와 일치하지 않습니다.`);
             return;
         }
-
-        // 자유 행 수집
         const dailyPrice  = dGetRows('daily');
         const periodPrice = dGetRows('period');
-
         const useFixed = document.getElementById('d-useFixed')?.checked || false;
         const fixedSeat = useFixed ? {
             enabled: true,
             count: Number(document.getElementById('d-fixedCount')?.value || 0),
             priceList: dGetRows('fixed')
         } : { enabled: false };
-
         const useRoom = document.getElementById('d-useRoom')?.checked || false;
-        const rooms = useRoom
-            ? { enabled: true, list: dGetRoomData() }
-            : { enabled: false, list: [] };
-
+        const rooms = useRoom ? { enabled: true, list: dGetRoomData() } : { enabled: false, list: [] };
         const useLocker = document.getElementById('d-useLocker')?.checked || false;
         const locker = useLocker ? {
             enabled: true,
@@ -241,54 +171,32 @@ async function saveCafeInfo() {
         } : { enabled: false };
 
         await updateDoc(cafeDocRef, {
-            cafeName:      nameVal,
-            address:       addrVal,
-            addressDetail: addr2Val,
-            bizNumber:     bizVal,
-            totalSeats:    totalVal,
-            seatsA:        seatsAVal,
-            seatsB:        seatsBVal,
-            // 기존 호환 필드
-            'price.daily':  dailyPrice[0]?.price  || 0,
+            cafeName: nameVal, address: addrVal, addressDetail: addr2Val,
+            bizNumber: bizVal, totalSeats: totalVal, seatsA: seatsAVal, seatsB: seatsBVal,
+            'price.daily': dailyPrice[0]?.price || 0,
             'price.weekly': periodPrice[0]?.price || 0,
-            dailyPrice,
-            periodPrice,
-            fixedSeat,
-            rooms,
-            locker
+            dailyPrice, periodPrice, fixedSeat, rooms, locker
         });
-
         showToast('success', '저장 완료', '업장 정보가 성공적으로 업데이트되었습니다.');
         addLog('업장 정보 수동 저장 완료');
     } catch (e) {
-        console.error('🔥 [SAVE ERROR] 파이어베이스 업데이트 실패:', e);
+        console.error('저장 실패:', e);
         showToast('danger', '저장 실패', '파이어베이스 연동 오류: ' + e.message);
     }
 }
 
-// ==========================================
-// 4. 좌석 초기화
-// ==========================================
 async function resetDefaultSeatsInFirebase() {
     if (!cafeDocRef) return;
     const initialSeats = {};
     for (let i = 1; i <= ZONE_A; i++) initialSeats['A' + i] = { status: 'empty', name: '', type: '', endTime: null, userId: '' };
     for (let i = 1; i <= ZONE_B; i++) initialSeats['B' + i] = { status: 'empty', name: '', type: '', endTime: null, userId: '' };
-    try {
-        await updateDoc(cafeDocRef, { seats: initialSeats });
-    } catch (e) {
-        console.error("좌석 초기화 실패:", e);
-    }
+    try { await updateDoc(cafeDocRef, { seats: initialSeats }); } catch (e) { console.error("좌석 초기화 실패:", e); }
 }
 
-// ==========================================
-// 5. 좌석 렌더링
-// ==========================================
 function renderSeats() {
     const za = document.getElementById('zone-a');
     const zb = document.getElementById('zone-b');
     if (!za || !zb) return;
-
     za.innerHTML = '';
     zb.innerHTML = '';
     for (let i = 1; i <= ZONE_A; i++) za.appendChild(makeSeatEl('A' + i));
@@ -300,18 +208,15 @@ function makeSeatEl(id) {
     const div = document.createElement('div');
     const isA = id.startsWith('A');
     let cls = 'seat ';
-
     if (s.status === 'empty') cls += 'empty';
     else if (s.status === 'occupied') cls += (isA ? 'occupied-a' : 'occupied-b');
     else if (s.status === 'expiring') cls += 'expiring';
     div.className = cls;
     div.onclick = () => clickSeat(id);
-
     const numEl = document.createElement('div');
     numEl.className = 'seat-num';
     numEl.textContent = id;
     div.appendChild(numEl);
-
     if (s.status !== 'empty' && s.endTime) {
         const rem = Math.max(0, Math.floor((s.endTime - Date.now()) / 1000));
         const timerEl = document.createElement('div');
@@ -319,7 +224,6 @@ function makeSeatEl(id) {
         timerEl.id = 'timer-' + id;
         timerEl.textContent = formatTime(rem);
         div.appendChild(timerEl);
-
         if (s.name) {
             const badge = document.createElement('div');
             badge.className = 'seat-type-badge';
@@ -339,9 +243,6 @@ function formatTime(sec) {
     return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-// ==========================================
-// 6. 타이머 & 통계 업데이트 (1초 인터벌)
-// ==========================================
 function updateTimers() {
     let occ = 0, exp = 0, free = 0;
     Object.keys(seats).forEach(id => {
@@ -351,14 +252,12 @@ function updateTimers() {
         const rem = s.endTime ? Math.max(0, Math.floor((s.endTime - Date.now()) / 1000)) : Infinity;
         const el = document.getElementById('timer-' + id);
         if (el) el.textContent = formatTime(rem);
-
         if (rem <= 0 && s.status !== 'empty') {
             addNotification('danger', `⏰ ${id}석 이용 종료`, `${s.name || '사용자'}의 이용 시간이 만료되었습니다.`);
             showToast('danger', `${id}석 시간 만료`, '자동 퇴실 처리되었습니다.');
             updateFirebaseSeat(id, { status: 'empty', name: '', type: '', endTime: null, userId: '' });
             return;
         }
-
         if (rem <= 900 && rem > 0 && s.status === 'occupied') {
             seats[id].status = 'expiring';
             if (!s._warned) {
@@ -371,7 +270,6 @@ function updateTimers() {
         }
         if (s.status === 'expiring') exp++;
     });
-
     if (document.getElementById('stat-occ'))  document.getElementById('stat-occ').textContent  = occ;
     if (document.getElementById('stat-free')) document.getElementById('stat-free').textContent = free;
     if (document.getElementById('stat-exp'))  document.getElementById('stat-exp').textContent  = exp;
@@ -383,23 +281,18 @@ function updateStats() {
         if (!seats[id] || seats[id].status === 'empty') free++;
         else { occ++; if (seats[id].status === 'expiring') exp++; }
     });
-
     if (document.getElementById('stat-occ'))  document.getElementById('stat-occ').textContent  = occ;
     if (document.getElementById('stat-free')) document.getElementById('stat-free').textContent = free;
     if (document.getElementById('stat-exp'))  document.getElementById('stat-exp').textContent  = exp;
     if (document.getElementById('stat-rev'))  document.getElementById('stat-rev').textContent  = revenue.toLocaleString();
 }
 
-// ==========================================
-// 7. 좌석 클릭 (강제 퇴실)
-// ==========================================
 function clickSeat(id) {
     const s = seats[id];
     if (s && s.status !== 'empty') {
         if (confirm(`⚠️ [${id}석] (${s.name} 사용자)을 강제 퇴실 처리하시겠습니까?\n이 작업은 파이어베이스 클라우드에 즉시 반영됩니다.`)) {
             updateFirebaseSeat(id, { status: 'empty', name: '', type: '', endTime: null, userId: '' });
             addLog(`${id}석 관리자 강제 퇴실`);
-            // reservations에서 해당 좌석 활성 예약 찾아서 force_cancelled로 변경
             forceEvictReservation(id);
         }
     }
@@ -409,22 +302,12 @@ async function forceEvictReservation(seatId) {
     if (!cafeDocRef) return;
     const cafeId = cafeDocRef.id;
     try {
-        const q = query(
-            collection(db, "reservations"),
-            where("cafeId", "==", cafeId),
-            where("seatId", "==", seatId),
-            where("status", "in", ["active", "confirmed"])
-        );
+        const q = query(collection(db, "reservations"), where("cafeId", "==", cafeId), where("seatId", "==", seatId), where("status", "in", ["active", "confirmed"]));
         const snap = await getDocs(q);
         snap.forEach(async (docSnap) => {
-            await updateDoc(doc(db, "reservations", docSnap.id), {
-                status: "force_cancelled"
-            });
+            await updateDoc(doc(db, "reservations", docSnap.id), { status: "force_cancelled" });
         });
-        console.log(`[강제퇴실] ${seatId}석 예약 상태 업데이트 완료`);
-    } catch(e) {
-        console.error("reservations 강제퇴실 업데이트 실패:", e);
-    }
+    } catch(e) { console.error("reservations 강제퇴실 업데이트 실패:", e); }
 }
 
 async function updateFirebaseSeat(seatId, data) {
@@ -433,14 +316,9 @@ async function updateFirebaseSeat(seatId, data) {
         const updateObj = {};
         updateObj[`seats.${seatId}`] = data;
         await updateDoc(cafeDocRef, updateObj);
-    } catch (e) {
-        console.error("Firebase 데이터 동기화 실패:", e);
-    }
+    } catch (e) { console.error("Firebase 데이터 동기화 실패:", e); }
 }
 
-// ==========================================
-// 8. 수동 발권 (관리자 강제 발권)
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const manualBtn = document.getElementById('btn-manual-issue');
     if (manualBtn) {
@@ -450,31 +328,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const userName = document.getElementById('m-user-name')?.value.trim();
             const type     = document.getElementById('m-type')?.value;
             const hours    = Number(document.getElementById('m-hours')?.value || 8);
-
             if (!seatId || !userName) { alert("좌석 번호와 사용자 성함을 입력해주세요."); return; }
-
             const endTime = type === 'day' ? Date.now() + hours * 3600 * 1000 : null;
-            await updateFirebaseSeat(seatId, {
-                status: 'occupied',
-                name:   userName,
-                type:   type === 'day' ? '당일권' : '기간권',
-                endTime,
-                userId: 'manual'
-            });
-
-            if (type === 'day') revenue += (ZONE_A > 0 ? 4000 : 0); // 임시 금액, 실제는 price 필드 참조
+            await updateFirebaseSeat(seatId, { status: 'occupied', name: userName, type: type === 'day' ? '당일권' : '기간권', endTime, userId: 'manual' });
             showToast('success', `${seatId}석 발권 완료`, `${userName} (${type === 'day' ? '당일권' : '기간권'})`);
             addLog(`관리자 발권: ${seatId}석 → ${userName}`);
-
-            if (document.getElementById('m-seat-id'))  document.getElementById('m-seat-id').value  = '';
+            if (document.getElementById('m-seat-id'))   document.getElementById('m-seat-id').value  = '';
             if (document.getElementById('m-user-name')) document.getElementById('m-user-name').value = '';
         });
     }
 });
 
-// ==========================================
-// 9. 알림 & 토스트
-// ==========================================
 function addNotification(type, title, body) {
     notifications.unshift({ type, title, body, time: new Date(), read: false });
     const count = notifications.filter(n => !n.read).length;
@@ -496,7 +360,7 @@ function renderNotifList() {
     `).join('');
 }
 
-window.markRead = function (i) {
+window.markRead = function(i) {
     notifications[i].read = true;
     const c = notifications.filter(n => !n.read).length;
     const badge = document.getElementById('notif-count');
@@ -504,14 +368,14 @@ window.markRead = function (i) {
     renderNotifList();
 };
 
-window.clearNotifs = function () {
+window.clearNotifs = function() {
     notifications.forEach(n => n.read = true);
     const badge = document.getElementById('notif-count');
     if (badge) badge.style.display = 'none';
     renderNotifList();
 };
 
-window.toggleNotif = function () {
+window.toggleNotif = function() {
     const o = document.getElementById('notif-overlay');
     if (!o) return;
     o.style.display = o.style.display === 'none' ? 'flex' : 'none';
@@ -524,19 +388,15 @@ function showToast(type, title, body) {
     const div = document.createElement('div');
     const icons = { success: 'ti-circle-check', danger: 'ti-alert-circle', warning: 'ti-alert-triangle' };
     div.className = 'toast ' + (type === 'success' ? '' : type);
-    div.innerHTML = `<i class="ti ${icons[type] || 'ti-bell'}" aria-hidden="true"></i><div class="toast-body"><p>${title}</p><span>${body}</span></div>`;
+    div.innerHTML = `<i class="ti ${icons[type] || 'ti-bell'}"></i><div class="toast-body"><p>${title}</p><span>${body}</span></div>`;
     wrap.appendChild(div);
     setTimeout(() => {
-        div.style.opacity = '0';
-        div.style.transition = 'opacity 0.4s';
+        div.style.opacity = '0'; div.style.transition = 'opacity 0.4s';
         setTimeout(() => div.remove(), 400);
     }, 4000);
     if (type !== 'success') addNotification(type, title, body);
 }
 
-// ==========================================
-// 10. 실시간 출입 로그
-// ==========================================
 function addLog(msg) {
     const logList = document.getElementById('log-list');
     if (!logList) return;
@@ -545,30 +405,26 @@ function addLog(msg) {
     const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     item.innerHTML = `<span class="time">${now}</span>${msg}`;
     logList.prepend(item);
-    // 최대 30개 유지
     while (logList.children.length > 30) logList.lastChild.remove();
 }
 
-// ==========================================
-// 11. 페이지 전환
-// ==========================================
-window.showPage = function (id) {
+window.showPage = function(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
     const targetPage = document.getElementById('page-' + id);
     const targetNav  = document.getElementById('nav-' + id);
     if (targetPage) targetPage.classList.add('active');
     if (targetNav)  targetNav.classList.add('active');
-
-    const titles = { seats: '좌석 배치도 · 실시간 모니터링', info: '업장 정보 설정', users: '이용자 현황' };
+    const titles = {
+        seats:   '좌석 배치도 · 실시간 모니터링',
+        info:    '업장 정보 설정',
+        users:   '이용자 현황',
+        revenue: '매출 현황'  // ✅ 추가
+    };
     const titleEl = document.getElementById('page-title');
     if (titleEl) titleEl.textContent = titles[id] || '';
 };
 
-// ==========================================
-// 12. 시계 & 인터벌 시작
-// ==========================================
 function liveClock() {
     const clock = document.getElementById('live-clock');
     if (clock) clock.textContent = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -580,8 +436,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTimers, 1000);
     showToast('success', '실시간 관제 시스템 가동', '로그인 인증 후 데이터 동기화를 시작합니다.');
 });
+
 // ==========================================
-// 13. 이용자 현황 (기간권 · 고정석 · 사물함 남은 기간)
+// 이용자 현황
 // ==========================================
 let allUserStatusData = [];
 let currentUserTab = 'all';
@@ -591,28 +448,18 @@ window.loadUserStatus = async function() {
     const cafeId = cafeDocRef.id;
     const listEl = document.getElementById('userStatusList');
     if (!listEl) return;
-
     listEl.innerHTML = '<div class="usc-empty">불러오는 중...</div>';
-
     try {
-        const q = query(
-            collection(db, 'reservations'),
-            where('cafeId', '==', cafeId),
-            where('status', 'in', ['active', 'confirmed'])
-        );
+        const q = query(collection(db, 'reservations'), where('cafeId', '==', cafeId), where('status', 'in', ['active', 'confirmed']));
         const snap = await getDocs(q);
-
-        // uid별로 그룹핑
         const byUser = {};
         snap.forEach(d => {
             const r = { id: d.id, ...d.data() };
             if (!byUser[r.uid]) byUser[r.uid] = { uid: r.uid, email: r.email || '-', items: [] };
             byUser[r.uid].items.push(r);
         });
-
         allUserStatusData = Object.values(byUser);
         renderUserStatus(allUserStatusData, currentUserTab);
-
     } catch(e) {
         console.error('이용자 현황 로드 실패:', e);
         listEl.innerHTML = `<div class="usc-empty">불러오기 실패: ${e.message}</div>`;
@@ -625,8 +472,7 @@ window.filterUserTab = function(tab) {
         const btn = document.getElementById('utab-' + t);
         if (!btn) return;
         btn.className = t === tab ? 'btn btn-primary' : 'btn btn-secondary';
-        btn.style.padding = '8px 16px';
-        btn.style.fontSize = '13px';
+        btn.style.padding = '8px 16px'; btn.style.fontSize = '13px';
     });
     renderUserStatus(allUserStatusData, tab);
 };
@@ -641,20 +487,12 @@ function daysLeft(createdAt, days) {
 function renderUserStatus(data, tab) {
     const listEl = document.getElementById('userStatusList');
     if (!listEl) return;
-
-    if (!data || data.length === 0) {
-        listEl.innerHTML = '<div class="usc-empty">활성 이용자가 없습니다.</div>';
-        return;
-    }
-
+    if (!data || data.length === 0) { listEl.innerHTML = '<div class="usc-empty">활성 이용자가 없습니다.</div>'; return; }
     let html = '';
-
     data.forEach(u => {
         const badges = [];
-
         u.items.forEach(r => {
             const type = r.reservationType || (r.zone === 'A' ? 'period' : r.zone === 'B' ? 'fixed' : r.type || 'period');
-
             if ((r.zone === 'A' || type === 'period') && (r.days || r.weeks)) {
                 if (tab !== 'all' && tab !== 'period') return;
                 const totalDays = r.days || (r.weeks * 7);
@@ -681,28 +519,22 @@ function renderUserStatus(data, tab) {
                 badges.push('<span class="usc-badge ' + cls + '">🔒 사물함 ' + (r.seatId||'') + ' ' + leftTxt + '</span>');
             }
         });
-
         if (badges.length === 0) return;
-
         html += '<div class="user-status-card">'
               + '<div><div class="usc-name">' + u.email + '</div>'
               + '<div class="usc-email">' + u.uid.slice(0,8) + '...</div></div>'
               + '<div class="usc-badges">' + badges.join('') + '</div>'
               + '</div>';
     });
-
     listEl.innerHTML = html || '<div class="usc-empty">해당 유형의 이용자가 없습니다.</div>';
 }
 
 // ==========================================
-// 14. 대시보드 업장 설정 — 자유 행 UI 함수
-//     admin-cafe.html과 동일한 데이터 구조 사용
+// 대시보드 설정 폼 함수
 // ==========================================
 const _dRowIdx = { daily:0, period:0, fixed:0, locker:0 };
 
-function _dRowTd(inp) {
-    return `<td style="padding:5px 7px;border:1px solid var(--gray-200)">${inp}</td>`;
-}
+function _dRowTd(inp) { return `<td style="padding:5px 7px;border:1px solid var(--gray-200)">${inp}</td>`; }
 function _dInp(id, ph, type='number') {
     return `<input type="${type}" id="${id}" placeholder="${ph}" style="width:100%;height:34px;border:1px solid var(--gray-300);border-radius:6px;padding:0 8px;font-size:13px">`;
 }
@@ -749,7 +581,6 @@ window.dToggle = function(id, show) {
     if (el) el.style.display = show ? 'block' : 'none';
 };
 
-// 룸 카드
 let _dRoomIdx = 0;
 window.dAddRoomCard = function(vals) {
     const container = document.getElementById('d-room-cards');
@@ -826,4 +657,107 @@ window.dGetRoomData = function() {
         if (persons > 0) rooms.push({ persons, count, pricePerHour: perHour, timePrice });
     });
     return rooms;
+};
+
+// ==========================================
+// ✅ 매출 현황 (신규 추가)
+// ==========================================
+const _revTypeLabels = {
+    daily: '당일권', period: '기간권', fixed: '고정석',
+    room: '스터디룸', locker: '사물함'
+};
+
+window.loadRevenue = async function() {
+    if (!cafeDocRef) return;
+    const cafeId = cafeDocRef.id;
+
+    const now        = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const weekStart  = new Date(now - now.getDay() * 86400000).setHours(0,0,0,0);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    const tbody = document.getElementById('rev-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray-400)">불러오는 중...</td></tr>';
+
+    try {
+        const q = query(
+            collection(db, 'reservations'),
+            where('cafeId', '==', cafeId),
+            where('status', 'in', ['confirmed', 'active'])
+        );
+        const snap = await getDocs(q);
+
+        let todayRev = 0, weekRev = 0, monthRev = 0;
+        const byType = {};
+        const rows = [];
+
+        snap.forEach(d => {
+            const r = d.data();
+            const price = r.totalPrice || 0;
+            const ts = r.createdAt?.seconds
+                ? r.createdAt.seconds * 1000
+                : new Date(r.createdAt || 0).getTime();
+
+            if (ts >= todayStart) todayRev += price;
+            if (ts >= weekStart)  weekRev  += price;
+            if (ts >= monthStart) {
+                monthRev += price;
+                const t = r.reservationType || 'daily';
+                byType[t] = (byType[t] || 0) + price;
+            }
+            rows.push({ ts, r, price });
+        });
+
+        // 요약 카드
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setEl('rev-today', todayRev.toLocaleString());
+        setEl('rev-week',  weekRev.toLocaleString());
+        setEl('rev-month', monthRev.toLocaleString());
+
+        // 대시보드 당일 정산 카드 동기화
+        revenue = todayRev;
+        setEl('stat-rev', todayRev.toLocaleString());
+
+        // 이용권 종류별
+        const typeEl = document.getElementById('rev-by-type');
+        if (typeEl) {
+            typeEl.innerHTML = Object.keys(byType).length === 0
+                ? '<span style="color:var(--gray-400);font-size:13px">이번 달 매출 없음</span>'
+                : Object.entries(byType).map(([t, v]) => `
+                    <div style="background:var(--blue-light);border-radius:10px;padding:14px 20px;min-width:120px">
+                        <div style="font-size:12px;color:var(--blue);font-weight:600;margin-bottom:4px">${_revTypeLabels[t] || t}</div>
+                        <div style="font-size:18px;font-weight:800;color:var(--gray-800)">${v.toLocaleString()}원</div>
+                    </div>
+                `).join('');
+        }
+
+        // 최근 결제 내역 테이블
+        rows.sort((a, b) => b.ts - a.ts);
+        if (tbody) {
+            tbody.innerHTML = rows.slice(0, 50).map(({ ts, r, price }) => {
+                const dt = ts
+                    ? new Date(ts).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })
+                    : '-';
+                const t = r.reservationType || 'daily';
+                return `
+                    <tr>
+                        <td style="padding:10px 12px;color:var(--gray-600)">${dt}</td>
+                        <td style="padding:10px 12px;font-weight:600">${r.email || '-'}</td>
+                        <td style="padding:10px 12px">${r.seatId || '-'}</td>
+                        <td style="padding:10px 12px">
+                            <span style="background:var(--blue-light);color:var(--blue);padding:3px 9px;border-radius:6px;font-size:12px;font-weight:700">
+                                ${_revTypeLabels[t] || t}
+                            </span>
+                        </td>
+                        <td style="padding:10px 12px;color:var(--gray-600)">${r.payMethod || '-'}</td>
+                        <td style="padding:10px 12px;text-align:right;font-weight:700;color:var(--blue)">${price.toLocaleString()}원</td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray-400)">결제 내역이 없습니다</td></tr>';
+        }
+
+    } catch(e) {
+        console.error('매출 로드 실패:', e);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--red)">오류: ${e.message}</td></tr>`;
+    }
 };
