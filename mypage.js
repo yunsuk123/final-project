@@ -256,7 +256,7 @@ async function renderReservations(user) {
             <td>${formatDate(d.createdAt)}</td>
             <td>${d.cafeName || "-"}</td>
             <td>${d.seatId || "-"}</td>
-            <td>${(d.price || 0).toLocaleString()}원</td>
+            <td>${(d.totalPrice || d.price || 0).toLocaleString()}원</td>
             <td>${d.payMethod || "-"}</td>
             <td class="${statusClass}">${statusText}</td>
           </tr>
