@@ -170,7 +170,7 @@ async function renderReservations(user) {
   try {
     const q = query(
       collection(db, "reservations"),
-      where("userId", "==", user.uid)
+      where("uid", "==", user.uid)
     );
     const snap = await getDocs(q);
 
@@ -240,7 +240,7 @@ async function renderReservations(user) {
           })</td>
           <td>${d.date || "-"}</td>
           <td>${timeInfo}</td>
-          <td>${(d.price || 0).toLocaleString()}원</td>
+          <td>${(d.totalPrice || d.price || 0).toLocaleString()}원</td>
           <td>${d.payMethod || "-"}</td>
           <td class="${statusClass}">${statusText}</td>
           <td>${d.status === "active"
