@@ -367,10 +367,10 @@
       margin-bottom: 6px;
     }
 
-    .tag.blue { background: #eef2ff; color: #4a6cf7; }
-    .tag.green { background: #eafaf0; color: #1e9d57; }
+    .tag.blue   { background: #eef2ff; color: #4a6cf7; }
+    .tag.green  { background: #eafaf0; color: #1e9d57; }
     .tag.orange { background: #fff4e7; color: #f39a28; }
-    .tag.red { background: #ffeaea; color: #e54848; }
+    .tag.red    { background: #ffeaea; color: #e54848; }
 
     .actions {
       display: flex;
@@ -403,9 +403,10 @@
     th { font-weight: 800; color: #444; }
     td { color: #555; }
 
-    .status-done { color: #1db954; font-weight: 700; }
-    .status-wait { color: #f5a623; font-weight: 700; }
-    .status-cancel { color: #ff4d4f; font-weight: 700; }
+    .status-done     { color: #1db954; font-weight: 700; }  /* 예약중 - 초록 */
+    .status-wait     { color: #f5a623; font-weight: 700; }  /* 대기 - 주황 */
+    .status-cancel   { color: #ff4d4f; font-weight: 700; }  /* 취소됨 - 빨강 */
+    .status-complete { color: #888;    font-weight: 700; }  /* 이용완료 - 회색 */
 
     footer {
       background: #1f2430;
@@ -460,7 +461,6 @@
           <p>내 정보, 활동 내역, 예약 및 결제 내역을 한눈에 관리하세요.</p>
         </div>
         <div class="profile-summary">
-          <!-- ✅ 수정: 하드코딩 숫자 → JS에서 동적으로 채움 -->
           <div class="summary-card"><h3>내 게시글</h3><p id="summaryPosts">-</p></div>
           <div class="summary-card"><h3>예약 내역</h3><p id="summaryReservations">-</p></div>
           <div class="summary-card"><h3>결제 내역</h3><p id="summaryPayments">-</p></div>
@@ -575,7 +575,7 @@
           </div>
         </div>
 
-        <!-- ✅ 수정: 예약 내역 tbody에 id 추가, thead 컬럼 수정 -->
+        <!-- 예약 내역 -->
         <div id="reservations" class="tab-content">
           <div class="panel">
             <h2>좌석 예약 내역</h2>
@@ -594,7 +594,6 @@
                     <th>관리</th>
                   </tr>
                 </thead>
-                <!-- ✅ id 추가 -->
                 <tbody id="reservationTableBody">
                   <tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px;">불러오는 중...</td></tr>
                 </tbody>
@@ -603,7 +602,7 @@
           </div>
         </div>
 
-        <!-- ✅ 수정: 결제 내역 tbody에 id 추가, thead 컬럼 수정 -->
+        <!-- 결제 내역 -->
         <div id="payments" class="tab-content">
           <div class="panel">
             <h2>결제 내역</h2>
@@ -620,7 +619,6 @@
                     <th>상태</th>
                   </tr>
                 </thead>
-                <!-- ✅ id 추가 -->
                 <tbody id="paymentTableBody">
                   <tr><td colspan="6" style="text-align:center;color:#aaa;padding:24px;">불러오는 중...</td></tr>
                 </tbody>
