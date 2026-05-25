@@ -115,6 +115,14 @@ function updateKPI(filtered) {
   document.getElementById("kpiPeriod").textContent = mode === "daily"
     ? `${year}년 ${month}월`
     : `${year}년 연간`;
+
+  // 사물함 포함 예약 KPI
+  const lockerItems  = filtered.filter(r => r.lockerAddon && r.lockerAddon.seatId);
+  const lockerAmt    = lockerItems.reduce((s, r) => s + (r.lockerAddon?.price || 0), 0);
+  const lockerEl     = document.getElementById("kpiLocker");
+  const lockerAmtEl  = document.getElementById("kpiLockerAmt");
+  if (lockerEl)    lockerEl.textContent    = lockerItems.length.toLocaleString() + "건";
+  if (lockerAmtEl) lockerAmtEl.textContent = "사물함 매출 " + lockerAmt.toLocaleString() + "원";
 }
 
 // ── 매출 추이 차트 ──
@@ -243,12 +251,17 @@ function buildCafeTable(filtered) {
   const byName = {};
   filtered.forEach(r => {
     const name = r.cafeName || cafeMap[r.cafeId] || r.cafeId || "unknown";
-    if (!byName[name]) byName[name] = { total: 0, count: 0, daily: 0, weekly: 0 };
+    if (!byName[name]) byName[name] = { total: 0, count: 0, daily: 0, weekly: 0, lockerCount: 0, lockerAmt: 0 };
     const amt = getAmt(r);
     byName[name].total += amt;
     byName[name].count += 1;
     if (r.zone === "A") byName[name].daily  += amt;
     else                byName[name].weekly += amt;
+    // 사물함 애드온 집계
+    if (r.lockerAddon && r.lockerAddon.seatId) {
+      byName[name].lockerCount += 1;
+      byName[name].lockerAmt   += (r.lockerAddon.price || 0);
+    }
   });
 
   const sorted   = Object.entries(byName).sort((a, b) => b[1].total - a[1].total);
@@ -256,13 +269,16 @@ function buildCafeTable(filtered) {
   const tbody    = document.getElementById("cafeTableBody");
 
   if (sorted.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">해당 기간에 결제 데이터가 없습니다.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">해당 기간에 결제 데이터가 없습니다.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = sorted.map(([name, v], i) => {
     const rankClass = ["r1", "r2", "r3"][i] || "rn";
     const pct = Math.round((v.total / maxTotal) * 100);
+    const lockerCell = v.lockerCount > 0
+      ? `<span style="background:#e1f5ee;color:#0f6e56;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;">${v.lockerCount}건 (+${v.lockerAmt.toLocaleString()}원)</span>`
+      : `<span style="color:#ccc;font-size:12px;">-</span>`;
     return `
       <tr>
         <td><span class="rank ${rankClass}">${i + 1}</span></td>
@@ -271,6 +287,7 @@ function buildCafeTable(filtered) {
         <td>${v.count}건</td>
         <td><span class="zone-a">${v.daily.toLocaleString()}원</span></td>
         <td><span class="zone-b">${v.weekly.toLocaleString()}원</span></td>
+        <td>${lockerCell}</td>
         <td>
           <div class="bar-wrap">
             <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>

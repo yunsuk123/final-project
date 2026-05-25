@@ -24,7 +24,19 @@ onAuthStateChanged(auth, async (user) => {
         alert("권한 확인 중 오류가 발생했습니다."); location.href = "login.html"; return;
     }
 
-    cafeDocRef = doc(db, "cafes", user.uid);
+    // cafes 문서 ID가 uid와 다를 수 있으므로 ownerUid로 쿼리
+    try {
+        const cafeQ = query(collection(db, "cafes"), where("ownerUid", "==", user.uid));
+        const cafeSnap = await getDocs(cafeQ);
+        if (!cafeSnap.empty) {
+            cafeDocRef = cafeSnap.docs[0].ref;
+        } else {
+            cafeDocRef = doc(db, "cafes", user.uid); // fallback
+        }
+    } catch(e) {
+        console.error("카페 문서 조회 실패:", e);
+        cafeDocRef = doc(db, "cafes", user.uid);
+    }
     const brandTitle = document.getElementById('sb-cafe-name');
     if (brandTitle) brandTitle.textContent = "불러오는 중...";
 
@@ -67,7 +79,7 @@ function listenToCafeInfo() {
         if (brandTitle) brandTitle.textContent = data.cafeName || "Study Cafe";
         const textPrice = document.getElementById('sb-cafe-price');
         const textSeats = document.getElementById('sb-cafe-seats');
-        if (textPrice) textPrice.textContent = `당일권 ${priceDay.toLocaleString()}원 · 주간 ${priceWeek.toLocaleString()}원`;
+        if (textPrice) textPrice.textContent = `당일권 ${priceDay.toLocaleString()}원 · 기간권 ${priceWeek.toLocaleString()}원`;
         if (textSeats) textSeats.textContent = `총 ${totalSeats}석 (A구역 ${ZONE_A} · B구역 ${ZONE_B})`;
 
         if (document.getElementById('f-name'))   document.getElementById('f-name').value   = data.cafeName      || '';
@@ -118,24 +130,76 @@ function listenToCafeInfo() {
 function listenToSeats() {
     if (!cafeDocRef) return;
     if (seatUnsubscribe) seatUnsubscribe();
-    seatUnsubscribe = onSnapshot(cafeDocRef, (docSnap) => {
-        if (!docSnap.exists()) return;
-        const remoteSeats = docSnap.data().seats;
-        if (!remoteSeats) { resetDefaultSeatsInFirebase(); return; }
-        Object.keys(remoteSeats).forEach(id => {
-            if (seats[id] && seats[id].status === 'empty' && remoteSeats[id].status === 'occupied') {
-                showToast('success', `🔔 ${id}석 신규 예약`, `${remoteSeats[id].name} 사용자가 좌석을 선택했습니다.`);
-                addLog(`${id}석 - ${remoteSeats[id].name} 입실`);
+
+    const cafeId = cafeDocRef.id;
+
+    // reservations 컬렉션을 실시간으로 읽어서 좌석 상태 구성
+    const resQuery = query(
+        collection(db, "reservations"),
+        where("cafeId", "==", cafeId),
+        where("status", "in", ["confirmed", "active"])
+    );
+
+    let _firstLoad = true;  // 첫 로드 플래그 — 새로고침 시 기존 좌석을 입실로 잡지 않게
+
+    seatUnsubscribe = onSnapshot(resQuery, (snap) => {
+        // 모든 좌석 초기화
+        const newSeats = {};
+        for (let i = 1; i <= ZONE_A; i++) newSeats['A' + i] = { status: 'empty', name: '', type: '', endTime: null, userId: '' };
+        for (let i = 1; i <= ZONE_B; i++) newSeats['B' + i] = { status: 'empty', name: '', type: '', endTime: null, userId: '' };
+
+        const now = Date.now();
+        snap.forEach(d => {
+            const r = d.data();
+            const seatId = r.seatId;
+            if (!seatId || !newSeats[seatId]) return;
+
+            // 당일권 — endTime 계산 (입실 시각 기준 우선, 없으면 결제 시각 기준)
+            let endTime = null;
+            if (r.reservationType === 'daily' && r.hours) {
+                if (r.endTimestamp) {
+                    endTime = r.endTimestamp;
+                } else {
+                    const createdMs = r.createdAt?.seconds ? r.createdAt.seconds * 1000 : now;
+                    endTime = createdMs + r.hours * 3600 * 1000;
+                }
+                // 이미 만료된 당일권은 empty로
+                if (endTime < now) return;
             }
-            if (seats[id] && seats[id].status !== 'empty' && remoteSeats[id].status === 'empty') {
-                showToast('warning', `💨 ${id}석 이용 종료`, '사용자가 퇴실했거나 시간이 만료되었습니다.');
-                addLog(`${id}석 퇴실 처리`);
+
+            const prevStatus = seats[seatId]?.status || 'empty';
+            const newStatus  = 'occupied';
+
+            // 첫 로드(새로고침)가 아닐 때만 입실 알림 — 새로고침 시 기존 예약을 신규 입실로 잡지 않음
+            if (!_firstLoad && prevStatus === 'empty' && newStatus === 'occupied') {
+                showToast('success', `🔔 ${seatId}석 신규 예약`, `${r.email || '예약자'} 좌석 배정`);
+                addLog(`${seatId}석 - ${r.email || '예약자'} 입실`);
             }
+
+            newSeats[seatId] = {
+                status:  'occupied',
+                name:    r.email?.split('@')[0] || '예약자',
+                userId:  r.uid || '',
+                type:    r.reservationType || 'daily',
+                endTime: endTime
+            };
         });
-        seats = remoteSeats;
+
+        // 이전엔 있었는데 지금 없는 좌석 → 퇴실 (첫 로드 제외)
+        if (!_firstLoad) {
+            Object.keys(seats).forEach(id => {
+                if (seats[id]?.status === 'occupied' && newSeats[id]?.status === 'empty') {
+                    showToast('warning', `💨 ${id}석 이용 종료`, '예약이 완료되거나 취소되었습니다.');
+                    addLog(`${id}석 퇴실 처리`);
+                }
+            });
+        }
+
+        _firstLoad = false;  // 첫 로드 완료
+        seats = newSeats;
         renderSeats();
         updateStats();
-    }, (error) => { console.error("Firebase 좌석 연결 에러:", error); });
+    }, (error) => { console.error("reservations 실시간 연결 에러:", error); });
 }
 
 async function saveCafeInfo() {
@@ -255,7 +319,12 @@ function updateTimers() {
         if (rem <= 0 && s.status !== 'empty') {
             addNotification('danger', `⏰ ${id}석 이용 종료`, `${s.name || '사용자'}의 이용 시간이 만료되었습니다.`);
             showToast('danger', `${id}석 시간 만료`, '자동 퇴실 처리되었습니다.');
-            updateFirebaseSeat(id, { status: 'empty', name: '', type: '', endTime: null, userId: '' });
+            addLog(`${id}석 - ${s.name || '사용자'} 이용 시간 만료 퇴실`);
+            // reservations status → completed 업데이트
+            expireReservation(id, s.userId);
+            seats[id] = { status: 'empty', name: '', type: '', endTime: null, userId: '' };
+            renderSeats();
+            updateStats();
             return;
         }
         if (rem <= 900 && rem > 0 && s.status === 'occupied') {
@@ -290,7 +359,7 @@ function updateStats() {
 function clickSeat(id) {
     const s = seats[id];
     if (s && s.status !== 'empty') {
-        if (confirm(`⚠️ [${id}석] (${s.name} 사용자)을 강제 퇴실 처리하시겠습니까?\n이 작업은 파이어베이스 클라우드에 즉시 반영됩니다.`)) {
+        if (confirm(`⚠️ [${id}석] (${s.name} 사용자)을 강제 퇴실 처리하시겠습니까?`)) {
             updateFirebaseSeat(id, { status: 'empty', name: '', type: '', endTime: null, userId: '' });
             addLog(`${id}석 관리자 강제 퇴실`);
             forceEvictReservation(id);
@@ -308,6 +377,22 @@ async function forceEvictReservation(seatId) {
             await updateDoc(doc(db, "reservations", docSnap.id), { status: "force_cancelled" });
         });
     } catch(e) { console.error("reservations 강제퇴실 업데이트 실패:", e); }
+}
+
+async function expireReservation(seatId, userId) {
+    if (!cafeDocRef) return;
+    const cafeId = cafeDocRef.id;
+    try {
+        const q = query(collection(db, "reservations"),
+            where("cafeId", "==", cafeId),
+            where("seatId", "==", seatId),
+            where("status", "in", ["active", "confirmed"])
+        );
+        const snap = await getDocs(q);
+        snap.forEach(async (docSnap) => {
+            await updateDoc(doc(db, "reservations", docSnap.id), { status: "completed" });
+        });
+    } catch(e) { console.error("만료 처리 실패:", e); }
 }
 
 async function updateFirebaseSeat(seatId, data) {
@@ -492,14 +577,31 @@ function renderUserStatus(data, tab) {
     data.forEach(u => {
         const badges = [];
         u.items.forEach(r => {
-            const type = r.reservationType || (r.zone === 'A' ? 'period' : r.zone === 'B' ? 'fixed' : r.type || 'period');
-            if ((r.zone === 'A' || type === 'period') && (r.days || r.weeks)) {
+            const type = r.reservationType || (r.zone === 'A' ? 'daily' : r.zone === 'B' ? 'fixed' : r.type || 'daily');
+
+            // 당일권
+            if (type === 'daily') {
+                if (tab !== 'all' && tab !== 'period' && tab !== 'locker') return;
+                // 사물함 탭에서는 당일권 뱃지는 숨기고 아래 lockerAddon만 표시
+                if (tab === 'locker') { /* 당일권 뱃지 스킵, lockerAddon 처리로 넘어감 */ }
+                else {
+                const hrs = r.hours || 0;
+                const createdMs = r.createdAt?.seconds ? r.createdAt.seconds * 1000 : Date.now();
+                const endMs = r.endTimestamp || (createdMs + hrs * 3600 * 1000);
+                const minsLeft = Math.ceil((endMs - Date.now()) / 60000);
+                const timeLeft = minsLeft <= 0 ? '시간 만료' : minsLeft < 60 ? minsLeft + '분 남음' : Math.floor(minsLeft/60) + '시간 ' + (minsLeft%60) + '분 남음';
+                const cls = minsLeft <= 0 ? 'expired' : minsLeft <= 15 ? 'expiring' : 'period';
+                badges.push('<span class="usc-badge ' + cls + '">⏱️ 당일권 ' + (r.seatId||'') + ' ' + timeLeft + '</span>');
+                } // end else (tab !== locker)
+            // 기간권
+            } else if (type === 'period' && (r.days || r.weeks)) {
                 if (tab !== 'all' && tab !== 'period') return;
                 const totalDays = r.days || (r.weeks * 7);
                 const left = daysLeft(r.createdAt, totalDays);
                 const cls = left === null ? 'period' : left <= 3 ? 'expiring' : left < 0 ? 'expired' : 'period';
                 const leftTxt = left === null ? '' : left < 0 ? '만료' : left + '일 남음';
                 badges.push('<span class="usc-badge ' + cls + '">📅 기간권 ' + (r.seatId||'') + ' ' + leftTxt + '</span>');
+            // 고정석
             } else if (r.zone === 'B' || type === 'fixed') {
                 if (tab !== 'all' && tab !== 'fixed') return;
                 const totalDays = r.days || (r.weeks * 7) || 14;
@@ -507,9 +609,11 @@ function renderUserStatus(data, tab) {
                 const cls = left === null ? 'fixed' : left <= 3 ? 'expiring' : left < 0 ? 'expired' : 'fixed';
                 const leftTxt = left === null ? '' : left < 0 ? '만료' : left + '일 남음';
                 badges.push('<span class="usc-badge ' + cls + '">🪑 고정석 ' + (r.seatId||'') + ' ' + leftTxt + '</span>');
+            // 스터디룸
             } else if (type === 'room') {
                 if (tab !== 'all' && tab !== 'room') return;
                 badges.push('<span class="usc-badge room">🏠 스터디룸 ' + (r.seatId||'') + '</span>');
+            // 사물함 단독
             } else if (type === 'locker') {
                 if (tab !== 'all' && tab !== 'locker') return;
                 const totalDays = r.days || 30;
@@ -517,6 +621,18 @@ function renderUserStatus(data, tab) {
                 const cls = left === null ? 'locker' : left <= 3 ? 'expiring' : left < 0 ? 'expired' : 'locker';
                 const leftTxt = left === null ? '' : left < 0 ? '만료' : left + '일 남음';
                 badges.push('<span class="usc-badge ' + cls + '">🔒 사물함 ' + (r.seatId||'') + ' ' + leftTxt + '</span>');
+            }
+
+            // 사물함 애드온 (당일권/기간권과 함께 결제한 경우)
+            if (r.lockerAddon && r.lockerAddon.seatId) {
+                if (tab === 'all' || tab === 'locker') {
+                    const la = r.lockerAddon;
+                    const totalDays = la.days || 7;
+                    const left = daysLeft(r.createdAt, totalDays);
+                    const cls = left === null ? 'locker' : left <= 3 ? 'expiring' : left < 0 ? 'expired' : 'locker';
+                    const leftTxt = left === null ? '' : left < 0 ? '만료' : left + '일 남음';
+                    badges.push('<span class="usc-badge ' + cls + '">🔒 사물함(추가) ' + la.seatId + ' ' + leftTxt + '</span>');
+                }
             }
         });
         if (badges.length === 0) return;

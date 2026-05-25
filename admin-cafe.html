@@ -288,9 +288,16 @@ function getRoomData() {
     if (role !== 'admin' && role !== 'superAdmin') { alert('접근 권한이 없습니다.'); location.href = 'index.html'; return; }
     currentUser = user;
 
-    const cafeDoc = await getDoc(doc(db, 'cafes', user.uid));
-    if (!cafeDoc.exists()) return;
-    const d = cafeDoc.data();
+    // ownerUid로 업장 조회 (문서 ID가 uid와 다를 수 있음)
+    const { collection: _col, query: _q, where: _wh, getDocs: _gd } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const cafeQ = _q(_col(db, 'cafes'), _wh('ownerUid', '==', user.uid));
+    const cafeSnap = await _gd(cafeQ);
+
+    // 이미 업장이 등록돼 있으면 바로 대시보드로
+    if (!cafeSnap.empty) {
+      location.href = 'admin-dashboard.html';
+      return;
+    }
 
     // 기본 정보
     document.getElementById('cafeName').value    = d.cafeName      || '';

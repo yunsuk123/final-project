@@ -2,7 +2,10 @@ import { auth, db } from "./firebase.js";
 import {
   signInWithEmailAndPassword,
   sendEmailVerification,
-  signOut
+  signOut,
+  setPersistence,
+  browserSessionPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc,
@@ -32,6 +35,8 @@ loginForm.addEventListener("submit", async (e) => {
   showMessage("");
 
   try {
+    // 일단 localStorage로 로그인 (토스페이 리다이렉트 후에도 세션 유지)
+    await setPersistence(auth, browserLocalPersistence);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -41,11 +46,13 @@ loginForm.addEventListener("submit", async (e) => {
         emailVerified: user.emailVerified
       });
     } catch (updateError) {
-      console.error("emailVerified 업데이트 실패:", updateError);
+      console.error("emailVerified 업데이스 실패:", updateError);
     }
 
-    // 총관리자 (기존 하드코딩 방식 유지)
+    // 총관리자 → sessionPersistence로 전환 (탭 간 세션 분리)
     if (user.email === SUPER_ADMIN_EMAIL) {
+      await setPersistence(auth, browserSessionPersistence);
+      await signInWithEmailAndPassword(auth, email, password);
       sessionStorage.setItem("isAdmin", "true");
       sessionStorage.setItem("adminEmail", user.email);
       alert("총 관리자 로그인 성공");
@@ -65,14 +72,17 @@ loginForm.addEventListener("submit", async (e) => {
     const role = userDoc.exists() ? userDoc.data().role : "user";
 
     if (role === "admin") {
+      // 업장 관리자 → sessionPersistence로 전환 (탭 간 세션 분리)
+      await setPersistence(auth, browserSessionPersistence);
+      await signInWithEmailAndPassword(auth, email, password);
       sessionStorage.setItem("userRole", "admin");
       sessionStorage.setItem("userUid", user.uid);
       alert("관리자 로그인 성공");
-      location.href = "admin-cafe.html"; // 업장 등록/관리 페이지
+      location.href = "admin-cafe.html";
       return;
     }
 
-    // 일반 사용자
+    // 일반 사용자 → localStorage 유지 (결제 리다이렉트 후에도 세션 살아있어야 함)
     sessionStorage.removeItem("isAdmin");
     sessionStorage.setItem("userRole", "user");
     showMessage("로그인 성공", "green");
@@ -110,6 +120,7 @@ resendBtn.addEventListener("click", async () => {
   }
 
   try {
+    await setPersistence(auth, browserSessionPersistence);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 

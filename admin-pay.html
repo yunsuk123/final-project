@@ -231,7 +231,7 @@
     </div>
 
     <!-- KPI -->
-    <div class="kpi-grid">
+    <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
       <div class="kpi-card blue">
         <div class="kpi-icon">💰</div>
         <div class="kpi-label">총 매출</div>
@@ -249,6 +249,12 @@
         <div class="kpi-label">건당 평균 결제</div>
         <div class="kpi-value" id="kpiAvg">-</div>
         <div class="kpi-sub">예약 1건 평균</div>
+      </div>
+      <div class="kpi-card" style="border-top: 4px solid #1d9e75;">
+        <div class="kpi-icon">🔒</div>
+        <div class="kpi-label">사물함 포함 예약</div>
+        <div class="kpi-value" id="kpiLocker" style="color:#1d9e75;">-</div>
+        <div class="kpi-sub" id="kpiLockerAmt">-</div>
       </div>
     </div>
 
@@ -294,6 +300,7 @@
               <th>예약 건수</th>
               <th>당일권 (A구역)</th>
               <th>기간권 (B구역)</th>
+              <th>🔒 사물함 포함</th>
               <th>비중</th>
             </tr>
           </thead>

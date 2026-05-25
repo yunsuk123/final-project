@@ -172,6 +172,8 @@
       <div class="date-row">
         <label>📅 날짜</label>
         <input type="date" id="pickDate" />
+        <label id="startTimeLabel" style="display:none">🕐 입실 시각</label>
+        <input type="time" id="pickStartTime" style="display:none;padding:8px 14px;border:2px solid #e0e4f7;border-radius:10px;font-size:14px;font-weight:600;outline:none;" />
       </div>
 
       <!-- 당일권 옵션 -->
@@ -240,6 +242,29 @@
         <div class="seat-summary-text">이용: <span id="selectedTimeLabel">-</span></div>
         <div class="seat-summary-text">금액: <span id="selectedPriceLabel">0원</span></div>
       </div>
+
+      <!-- 사물함 추가 옵션 (당일권/기간권/고정석 선택 시 표시) -->
+      <div id="locker-addon-section" style="display:none; margin-top:16px; border:2px solid #e0e4f7; border-radius:16px; padding:18px; background:#fafbff;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <div>
+            <div style="font-size:15px; font-weight:800; color:#333;">🔒 사물함 함께 추가하기</div>
+            <div style="font-size:12px; color:#888; margin-top:3px;">선택 사항 — 당일권/기간권과 함께 결제됩니다</div>
+          </div>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+            <input type="checkbox" id="lockerAddonCheck" style="width:18px;height:18px;accent-color:#4a6cf7;" onchange="toggleLockerAddon(this.checked)">
+            <span style="font-size:13px; font-weight:700; color:#4a6cf7;">추가</span>
+          </label>
+        </div>
+        <div id="locker-addon-body" style="display:none;">
+          <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:8px;">이용 기간 선택</div>
+          <div class="option-grid" id="locker-addon-period-opts"></div>
+          <div id="locker-addon-seat-wrap" style="display:none; margin-top:14px;">
+            <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:8px;">사물함 번호 선택</div>
+            <div class="seat-grid" id="seatGridLockerAddon"></div>
+          </div>
+          <div id="locker-addon-summary" style="display:none; margin-top:12px; background:#f0f2ff; border-radius:10px; padding:10px 14px; font-size:13px; color:#4a6cf7; font-weight:700;"></div>
+        </div>
+      </div>
     </div>
     <button class="btn-primary" id="goToPayBtn" onclick="goToStep3()" disabled>결제하기 →</button>
     <button class="btn-outline" onclick="goToStep1()">← 지점 다시 선택</button>
@@ -256,6 +281,7 @@
         <div class="order-row"><span>좌석/룸</span> <span id="pay_seat">-</span></div>
         <div class="order-row"><span>날짜</span>    <span id="pay_date">-</span></div>
         <div class="order-row"><span>이용</span>    <span id="pay_time">-</span></div>
+        <div class="order-row" id="pay_locker_row" style="display:none"><span>🔒 사물함</span> <span id="pay_locker">-</span></div>
         <div class="order-row total"><span>결제 금액</span><span id="pay_total">-</span></div>
       </div>
       <h4 style="font-size:15px;font-weight:700;color:#333;margin-bottom:12px;">결제 수단 선택</h4>
@@ -304,7 +330,15 @@
     // 결제 후 저장용 메타
     reservationType: null,
     days: null,
-    hours: null
+    hours: null,
+    startTime: null,  // 입실 시각 (HH:MM)
+    // 사물함 추가 (애드온)
+    lockerAddon: {
+      enabled: false,
+      seat: null,
+      optionKey: null,
+      price: 0
+    }
   };
 
   let map = null, ps = null;
@@ -338,7 +372,12 @@
     document.getElementById("pickDate").value = today;
     document.getElementById("pickDate").min   = today;
     window._rsv.date = today;
+    // 현재 시각을 기본 입실 시각으로 설정
+    const nowTime = new Date();
+    window._rsv.startTime = String(nowTime.getHours()).padStart(2,'0') + ':' + String(nowTime.getMinutes()).padStart(2,'0');
+    document.getElementById("pickStartTime").value = window._rsv.startTime;
     document.getElementById("pickDate").onchange = e => { window._rsv.date = e.target.value; };
+    document.getElementById("pickStartTime").onchange = e => { window._rsv.startTime = e.target.value; };
 
     // 타입 탭 표시 여부
     const data = cafe.rawData || {};
@@ -431,7 +470,89 @@
     }
 
     updateSummary();
+
+    // 입실 시각 표시: 당일권/스터디룸일 때만 (시간 단위 이용권)
+    const showStartTime = ["daily","room"].includes(type);
+    const startTimeLbl = document.getElementById("startTimeLabel");
+    const startTimeInp = document.getElementById("pickStartTime");
+    if (startTimeLbl) startTimeLbl.style.display = showStartTime ? "inline" : "none";
+    if (startTimeInp) startTimeInp.style.display = showStartTime ? "inline-block" : "none";
+    if (!showStartTime) window._rsv.startTime = null;
+
+    // 사물함 애드온 섹션: 당일권/기간권/고정석일 때만 표시
+    const showAddon = ["daily","period","fixed"].includes(type);
+    const addonSec = document.getElementById("locker-addon-section");
+    if (addonSec) {
+      const lockerData = window._rsv.cafe?.rawData?.locker;
+      addonSec.style.display = (showAddon && lockerData?.enabled && lockerData?.priceList?.length > 0) ? "block" : "none";
+    }
+    // 타입 바꾸면 애드온 초기화
+    const addonCheck = document.getElementById("lockerAddonCheck");
+    if (addonCheck) { addonCheck.checked = false; toggleLockerAddon(false); }
   };
+
+  // ── 사물함 애드온 토글 ──
+  window.toggleLockerAddon = function(enabled) {
+    const r = window._rsv;
+    r.lockerAddon.enabled = enabled;
+    r.lockerAddon.seat = null;
+    r.lockerAddon.optionKey = null;
+    r.lockerAddon.price = 0;
+
+    const body = document.getElementById("locker-addon-body");
+    body.style.display = enabled ? "block" : "none";
+
+    if (enabled) {
+      const lockerData = r.cafe?.rawData?.locker || {};
+      const priceList  = lockerData.priceList || [];
+      const count      = lockerData.count || 10;
+
+      // 기간 옵션 렌더
+      renderOpts("locker-addon-period-opts", priceList, row => `${row.key}일`, row => row.price, row => {
+        r.lockerAddon.optionKey = row.key;
+        r.lockerAddon.price     = row.price;
+        // 사물함 번호 선택 그리드 표시
+        buildLockerAddonSeats(count);
+        document.getElementById("locker-addon-seat-wrap").style.display = "block";
+        updateAddonSummary();
+        updateSummary();
+      });
+    }
+
+    document.getElementById("locker-addon-seat-wrap").style.display = "none";
+    document.getElementById("locker-addon-summary").style.display   = "none";
+    updateSummary();
+  };
+
+  function buildLockerAddonSeats(count) {
+    const grid = document.getElementById("seatGridLockerAddon");
+    grid.innerHTML = "";
+    for (let i = 1; i <= count; i++) {
+      const id = `L${i}`;
+      const el = document.createElement("div");
+      el.className = "seat";
+      el.textContent = id;
+      el.onclick = () => {
+        grid.querySelectorAll(".seat").forEach(s => s.classList.remove("selected"));
+        el.classList.add("selected");
+        window._rsv.lockerAddon.seat = id;
+        updateAddonSummary();
+        updateSummary();
+      };
+      grid.appendChild(el);
+    }
+  }
+
+  function updateAddonSummary() {
+    const la  = window._rsv.lockerAddon;
+    const el  = document.getElementById("locker-addon-summary");
+    if (la.optionKey && la.seat) {
+      el.style.display = "block";
+      el.textContent   = `🔒 ${la.seat} · ${la.optionKey}일 · +${la.price.toLocaleString()}원`;
+    } else {
+      el.style.display = "none";
+    }
+  }
 
   // ── 옵션 버튼 렌더 헬퍼 ──
   function renderOpts(containerId, list, labelFn, priceFn, onSelect) {
@@ -600,8 +721,9 @@
   // ── 요약 업데이트 ──
   function updateSummary() {
     const r = window._rsv;
-    const price = r.optionPrice || 0;
-    r.finalPrice = price;
+    const basePrice = r.optionPrice || 0;
+    const addonPrice = (r.lockerAddon.enabled && r.lockerAddon.seat) ? r.lockerAddon.price : 0;
+    r.finalPrice = basePrice + addonPrice;
 
     let seatLabel = r.seat ? r.seat.id : "없음";
     let timeLabel = "-";
@@ -618,10 +740,17 @@
       timeLabel = `${r.optionKey}일 이용`;
     }
 
+    const totalDisplay = r.finalPrice > 0
+      ? (addonPrice > 0 ? `${basePrice.toLocaleString()}원 + 사물함 ${addonPrice.toLocaleString()}원 = ${r.finalPrice.toLocaleString()}원` : `${basePrice.toLocaleString()}원`)
+      : "옵션을 선택하세요";
+
     document.getElementById("selectedSeatLabel").textContent  = seatLabel;
     document.getElementById("selectedTimeLabel").textContent  = timeLabel;
-    document.getElementById("selectedPriceLabel").textContent = price > 0 ? `${price.toLocaleString()}원` : "옵션을 선택하세요";
-    document.getElementById("goToPayBtn").disabled = !(r.seat && price > 0);
+    document.getElementById("selectedPriceLabel").textContent = totalDisplay;
+
+    // 사물함 addon 선택 시에만 goToPayBtn 활성화 조건에 locker seat 포함
+    const lockerOk = !r.lockerAddon.enabled || (r.lockerAddon.seat && r.lockerAddon.optionKey);
+    document.getElementById("goToPayBtn").disabled = !(r.seat && basePrice > 0 && lockerOk);
   }
 
   // ── STEP 3 이동 ──
@@ -633,11 +762,23 @@
     document.getElementById("pay_type").textContent = typeLabels[r.type] || r.type;
     document.getElementById("pay_seat").textContent = r.seat.id;
     document.getElementById("pay_date").textContent = r.date;
+    const startTxt = (r.startTime && (r.type === "daily" || r.type === "room")) ? ` (${r.startTime} 입실)` : "";
     document.getElementById("pay_time").textContent = r.type === "daily"
-      ? `${r.optionKey}시간 이용`
+      ? `${r.optionKey}시간 이용${startTxt}`
       : r.type === "room"
         ? (() => { const rm = r.cafe?.rawData?.rooms?.list?.[r.roomType]; return rm ? `${rm.persons}인실 ${r.optionKey}시간` : `${r.optionKey}시간`; })()
         : `${r.optionKey}일 이용`;
+
+    // 사물함 애드온 행
+    const lockerRow = document.getElementById("pay_locker_row");
+    const la = r.lockerAddon;
+    if (la.enabled && la.seat && la.optionKey) {
+      lockerRow.style.display = "flex";
+      document.getElementById("pay_locker").textContent = `${la.seat} · ${la.optionKey}일 (+${la.price.toLocaleString()}원)`;
+    } else {
+      lockerRow.style.display = "none";
+    }
+
     document.getElementById("pay_total").textContent = `${r.finalPrice.toLocaleString()}원`;
     document.getElementById("step2").style.display = "none";
     document.getElementById("step3").style.display = "block";
@@ -698,6 +839,14 @@
       // 기간/시간 정보
       if (r.days)  successUrl.searchParams.set("days",  r.days);
       if (r.hours) successUrl.searchParams.set("hours", r.hours);
+      if (r.startTime) successUrl.searchParams.set("startTime", r.startTime);
+      // 사물함 애드온 정보
+      const la = r.lockerAddon;
+      if (la.enabled && la.seat && la.optionKey) {
+        successUrl.searchParams.set("lockerSeat",  la.seat);
+        successUrl.searchParams.set("lockerDays",  la.optionKey);
+        successUrl.searchParams.set("lockerPrice", la.price);
+      }
 
       await tossPayments.requestPayment(r.payMethod, {
         amount:       r.finalPrice,
