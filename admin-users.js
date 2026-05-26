@@ -19,42 +19,26 @@ const adminLogoutBtn = document.getElementById("adminLogoutBtn");
 
 function formatDate(timestamp) {
   if (!timestamp) return "-";
-
   if (timestamp.toDate) {
     const date = timestamp.toDate();
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
-
   if (timestamp.seconds) {
     const date = new Date(timestamp.seconds * 1000);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
-
   return "-";
 }
 
 function getSuspendedDate(suspendedUntil) {
   if (!suspendedUntil) return null;
-
-  if (suspendedUntil.toDate) {
-    return suspendedUntil.toDate();
-  }
-
-  if (suspendedUntil.seconds) {
-    return new Date(suspendedUntil.seconds * 1000);
-  }
-
+  if (suspendedUntil.toDate) return suspendedUntil.toDate();
+  if (suspendedUntil.seconds) return new Date(suspendedUntil.seconds * 1000);
   return new Date(suspendedUntil);
 }
 
 function getUserName(data) {
-  return (
-    data.name ||
-    data.nickname ||
-    data.username ||
-    data.userName ||
-    "-"
-  );
+  return data.name || data.nickname || data.username || data.userName || "-";
 }
 
 async function loadUsers() {
@@ -62,11 +46,7 @@ async function loadUsers() {
     const snapshot = await getDocs(collection(db, "users"));
 
     if (snapshot.empty) {
-      userTableBody.innerHTML = `
-        <tr>
-          <td colspan="6">회원 데이터가 없습니다.</td>
-        </tr>
-      `;
+      userTableBody.innerHTML = `<tr><td colspan="6">회원 데이터가 없습니다.</td></tr>`;
       return;
     }
 
@@ -76,13 +56,12 @@ async function loadUsers() {
       const uid = docSnap.id;
       const data = docSnap.data();
 
-      const reportCount = data.reportCount || 0;
+      // ✅ 관리자 계정 제외
+      if (data.role === "admin" || data.role === "superAdmin") return;
 
+      const reportCount = data.reportCount || 0;
       const suspendedDate = getSuspendedDate(data.suspendedUntil);
-      const isSuspended =
-        suspendedDate &&
-        !isNaN(suspendedDate.getTime()) &&
-        suspendedDate > new Date();
+      const isSuspended = suspendedDate && !isNaN(suspendedDate.getTime()) && suspendedDate > new Date();
 
       let statusText = "정상";
       let statusClass = "status-active";
@@ -120,14 +99,11 @@ async function loadUsers() {
       `;
     });
 
-    userTableBody.innerHTML = html;
+    userTableBody.innerHTML = html || `<tr><td colspan="6">일반 회원이 없습니다.</td></tr>`;
+
   } catch (error) {
     console.error("회원 목록 불러오기 실패:", error);
-    userTableBody.innerHTML = `
-      <tr>
-        <td colspan="6">회원 정보를 불러오지 못했습니다.</td>
-      </tr>
-    `;
+    userTableBody.innerHTML = `<tr><td colspan="6">회원 정보를 불러오지 못했습니다.</td></tr>`;
   }
 }
 
@@ -159,7 +135,6 @@ async function deleteUserDoc(uid, name, email) {
 
     if (email) {
       const normalizedEmail = email.trim().toLowerCase();
-
       await setDoc(doc(db, "blockedEmails", normalizedEmail), {
         email: normalizedEmail,
         blockedAt: serverTimestamp(),
@@ -170,9 +145,9 @@ async function deleteUserDoc(uid, name, email) {
     }
 
     await deleteDoc(doc(db, "users", uid));
-
     alert("삭제되었습니다.");
     await loadUsers();
+
   } catch (error) {
     console.error("회원 삭제 실패:", error);
     alert("삭제에 실패했습니다.\n" + error.message);
@@ -182,7 +157,6 @@ async function deleteUserDoc(uid, name, email) {
 document.addEventListener("click", async (e) => {
   const deleteButton = e.target.closest(".delete-btn");
   if (!deleteButton) return;
-
   await deleteUserDoc(
     deleteButton.dataset.uid,
     deleteButton.dataset.name,
