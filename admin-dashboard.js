@@ -2,6 +2,7 @@ import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, onSnapshot, updateDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+let _isLoggingOut = false;
 let cafeDocRef = null;
 let ZONE_A = 30;
 let ZONE_B = 20;
@@ -12,7 +13,7 @@ let seatUnsubscribe = null;
 let cafeUnsubscribe = null;
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) { alert("로그인이 필요합니다."); location.href = "login.html"; return; }
+    if (!user) { if (_isLoggingOut) return; alert("로그인이 필요합니다."); location.href = "login.html"; return; }
     try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const role = userDoc.exists() ? userDoc.data().role : null;
@@ -49,8 +50,12 @@ onAuthStateChanged(auth, async (user) => {
     const logoutBtn = document.getElementById('btn-logout');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
+            _isLoggingOut = true;
             import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js")
-                .then(({ signOut }) => signOut(auth).then(() => location.href = "login.html"));
+                .then(({ signOut }) => signOut(auth).then(() => {
+                    alert("로그아웃 되었습니다.");
+                    location.href = "login.html";
+                }));
         });
     }
 });
