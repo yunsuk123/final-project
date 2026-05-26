@@ -504,10 +504,14 @@ window.showPage = function(id) {
         seats:   '좌석 배치도 · 실시간 모니터링',
         info:    '업장 정보 설정',
         users:   '이용자 현황',
-        revenue: '매출 현황'  // ✅ 추가
+        revenue: '매출 현황'
     };
     const titleEl = document.getElementById('page-title');
     if (titleEl) titleEl.textContent = titles[id] || '';
+
+    // ✅ 페이지 진입 시 자동 로드
+    if (id === 'revenue') loadRevenue();
+    if (id === 'users')   loadUserStatus();
 };
 
 function liveClock() {
@@ -797,10 +801,10 @@ window.loadRevenue = async function() {
 
     try {
         const q = query(
-            collection(db, 'reservations'),
-            where('cafeId', '==', cafeId),
-            where('status', 'in', ['confirmed', 'active'])
-        );
+    collection(db, 'reservations'),
+    where('cafeId', '==', cafeId),
+    where('status', 'in', ['confirmed', 'active', 'completed'])
+);
         const snap = await getDocs(q);
 
         let todayRev = 0, weekRev = 0, monthRev = 0;

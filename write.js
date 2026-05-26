@@ -112,8 +112,37 @@ onAuthStateChanged(auth, async (user) => {
 
   currentUser = user;
 
+  // Firestore users 컬렉션에서 실제 이름 가져오기
+  let displayName = "";
+  try {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      displayName = userDoc.data().name || userDoc.data().displayName || user.email?.split("@")[0] || "";
+    } else {
+      displayName = user.displayName || user.email?.split("@")[0] || "";
+    }
+  } catch (e) {
+    displayName = user.displayName || user.email?.split("@")[0] || "";
+  }
+
+  // 네브바 업데이트
+  const navBtn = document.querySelector(".nav-btn");
+  if (navBtn) {
+    navBtn.textContent = "로그아웃";
+    navBtn.href = "#";
+    navBtn.onclick = async (e) => {
+      e.preventDefault();
+      const { signOut } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      await signOut(auth);
+      location.href = "login.html";
+    };
+  }
+
+  const userNameSpan = document.getElementById("navUserName");
+  if (userNameSpan) userNameSpan.textContent = displayName + "님";
+
   if (!isEditMode && !authorInput.value) {
-    authorInput.value = user.displayName || user.email?.split("@")[0] || "";
+    authorInput.value = displayName;
   }
 
   await loadPostForEdit(user);
@@ -194,10 +223,7 @@ writeForm.addEventListener("submit", async (event) => {
       });
 
       showMessage("게시글이 수정되었습니다.", "success");
-
-      setTimeout(() => {
-        location.href = "mypage.html";
-      }, 1000);
+      setTimeout(() => { location.href = "mypage.html"; }, 1000);
 
     } else {
       await addDoc(collection(db, "posts"), {
@@ -227,10 +253,7 @@ writeForm.addEventListener("submit", async (event) => {
       showMessage("글이 등록되었습니다.", "success");
       writeForm.reset();
       studyFields.style.display = "none";
-
-      setTimeout(() => {
-        location.href = "community.html";
-      }, 1000);
+      setTimeout(() => { location.href = "community.html"; }, 1000);
     }
   } catch (error) {
     console.error("게시글 저장 오류:", error);

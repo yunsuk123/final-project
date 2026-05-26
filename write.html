@@ -5,260 +5,252 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>글쓰기 | Study Spot</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Pretendard", "Malgun Gothic", sans-serif;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Pretendard", "Malgun Gothic", sans-serif; }
 
-    body {
-      background: #f7f8fc;
-      color: #222;
-      line-height: 1.6;
-    }
+    body { background: #f0f2fa; color: #222; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+    a { text-decoration: none; color: inherit; }
+    button { border: none; cursor: pointer; font-family: inherit; }
 
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
+    .container { width: 92%; max-width: 1100px; margin: 0 auto; }
 
-    button {
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
+    /* ── 헤더 ── */
     header {
-      background: #ffffff;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
       position: sticky;
       top: 0;
       z-index: 1000;
     }
-
     .navbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 18px 0;
+      padding: 16px 0;
     }
-
-    .logo {
-      font-size: 28px;
-      font-weight: 800;
-      color: #4a6cf7;
-    }
-
-    .nav-menu {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-      list-style: none;
-    }
-
-    .nav-menu a {
-      font-size: 15px;
-      font-weight: 500;
-      transition: 0.2s;
-    }
-
-    .nav-menu a:hover {
-      color: #4a6cf7;
-    }
-
+    .logo { font-size: 24px; font-weight: 800; color: #4a6cf7; }
+    .nav-menu { display: flex; gap: 20px; align-items: center; list-style: none; }
+    .nav-menu a { font-size: 15px; font-weight: 500; transition: 0.2s; }
+    .nav-menu a:hover { color: #4a6cf7; }
     .nav-btn {
       background: #4a6cf7;
       color: #fff !important;
-      padding: 10px 18px;
+      padding: 9px 18px;
       border-radius: 8px;
       font-weight: 700;
-    }
-
-    .nav-btn:hover {
-      background: #3655d6;
-    }
-
-    .write-section {
-      padding: 60px 0 80px;
-    }
-
-    .write-card {
-      background: #fff;
-      border-radius: 24px;
-      padding: 36px;
-      box-shadow: 0 10px 30px rgba(74, 108, 247, 0.08);
-    }
-
-    .write-header {
-      margin-bottom: 28px;
-    }
-
-    .write-header h1 {
-      font-size: 34px;
-      font-weight: 800;
-      margin-bottom: 10px;
-    }
-
-    .write-header p {
-      color: #666;
       font-size: 15px;
+      transition: 0.2s;
+    }
+    .nav-btn:hover { background: #3655d6; }
+    #navUserName { font-weight: 600; color: #4a6cf7; font-size: 15px; white-space: nowrap; }
+
+    /* ── 히어로 (마이페이지랑 동일 스타일) ── */
+    .write-hero {
+      background: linear-gradient(135deg, #4a6cf7 0%, #6d8dff 100%);
+      padding: 40px 0 0;
+    }
+    .hero-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      padding-bottom: 32px;
+    }
+    .hero-left h1 { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .hero-left p { color: rgba(255,255,255,0.75); font-size: 14px; }
+
+    .hero-bottom-curve {
+      background: linear-gradient(135deg, #4a6cf7 0%, #6d8dff 100%);
+      height: 28px;
+      position: relative;
+    }
+    .hero-bottom-curve::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 28px;
+      background: #f0f2fa;
+      border-radius: 28px 28px 0 0;
     }
 
-    .form-group {
-      margin-bottom: 22px;
+    /* ── 본문 ── */
+    main { flex: 1; }
+    .write-section { padding: 28px 0 60px; }
+
+    .write-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 22px;
+      align-items: start;
     }
 
+    /* ── 메인 폼 패널 ── */
+    .panel {
+      background: #fff;
+      border-radius: 16px;
+      padding: 26px 28px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      margin-bottom: 18px;
+    }
+    .panel:last-child { margin-bottom: 0; }
+    .panel h2 { font-size: 18px; font-weight: 800; color: #1a1f36; margin-bottom: 4px; }
+    .panel-desc { color: #aaa; font-size: 13px; margin-bottom: 20px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group:last-child { margin-bottom: 0; }
     .form-group label {
       display: block;
-      margin-bottom: 8px;
-      font-size: 15px;
+      margin-bottom: 7px;
+      font-size: 12px;
       font-weight: 700;
-      color: #333;
+      color: #555;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
     }
-
     .form-group input,
     .form-group select,
     .form-group textarea {
       width: 100%;
-      padding: 14px 16px;
-      border: 1px solid #d8def7;
-      border-radius: 12px;
-      font-size: 15px;
-      outline: none;
+      padding: 11px 13px;
+      border: 1.5px solid #e0e6ff;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #222;
       background: #fff;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
       border-color: #4a6cf7;
+      box-shadow: 0 0 0 3px rgba(74,108,247,0.08);
     }
-
-    .form-group textarea {
-      min-height: 220px;
-      resize: vertical;
-    }
-
-    .extra-study-fields {
-      display: none;
-      padding: 22px;
-      margin-bottom: 22px;
-      border-radius: 18px;
+    .form-group input[readonly] {
       background: #f8faff;
-      border: 1px solid #e6ecff;
+      color: #aaa;
+      cursor: default;
+      border-color: #eef2ff;
+    }
+    .form-group textarea {
+      min-height: 280px;
+      resize: vertical;
+      line-height: 1.75;
     }
 
-    .extra-study-fields h3 {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 16px;
-      color: #4a6cf7;
-    }
-
-    .study-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .button-group {
+    /* ── 사이드바 ── */
+    .write-sidebar {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 10px;
+      flex-direction: column;
+      gap: 16px;
+      position: sticky;
+      top: 90px;
+    }
+
+    .sidebar-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #bbb;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
     }
 
     .submit-btn {
+      width: 100%;
       background: #4a6cf7;
       color: #fff;
-      padding: 14px 24px;
-      border-radius: 12px;
-      font-size: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
       font-weight: 700;
+      transition: background 0.2s, transform 0.1s;
+      margin-bottom: 10px;
+      cursor: pointer;
     }
-
-    .submit-btn:hover {
-      background: #3655d6;
-    }
+    .submit-btn:hover { background: #3655d6; }
+    .submit-btn:active { transform: scale(0.98); }
 
     .sub-btn {
+      display: block;
+      width: 100%;
       background: #eef2ff;
       color: #4a6cf7;
-      padding: 14px 24px;
-      border-radius: 12px;
-      font-size: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
       font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+      border: none;
+      cursor: pointer;
     }
+    .sub-btn:hover { background: #dfe7ff; }
+    .sub-btn:last-child { margin-bottom: 0; }
 
-    .sub-btn:hover {
-      background: #dfe7ff;
-    }
-
-    .message-box {
-      margin-top: 20px;
-      padding: 16px;
-      border-radius: 12px;
+    /* ── 스터디 추가 필드 ── */
+    .extra-study-fields {
       display: none;
-      font-size: 14px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .study-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #4a6cf7;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    /* ── 메시지 박스 ── */
+    .message-box {
+      margin-top: 14px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      display: none;
+      font-size: 13px;
       font-weight: 600;
     }
+    .message-box.success { display: block; background: #eafaf0; color: #1a9a55; border: 1px solid #b6ecd1; }
+    .message-box.error   { display: block; background: #fff2f2; color: #d94040; border: 1px solid #f5c0c0; }
 
-    .message-box.success {
-      display: block;
-      background: #eafaf0;
-      color: #1a9a55;
+    /* ── 작성 팁 ── */
+    .tip-list { list-style: none; }
+    .tip-list li {
+      font-size: 12px;
+      color: #999;
+      padding: 6px 0;
+      border-bottom: 1px solid #f3f4f8;
+      line-height: 1.5;
     }
+    .tip-list li:last-child { border-bottom: none; }
+    .tip-list li::before { content: "· "; color: #4a6cf7; font-weight: 900; }
 
-    .message-box.error {
-      display: block;
-      background: #ffeaea;
-      color: #e64d4d;
+    /* ── 푸터 ── */
+    footer { background: #1f2430; color: #aaa; padding: 24px 0; margin-top: auto; }
+    .footer-wrap { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .footer-wrap p { font-size: 13px; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 980px) {
+      .write-layout { grid-template-columns: 1fr; }
+      .write-sidebar { position: static; }
     }
-
-    footer {
-      background: #1f2430;
-      color: #ddd;
-      padding: 28px 0;
-      margin-top: 20px;
-    }
-
-    .footer-wrap {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .footer-wrap p {
-      font-size: 14px;
-    }
-
     @media (max-width: 768px) {
-      .navbar {
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .nav-menu {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .write-card {
-        padding: 24px;
-      }
-
-      .write-header h1 {
-        font-size: 28px;
-      }
+      .navbar { flex-direction: column; gap: 12px; }
+      .nav-menu { flex-wrap: wrap; justify-content: center; }
+      .hero-left h1 { font-size: 22px; }
+      .panel { padding: 20px; }
     }
   </style>
 </head>
@@ -273,77 +265,102 @@
           <li><a href="community.html">커뮤니티</a></li>
           <li><a href="index.html#seats">좌석현황</a></li>
           <li><a href="index.html#groups">스터디그룹</a></li>
+          <li><span id="navUserName"></span></li>
           <li><a href="login.html" class="nav-btn">로그인</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <section class="write-section">
+  <!-- 히어로 배너 -->
+  <section class="write-hero">
     <div class="container">
-      <div class="write-card">
-        <div class="write-header">
+      <div class="hero-box">
+        <div class="hero-left">
           <h1>글쓰기</h1>
           <p>커뮤니티에 자유롭게 글을 작성해보세요. 스터디 모집 글은 추가 정보를 입력할 수 있습니다.</p>
         </div>
+      </div>
+    </div>
+  </section>
+  <div class="hero-bottom-curve"></div>
 
-        <form id="writeForm">
-          <div class="form-group">
-            <label for="category">카테고리</label>
-            <select id="category">
-              <option value="">카테고리를 선택하세요</option>
-              <option value="free">자유게시판</option>
-              <option value="study">스터디 모집</option>
-              <option value="review">후기 게시판</option>
-              </select>
+  <main>
+    <section class="write-section">
+      <div class="container">
+        <div class="write-layout">
+
+          <!-- 메인 폼 -->
+          <div>
+            <div class="panel">
+              <h2>게시글 작성</h2>
+              <p class="panel-desc">카테고리를 선택하고 제목과 내용을 입력해주세요.</p>
+              <form id="writeForm">
+                <div class="form-group">
+                  <label for="category">카테고리</label>
+                  <select id="category">
+                    <option value="">카테고리를 선택하세요</option>
+                    <option value="free">자유게시판</option>
+                    <option value="study">스터디 모집</option>
+                    <option value="review">후기 게시판</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="author">작성자</label>
+                  <input type="text" id="author" placeholder="작성자 이름" readonly>
+                </div>
+                <div class="form-group">
+                  <label for="title">제목</label>
+                  <input type="text" id="title" placeholder="제목을 입력하세요">
+                </div>
+                <div class="form-group">
+                  <label for="content">내용</label>
+                  <textarea id="content" placeholder="내용을 입력하세요"></textarea>
+                </div>
+                <div id="messageBox" class="message-box"></div>
+              </form>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="author">작성자</label>
-            <input type="text" id="author" placeholder="작성자 이름" readonly>
-          </div>
+          <!-- 사이드바 -->
+          <div class="write-sidebar">
+            <div class="sidebar-card">
+              <div class="sidebar-title">게시하기</div>
+              <button type="submit" form="writeForm" class="submit-btn">등록하기</button>
+              <a href="community.html" class="sub-btn">커뮤니티로 돌아가기</a>
+              <a href="index.html" class="sub-btn">메인으로 가기</a>
+            </div>
 
-          <div class="form-group">
-            <label for="title">제목</label>
-            <input type="text" id="title" placeholder="제목을 입력하세요">
-          </div>
-
-          <div class="form-group">
-            <label for="content">내용</label>
-            <textarea id="content" placeholder="내용을 입력하세요"></textarea>
-          </div>
-
-          <div class="extra-study-fields" id="studyFields">
-            <h3>스터디 모집 정보</h3>
-            <div class="study-grid">
+            <div class="extra-study-fields" id="studyFields">
+              <div class="study-section-title">스터디 모집 정보</div>
               <div class="form-group">
                 <label for="place">지점</label>
                 <input type="text" id="place" placeholder="예: 강남점">
               </div>
-
               <div class="form-group">
                 <label for="schedule">일정</label>
                 <input type="text" id="schedule" placeholder="예: 화/목 19:00">
               </div>
-
               <div class="form-group">
                 <label for="maxMembers">모집 인원</label>
                 <input type="number" id="maxMembers" placeholder="예: 4" min="1">
               </div>
             </div>
+
+            <div class="sidebar-card">
+              <div class="sidebar-title">작성 가이드</div>
+              <ul class="tip-list">
+                <li>욕설 및 비방 글은 삭제될 수 있어요</li>
+                <li>스터디 모집 시 카테고리를 올바르게 선택해주세요</li>
+                <li>정확한 정보로 신뢰도를 높여보세요</li>
+              </ul>
+            </div>
           </div>
 
-          <div class="button-group">
-            <button type="submit" class="submit-btn">등록하기</button>
-            <a href="community.html" class="sub-btn">커뮤니티로 돌아가기</a>
-            <a href="index.html" class="sub-btn">메인으로 가기</a>
-          </div>
-
-          <div id="messageBox" class="message-box"></div>
-        </form>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <footer>
     <div class="container footer-wrap">
@@ -356,14 +373,12 @@
   function toggleStudyFields() {
     const category = document.getElementById("category").value;
     const studyFields = document.getElementById("studyFields");
-
     if (category === "study") {
       studyFields.style.display = "block";
     } else {
       studyFields.style.display = "none";
     }
   }
-
   </script>
   <script type="module" src="./write.js"></script>
 </body>

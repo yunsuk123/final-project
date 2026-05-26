@@ -257,9 +257,17 @@
           )
         );
 
+        const now = Date.now(); // ✅ 추가
+
         const occupied = {};
         rSnap.forEach(d => {
           const r = d.data();
+
+  // ✅ 당일권 만료 체크
+          if (r.reservationType === "daily" && r.endTimestamp) {
+            if (r.endTimestamp < now) return;
+          }
+
           if (!occupied[r.cafeId]) occupied[r.cafeId] = { A: new Set(), B: new Set() };
           if (r.zone === "A") occupied[r.cafeId].A.add(r.seatId);
           else occupied[r.cafeId].B.add(r.seatId);

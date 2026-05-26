@@ -376,7 +376,16 @@
     const nowTime = new Date();
     window._rsv.startTime = String(nowTime.getHours()).padStart(2,'0') + ':' + String(nowTime.getMinutes()).padStart(2,'0');
     document.getElementById("pickStartTime").value = window._rsv.startTime;
-    document.getElementById("pickDate").onchange = e => { window._rsv.date = e.target.value; };
+    
+    document.getElementById("pickDate").onchange = e => {
+      const selected = e.target.value;
+      if (selected < today) {
+        e.target.value = today;
+        window._rsv.date = today;
+      } else {
+        window._rsv.date = selected;
+      }
+    };
     document.getElementById("pickStartTime").onchange = e => { window._rsv.startTime = e.target.value; };
 
     // 타입 탭 표시 여부
@@ -708,15 +717,19 @@
         where("status", "in", ["active", "confirmed"])
       );
       const snap = await getDocs(q);
+      const now = Date.now();
       snap.forEach(d => {
         const r = d.data();
+        if (r.reservationType === "daily" && r.endTimestamp) {
+          if (r.endTimestamp < now) return;
+        }
         if ((zone === "A" && r.zone === "A") || (zone !== "A" && r.zone === "B")) {
           occupied.add(r.seatId);
         }
       });
     } catch(e) { console.warn("예약 조회 실패:", e); }
     return occupied;
-  }
+}
 
   // ── 요약 업데이트 ──
   function updateSummary() {
