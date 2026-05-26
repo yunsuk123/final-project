@@ -127,6 +127,101 @@
       line-height: 1.5;
       min-height: 22px;
     }
+
+    /* ── 추가: 모달 스타일 ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 400px;
+      max-width: 92vw;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    }
+    .modal-box h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #222;
+      margin-bottom: 6px;
+    }
+    .modal-desc {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 22px;
+    }
+    .tab-wrap {
+      display: flex;
+      border-bottom: 2px solid #eef2ff;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 14px;
+      font-weight: 700;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #aaa;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab-btn.active {
+      color: #4a6cf7;
+      border-bottom-color: #4a6cf7;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .modal-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #d9dff5;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    .modal-input:focus { border-color: #4a6cf7; }
+    .modal-btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: #4a6cf7;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .modal-btn:hover { background: #3655d6; }
+    .modal-cancel {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      background: #f0f2f8;
+      color: #555;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .modal-cancel:hover { background: #e4e8f5; }
+    .modal-msg {
+      text-align: center;
+      font-size: 13px;
+      min-height: 20px;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -137,27 +232,25 @@
     <form id="loginForm">
       <div class="form-group">
         <label for="email">이메일</label>
-        <input
-          type="email"
-          id="email"
-          placeholder="이메일을 입력하세요"
-          required
-        />
+        <input type="email" id="email" placeholder="이메일을 입력하세요" required />
       </div>
 
       <div class="form-group">
         <label for="password">비밀번호</label>
-        <input
-          type="password"
-          id="password"
-          placeholder="비밀번호를 입력하세요"
-          required
-        />
+        <input type="password" id="password" placeholder="비밀번호를 입력하세요" required />
       </div>
 
       <button type="submit" class="login-btn">로그인</button>
       <button type="button" id="resendBtn" class="verify-btn">인증 메일 다시 보내기</button>
     </form>
+
+    <!-- 추가: 아이디/비밀번호 찾기 링크 -->
+    <div style="text-align:center; margin-top:14px;">
+      <a href="#" onclick="openFindModal(); return false;"
+         style="font-size:13px; color:#4a6cf7; text-decoration:none;">
+        아이디 · 비밀번호 찾기
+      </a>
+    </div>
 
     <div id="message" class="message"></div>
 
@@ -167,6 +260,37 @@
     </div>
 
     <a href="index.html" class="home-link">메인으로 돌아가기</a>
+  </div>
+
+  <!-- 추가: 찾기 모달 -->
+  <div class="modal-overlay" id="findModal">
+    <div class="modal-box">
+      <h2>계정 찾기</h2>
+      <p class="modal-desc">아이디 또는 비밀번호를 찾아드려요.</p>
+
+      <div class="tab-wrap">
+        <button class="tab-btn active" onclick="switchTab('id')">아이디 찾기</button>
+        <button class="tab-btn" onclick="switchTab('pw')">비밀번호 찾기</button>
+      </div>
+
+      <!-- 아이디 찾기 탭 -->
+      <div class="tab-content active" id="tab-id">
+        <input class="modal-input" id="findName" placeholder="이름 입력" />
+        <input class="modal-input" id="findSido" placeholder="시/도 입력 (예: 서울특별시)" />
+        <input class="modal-input" id="findSigungu" placeholder="시/군/구 입력 (예: 강남구)" />
+        <button class="modal-btn" onclick="findId()">아이디 찾기</button>
+        <div class="modal-msg" id="idResult"></div>
+      </div>
+
+      <!-- 비밀번호 찾기 탭 -->
+      <div class="tab-content" id="tab-pw">
+        <input class="modal-input" id="resetEmail" type="email" placeholder="가입한 이메일 입력" />
+        <button class="modal-btn" onclick="sendReset()">재설정 링크 보내기</button>
+        <div class="modal-msg" id="pwResult"></div>
+      </div>
+
+      <button class="modal-cancel" onclick="closeFindModal()">닫기</button>
+    </div>
   </div>
 
   <script type="module" src="login.js"></script>

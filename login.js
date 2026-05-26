@@ -2,6 +2,7 @@ import { auth, db } from "./firebase.js";
 import {
   signInWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signOut,
   setPersistence,
   browserSessionPersistence,
@@ -10,7 +11,11 @@ import {
 import {
   doc,
   getDoc,
-  updateDoc
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const loginForm = document.getElementById("loginForm");
@@ -19,7 +24,7 @@ const passwordInput = document.getElementById("password");
 const resendBtn = document.getElementById("resendBtn");
 const message = document.getElementById("message");
 
-const SUPER_ADMIN_EMAIL = "admin@studycafe.com"; // 기존 총관리자 이메일
+const SUPER_ADMIN_EMAIL = "admin@studycafe.com";
 
 function showMessage(text, color = "#444") {
   message.textContent = text;
@@ -35,12 +40,10 @@ loginForm.addEventListener("submit", async (e) => {
   showMessage("");
 
   try {
-    // 일단 localStorage로 로그인 (토스페이 리다이렉트 후에도 세션 유지)
     await setPersistence(auth, browserLocalPersistence);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // emailVerified 업데이트
     try {
       await updateDoc(doc(db, "users", user.uid), {
         emailVerified: user.emailVerified
@@ -49,7 +52,6 @@ loginForm.addEventListener("submit", async (e) => {
       console.error("emailVerified 업데이스 실패:", updateError);
     }
 
-    // 총관리자 → sessionPersistence로 전환 (탭 간 세션 분리)
     if (user.email === SUPER_ADMIN_EMAIL) {
       await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
@@ -60,19 +62,16 @@ loginForm.addEventListener("submit", async (e) => {
       return;
     }
 
-    // 이메일 인증 체크
     if (!user.emailVerified) {
       showMessage("이메일 인증이 완료되지 않았습니다. 인증 후 다시 로그인해주세요.", "crimson");
       await signOut(auth);
       return;
     }
 
-    // Firestore에서 role 확인
     const userDoc = await getDoc(doc(db, "users", user.uid));
     const role = userDoc.exists() ? userDoc.data().role : "user";
 
     if (role === "admin") {
-      // 업장 관리자 → sessionPersistence로 전환 (탭 간 세션 분리)
       await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
       sessionStorage.setItem("userRole", "admin");
@@ -82,7 +81,6 @@ loginForm.addEventListener("submit", async (e) => {
       return;
     }
 
-    // 일반 사용자 → localStorage 유지 (결제 리다이렉트 후에도 세션 살아있어야 함)
     sessionStorage.removeItem("isAdmin");
     sessionStorage.setItem("userRole", "user");
     showMessage("로그인 성공", "green");
@@ -160,3 +158,83 @@ resendBtn.addEventListener("click", async () => {
     }
   }
 });
+
+// ── 아이디/비밀번호 찾기 ──
+window.openFindModal = function() {
+  document.getElementById("findModal").style.display = "flex";
+};
+
+window.closeFindModal = function() {
+  document.getElementById("findModal").style.display = "none";
+  document.getElementById("findName").value = "";
+  document.getElementById("findSido").value = "";
+  document.getElementById("findSigungu").value = "";
+  document.getElementById("resetEmail").value = "";
+  document.getElementById("idResult").textContent = "";
+  document.getElementById("pwResult").textContent = "";
+};
+
+window.switchTab = function(tab) {
+  document.querySelectorAll(".tab-btn").forEach((b, i) => {
+    b.classList.toggle("active", tab === "id" ? i === 0 : i === 1);
+  });
+  document.getElementById("tab-id").classList.toggle("active", tab === "id");
+  document.getElementById("tab-pw").classList.toggle("active", tab === "pw");
+};
+
+window.findId = async function() {
+  const name    = document.getElementById("findName").value.trim();
+  const sido    = document.getElementById("findSido").value.trim();
+  const sigungu = document.getElementById("findSigungu").value.trim();
+  const result  = document.getElementById("idResult");
+
+  if (!name || !sido || !sigungu) {
+    result.style.color = "crimson";
+    result.textContent = "모든 항목을 입력해주세요.";
+    return;
+  }
+  try {
+    const q = query(
+      collection(db, "users"),
+      where("name", "==", name),
+      where("sido", "==", sido),
+      where("sigungu", "==", sigungu)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      result.style.color = "crimson";
+      result.textContent = "일치하는 계정을 찾을 수 없습니다.";
+      return;
+    }
+    const email = snap.docs[0].data().email;
+    const [id, domain] = email.split("@");
+    const masked = id.slice(0, 2) + "****@" + domain;
+    result.style.color = "#4a6cf7";
+    result.innerHTML = `찾은 아이디: <strong>${masked}</strong>`;
+  } catch (e) {
+    console.error("아이디 찾기 오류:", e);
+    result.style.color = "crimson";
+    result.textContent = "오류가 발생했습니다. 다시 시도해주세요.";
+  }
+};
+
+window.sendReset = async function() {
+  const email  = document.getElementById("resetEmail").value.trim().toLowerCase();
+  const result = document.getElementById("pwResult");
+
+  if (!email) {
+    result.style.color = "crimson";
+    result.textContent = "이메일을 입력해주세요.";
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    result.style.color = "green";
+    result.textContent = "재설정 링크를 이메일로 보냈습니다. 메일함을 확인해주세요.";
+  } catch (err) {
+    result.style.color = "crimson";
+    result.textContent = err.code === "auth/user-not-found"
+      ? "가입된 이메일이 없습니다."
+      : "오류가 발생했습니다. 다시 시도해주세요.";
+  }
+};

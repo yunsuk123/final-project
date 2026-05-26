@@ -17,7 +17,6 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ── 날짜 포맷 헬퍼 ──
 function formatDate(timestamp) {
   if (!timestamp) return "-";
   let date;
@@ -42,10 +41,8 @@ function escapeHtml(v) {
   return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-// ── 전역 유저 ──
 let currentUser = null;
 
-// ── 인증 체크 ──
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     alert("로그인 후 이용 가능합니다.");
@@ -53,6 +50,27 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   currentUser = user;
+
+  const authBtn = document.getElementById("authBtn");
+  const welcomeText = document.getElementById("welcomeText");
+  if (authBtn && welcomeText) {
+    try {
+      const userSnap = await getDoc(doc(db, "users", user.uid));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const displayName = userData.name || userData.nickname || user.displayName || user.email?.split("@")[0] || "사용자";
+      welcomeText.textContent = displayName + "님";
+    } catch (e) {
+      welcomeText.textContent = (user.email?.split("@")[0] || "사용자") + "님";
+    }
+    authBtn.textContent = "로그아웃";
+    authBtn.href = "#";
+    authBtn.onclick = async (e) => {
+      e.preventDefault();
+      await signOut(auth);
+      location.href = "login.html";
+    };
+  }
+  
   await loadAll(user);
 });
 
@@ -64,17 +82,14 @@ async function loadAll(user) {
   await loadStudyGroups(user);
 }
 
-// ── 내 정보 로드 ──
 async function loadProfile(user) {
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     const data = snap.exists() ? snap.data() : {};
-
     const name = data.name || data.nickname || user.displayName || user.email?.split("@")[0] || "-";
     document.getElementById("userName").textContent = name;
     document.getElementById("userEmail").textContent = user.email || "-";
     document.getElementById("userCreatedAt").textContent = formatDate(data.createdAt) || "-";
-
     const verifiedEl = document.getElementById("userVerified");
     if (user.emailVerified) {
       verifiedEl.textContent = "인증 완료 ✅";
@@ -83,30 +98,23 @@ async function loadProfile(user) {
       verifiedEl.textContent = "미인증 ❌";
       verifiedEl.style.color = "#ff4d4f";
     }
-
     const region = data.region || (data.sido ? `${data.sido} ${data.sigungu||""} ${data.dong||""}`.trim() : "");
     document.getElementById("userRegion").textContent = region || "지역 미설정";
-
-    // 지역 설정 폼 기본값
     if (data.sido) document.getElementById("sido").value = data.sido;
     if (data.sigungu) document.getElementById("sigungu").value = data.sigungu;
     if (data.dong) document.getElementById("dong").value = data.dong;
-
   } catch (e) {
     console.error("프로필 로드 실패:", e);
   }
 }
 
-// ── 지역 저장 ──
 window.updateRegion = async function() {
   if (!currentUser) return;
   const sido    = document.getElementById("sido").value.trim();
   const sigungu = document.getElementById("sigungu").value.trim();
   const dong    = document.getElementById("dong").value.trim();
-
   if (!sido) { alert("시/도를 선택해주세요."); return; }
   if (!sigungu) { alert("시/군/구를 입력해주세요."); return; }
-
   try {
     await updateDoc(doc(db, "users", currentUser.uid), {
       sido, sigungu, dong,
@@ -120,19 +128,15 @@ window.updateRegion = async function() {
   }
 };
 
-// ── 비밀번호 변경 ──
 window.changePassword = async function(e) {
   e.preventDefault();
   if (!currentUser) return;
-
   const current = document.getElementById("currentPassword").value;
   const newPw   = document.getElementById("newPassword").value;
   const confirm = document.getElementById("confirmPassword").value;
-
   if (!current || !newPw || !confirm) { alert("모든 항목을 입력해주세요."); return; }
   if (newPw !== confirm) { alert("새 비밀번호가 일치하지 않습니다."); return; }
   if (newPw.length < 6) { alert("비밀번호는 6자 이상이어야 합니다."); return; }
-
   try {
     const credential = EmailAuthProvider.credential(currentUser.email, current);
     await reauthenticateWithCredential(currentUser, credential);
@@ -151,7 +155,7 @@ window.changePassword = async function(e) {
   }
 };
 
-// ── 내가 쓴 게시글 ──
+// ── 내가 쓴 게시글 (study 제외) ──
 async function loadPosts(user) {
   const list = document.getElementById("myPostList");
   const empty = document.getElementById("emptyPostMessage");
@@ -163,17 +167,20 @@ async function loadPosts(user) {
     );
     const snap = await getDocs(q);
 
-    document.getElementById("summaryPosts").textContent = snap.size + "건";
+    // study 카테고리 제외
+    const filteredDocs = snap.docs.filter(d => d.data().category !== "study");
 
-    if (snap.empty) {
+    document.getElementById("summaryPosts").textContent = filteredDocs.length + "건";
+
+    if (filteredDocs.length === 0) {
       list.innerHTML = "";
       empty.style.display = "block";
       return;
     }
     empty.style.display = "none";
-    list.innerHTML = snap.docs.map(d => {
+    list.innerHTML = filteredDocs.map(d => {
       const p = d.data();
-      const catLabel = { free:"자유게시판", study:"스터디 모집", review:"후기 게시판", notice:"공지사항" }[p.category] || p.category || "일반";
+      const catLabel = { free:"자유게시판", review:"후기 게시판", notice:"공지사항" }[p.category] || p.category || "일반";
       return `
         <div class="card-item" style="background:#fff;border-radius:14px;padding:18px 20px;margin-bottom:12px;border:1px solid #eef1f5;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
@@ -205,37 +212,34 @@ async function loadReservations(user) {
       orderBy("createdAt", "desc")
     );
     const snap = await getDocs(q);
-
     document.getElementById("summaryReservations").textContent = snap.size + "건";
-
     if (snap.empty) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px;">예약 내역이 없습니다.</td></tr>`;
       return;
     }
-
     const typeLabel = { daily:"당일권", period:"기간권", fixed:"고정석", room:"스터디룸", locker:"사물함" };
     const statusClass = { confirmed:"status-done", active:"status-done", completed:"status-complete", cancelled:"status-cancel", cancel:"status-cancel", force_cancelled:"status-cancel" };
-    const statusText  = { confirmed:"이용 예정", active:"이용중", completed:"이용완료", cancelled:"취소됨", cancel:"취소됨", force_cancelled:"강제퇴실" };
-
+    const statusText  = { confirmed:"이용 예정", active:"사용중", completed:"사용 완료", cancelled:"취소됨", cancel:"취소됨", force_cancelled:"강제퇴실" };
     tbody.innerHTML = snap.docs.map(d => {
       const r = d.data();
-      const type   = typeLabel[r.reservationType] || r.reservationType || "-";
+      const type = typeLabel[r.reservationType] || r.reservationType || "-";
       const usageText = r.hours
         ? (r.startTime ? `${r.hours}시간 (${r.startTime} 입실)` : `${r.hours}시간`)
         : r.days ? `${r.days}일` : "-";
       let st = (r.status || "confirmed").toLowerCase();
       const now = Date.now();
-      // endTimestamp가 있고 이미 지났으면 이용완료로 표시
-      if ((st === "confirmed" || st === "active") && r.endTimestamp && r.endTimestamp < now) {
-        st = "completed";
+      if (st === "confirmed" || st === "active") {
+        if (r.endTimestamp && r.endTimestamp < now) {
+          st = "completed";
+        } else if (r.startTimestamp && r.startTimestamp <= now) {
+          st = "active";
+        }
       }
-      // startTimestamp가 있고 아직 시작 전이면 이용 예정 유지
-      const sCls   = statusClass[st] || "status-done";
-      const sTxt   = statusText[st]  || r.status || "-";
+      const sCls = statusClass[st] || "status-done";
+      const sTxt = statusText[st]  || r.status || "-";
       const lockerBadge = r.lockerAddon?.seatId
         ? `<br><span style="font-size:11px;background:#e1f5ee;color:#0f6e56;padding:2px 6px;border-radius:4px;font-weight:700;">🔒 사물함 ${r.lockerAddon.seatId}</span>`
         : "";
-      // 이용완료/취소/강제퇴실이면 취소 버튼 숨김
       const canCancel = (st === "confirmed" || st === "active") && !(r.endTimestamp && r.endTimestamp < now);
       return `<tr>
         <td>${escapeHtml(r.cafeName || "-")}</td>
@@ -254,7 +258,6 @@ async function loadReservations(user) {
   }
 }
 
-// ── 예약 취소 ──
 window.cancelReservation = async function(resId) {
   if (!confirm("예약을 취소하시겠습니까?")) return;
   try {
@@ -277,17 +280,13 @@ async function loadPayments(user) {
       orderBy("createdAt", "desc")
     );
     const snap = await getDocs(q);
-
     document.getElementById("summaryPayments").textContent = snap.size + "건";
-
     if (snap.empty) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#aaa;padding:24px;">결제 내역이 없습니다.</td></tr>`;
       return;
     }
-
     const statusText = { confirmed:"결제완료", active:"이용중", completed:"이용완료", cancelled:"취소됨", cancel:"취소됨" };
     const statusCls  = { confirmed:"status-done", active:"status-done", completed:"status-complete", cancelled:"status-cancel", cancel:"status-cancel" };
-
     tbody.innerHTML = snap.docs.map(d => {
       const r = d.data();
       const st   = (r.status || "confirmed").toLowerCase();
@@ -316,23 +315,19 @@ async function loadStudyGroups(user) {
   const list  = document.getElementById("joinedStudyList");
   const empty = document.getElementById("emptyJoinedStudyMessage");
   try {
-    // 내가 신청한 스터디 (applications 배열에 uid 포함)
     const q = query(
       collection(db, "posts"),
       where("category", "==", "study"),
       orderBy("createdAt", "desc")
     );
     const snap = await getDocs(q);
-
     const joined = snap.docs.filter(d => {
       const p = d.data();
       const apps = p.applications || [];
       return apps.some(a => (typeof a === "string" ? a === user.uid : a.uid === user.uid))
         || p.authorUid === user.uid;
     });
-
     document.getElementById("summaryGroups").textContent = joined.length + "건";
-
     if (joined.length === 0) {
       list.innerHTML = "";
       empty.style.display = "block";
@@ -363,7 +358,7 @@ async function loadStudyGroups(user) {
   }
 }
 
-// ── 로그아웃 버튼 (헤더에 있으면 연결) ──
+// ── 로그아웃 버튼 ──
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
