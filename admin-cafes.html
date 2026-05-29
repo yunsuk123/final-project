@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>업장 관리 | Study Spot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Pretendard", "Malgun Gothic", sans-serif; }
+    body { background: #f5f7fb; color: #222; }
+    a { text-decoration: none; color: inherit; }
+
+    .admin-layout { display: flex; min-height: 100vh; }
+
+    .sidebar { width: 270px; background: #1f2430; color: #fff; padding: 30px 20px; }
+    .sidebar h1 { font-size: 30px; color: #6f86ff; margin-bottom: 24px; }
+    .admin-badge { background: rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; line-height: 1.6; }
+    .menu { display: flex; flex-direction: column; gap: 12px; }
+    .menu a { display: block; width: 100%; }
+    .menu button { width: 100%; border: none; background: #2b3142; color: #fff; padding: 15px 16px; border-radius: 12px; text-align: left; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .menu button:hover { background: #3a4258; }
+    .menu button.active { background: #4a6cf7; }
+
+    .content { flex: 1; padding: 32px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .topbar h2 { font-size: 28px; font-weight: 800; }
+    .top-actions button { border: none; background: #4a6cf7; color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab-btn { padding: 10px 22px; border: 2px solid #e0e4ff; border-radius: 10px; background: #fff; font-size: 14px; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; }
+    .tab-btn.active { background: #4a6cf7; color: #fff; border-color: #4a6cf7; }
+
+    .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f0f2ff; padding: 14px 16px; font-size: 13px; font-weight: 700; color: #4a6cf7; text-align: left; }
+    td { padding: 14px 16px; font-size: 14px; border-top: 1px solid #f0f2ff; vertical-align: middle; }
+    tr:hover td { background: #fafbff; }
+
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .status-pending  { background: #fff8e1; color: #f59e0b; }
+    .status-approved { background: #e6f9ee; color: #16a34a; }
+    .status-rejected { background: #fff0f0; color: #e53935; }
+
+    .btn-approve { background: #e6f9ee; color: #16a34a; border: 1px solid #bbf7d0; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer; margin-right: 6px; }
+    .btn-approve:hover { background: #bbf7d0; }
+    .btn-reject  { background: #fff0f0; color: #e53935; border: 1px solid #ffb3b3; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-reject:hover  { background: #ffe0e0; }
+    .btn-delete  { background: #fff0f0; color: #e53935; border: 1px solid #ffb3b3; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-delete:hover  { background: #ffe0e0; }
+
+    .empty { text-align: center; padding: 60px; color: #aaa; font-size: 15px; }
+
+    @media (max-width: 900px) {
+      .admin-layout { flex-direction: column; }
+      .sidebar { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <h1>Study Spot</h1>
+    <div class="admin-badge" id="adminBadge">관리자 계정으로 로그인됨</div>
+    <div class="menu">
+      <a href="admin-cafes.html"><button type="button" class="active">업장 관리</button></a>
+      <a href="admin-users.html"><button type="button">회원 관리</button></a>
+      <a href="admin-community.html"><button type="button">커뮤니티 관리</button></a>
+      <a href="admin-study.html"><button type="button">스터디 그룹 관리</button></a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <h2>업장 관리</h2>
+      <div class="top-actions">
+        <button id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('cafes')">등록 업장 승인</button>
+      <button class="tab-btn" onclick="switchTab('reviews')">업장 리뷰 관리</button>
+    </div>
+
+    <div id="tab-cafes" class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>상호명</th><th>주소</th><th>사업자번호</th><th>등록일</th><th>상태</th><th>처리</th>
+          </tr>
+        </thead>
+        <tbody id="cafeTbody">
+          <tr><td colspan="6" class="empty">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="tab-reviews" class="card" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>업장명</th><th>작성자</th><th>별점</th><th>내용</th><th>작성일</th><th>삭제</th>
+          </tr>
+        </thead>
+        <tbody id="reviewTbody">
+          <tr><td colspan="6" class="empty">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { db } from './firebase.js';
+  import {
+    collection, getDocs, doc, updateDoc, deleteDoc,
+    query, orderBy
+  } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+  // ── 권한 체크 (sessionStorage 방식) ──
+  if (sessionStorage.getItem("isAdmin") !== "true") {
+    alert("관리자만 접근할 수 있습니다.");
+    location.href = "login.html";
+  } else {
+    loadCafes();
+    loadReviews();
+  }
+
+  window.switchTab = function(tab) {
+    document.getElementById('tab-cafes').style.display   = tab === 'cafes'   ? 'block' : 'none';
+    document.getElementById('tab-reviews').style.display = tab === 'reviews' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', (tab === 'cafes' && i === 0) || (tab === 'reviews' && i === 1));
+    });
+  };
+
+  async function loadCafes() {
+    const tbody = document.getElementById('cafeTbody');
+    try {
+      const snap = await getDocs(query(collection(db, 'cafes'), orderBy('updatedAt', 'desc')));
+      if (snap.empty) { tbody.innerHTML = '<tr><td colspan="6" class="empty">등록된 업장이 없습니다.</td></tr>'; return; }
+      tbody.innerHTML = '';
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const status = d.status || 'pending';
+        const date = d.updatedAt?.toDate().toLocaleDateString('ko-KR') || '-';
+        const statusLabel = { pending: '심사중', approved: '승인', rejected: '거절' }[status] || status;
+        const actionBtns = status === 'pending'
+          ? `<button class="btn-approve" onclick="updateStatus('${docSnap.id}','approved')">승인</button>
+             <button class="btn-reject"  onclick="updateStatus('${docSnap.id}','rejected')">거절</button>`
+          : status === 'approved'
+          ? `<button class="btn-reject" onclick="updateStatus('${docSnap.id}','rejected')">승인 취소</button>`
+          : `<button class="btn-approve" onclick="updateStatus('${docSnap.id}','approved')">재승인</button>`;
+        tbody.insertAdjacentHTML('beforeend', `
+          <tr id="cafe-row-${docSnap.id}">
+            <td><strong>${d.cafeName || '-'}</strong></td>
+            <td>${d.address || '-'}</td>
+            <td>${d.bizNumber || '-'}</td>
+            <td>${date}</td>
+            <td><span class="status-badge status-${status}">${statusLabel}</span></td>
+            <td>${actionBtns}</td>
+          </tr>
+        `);
+      });
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty">불러오기 실패: ${e.message}</td></tr>`;
+    }
+  }
+
+  window.updateStatus = async function(cafeId, newStatus) {
+    const label = newStatus === 'approved' ? '승인' : '거절';
+    if (!confirm(`이 업장을 ${label} 처리하시겠습니까?`)) return;
+    try {
+      await updateDoc(doc(db, 'cafes', cafeId), { status: newStatus });
+      alert(`${label} 처리되었습니다.`);
+      loadCafes();
+    } catch (e) {
+      alert('처리 실패: ' + e.message);
+    }
+  };
+
+  async function loadReviews() {
+    const tbody = document.getElementById('reviewTbody');
+    try {
+      const snap = await getDocs(query(collection(db, 'reviews'), orderBy('createdAt', 'desc')));
+      if (snap.empty) { tbody.innerHTML = '<tr><td colspan="6" class="empty">등록된 리뷰가 없습니다.</td></tr>'; return; }
+      tbody.innerHTML = '';
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const date = d.createdAt?.toDate().toLocaleDateString('ko-KR') || '-';
+        const stars = '⭐'.repeat(d.rating || 0);
+        tbody.insertAdjacentHTML('beforeend', `
+          <tr id="review-row-${docSnap.id}">
+            <td>${d.cafeName || '-'}</td>
+            <td>${d.authorName || d.authorEmail || '-'}</td>
+            <td>${stars} (${d.rating || 0})</td>
+            <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.content || '-'}</td>
+            <td>${date}</td>
+            <td><button class="btn-delete" onclick="deleteReview('${docSnap.id}')">삭제</button></td>
+          </tr>
+        `);
+      });
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty">불러오기 실패: ${e.message}</td></tr>`;
+    }
+  }
+
+  window.deleteReview = async function(reviewId) {
+    if (!confirm('이 리뷰를 삭제하시겠습니까?')) return;
+    try {
+      await deleteDoc(doc(db, 'reviews', reviewId));
+      document.getElementById('review-row-' + reviewId)?.remove();
+      alert('삭제되었습니다.');
+    } catch (e) {
+      alert('삭제 실패: ' + e.message);
+    }
+  };
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.removeItem("isAdmin");
+    alert("관리자 로그아웃 되었습니다.");
+    location.href = 'login.html';
+  });
+</script>
+</body>
+</html>

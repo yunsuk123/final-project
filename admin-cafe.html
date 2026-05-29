@@ -406,6 +406,7 @@ function getRoomData() {
         cafeName, address, addressDetail, lat, lng, bizNumber,
         totalSeats, seatsA, seatsB,
         availableSeats: totalSeats,
+        status: 'pending' ,
         // 기존 호환용 price 필드 (첫 번째 당일권/기간권 값)
         price: {
           daily:  dailyPrice[0]?.price  || 0,

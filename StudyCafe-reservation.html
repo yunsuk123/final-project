@@ -901,6 +901,10 @@
         const cafeSnap = await getDoc(doc(db, "cafes", cafeId));
         if (cafeSnap.exists()) {
           const cafe = cafeSnap.data();
+          if (cafe.status !== 'approved') {
+            list.innerHTML = '<div class="loading-msg">승인되지 않은 업장입니다.</div>';
+            return;
+          }
           _addCafeCard(list, { id: cafeId, ...cafe }, true);
           document.getElementById("reservationDesc").textContent = `${cafe.cafeName} 예약`;
           if (cafe.lat && cafe.lng) {
@@ -911,10 +915,12 @@
         }
       } else {
         list.innerHTML = "";
-        const cafeSnap = await getDocs(collection(db, "cafes"));
-        cafeSnap.forEach(d => {
-          const cafe = d.data();
-          if (sigungu && !cafe.address?.includes(sigungu)) return;
+        const cafeSnap = await getDocs(
+          query(collection(db, "cafes"), where("status", "==", "approved"))
+        );
+          cafeSnap.forEach(d => {
+            const cafe = d.data();
+            if (sigungu && !cafe.address?.includes(sigungu)) return;
           if (cafe.lat && cafe.lng) {
             const pos = new kakao.maps.LatLng(cafe.lat, cafe.lng);
             const marker = new kakao.maps.Marker({ map, position: pos });
