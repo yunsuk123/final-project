@@ -167,7 +167,6 @@ async function loadPosts(user) {
     );
     const snap = await getDocs(q);
 
-    // study 카테고리 제외
     const filteredDocs = snap.docs.filter(d => d.data().category !== "study");
 
     document.getElementById("summaryPosts").textContent = filteredDocs.length + "건";
@@ -324,8 +323,11 @@ async function loadStudyGroups(user) {
     const joined = snap.docs.filter(d => {
       const p = d.data();
       const apps = p.applications || [];
-      return apps.some(a => (typeof a === "string" ? a === user.uid : a.uid === user.uid))
-        || p.authorUid === user.uid;
+      return p.authorUid === user.uid
+        || apps.some(a =>
+            (typeof a === "string" ? a === user.uid : a.uid === user.uid)
+            && a.status === "approved"
+          );
     });
     document.getElementById("summaryGroups").textContent = joined.length + "건";
     if (joined.length === 0) {
@@ -348,7 +350,7 @@ async function loadStudyGroups(user) {
               <div style="font-size:16px;font-weight:700;margin:8px 0 4px;">${escapeHtml(p.title || "제목 없음")}</div>
               <div style="font-size:13px;color:#888;">📍 ${escapeHtml(p.studyInfo?.place || "-")} &nbsp;|&nbsp; 🗓 ${escapeHtml(p.studyInfo?.schedule || "-")} &nbsp;|&nbsp; 👥 ${cur}/${max}명</div>
             </div>
-            <a href="study-chat.html?postId=${d.id}" style="padding:8px 16px;background:#4a6cf7;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;flex-shrink:0;">채팅방 이동</a>
+            <button onclick="goToChat('${d.id}')" style="padding:8px 16px;background:#4a6cf7;color:#fff;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;flex-shrink:0;">채팅방 이동</button>
           </div>
         </div>`;
     }).join("");
@@ -357,6 +359,44 @@ async function loadStudyGroups(user) {
     list.innerHTML = "<p style='color:#aaa;padding:16px;'>스터디 그룹을 불러오지 못했습니다.</p>";
   }
 }
+
+// ── 채팅방 이동 (chatMembers 초기화 후 이동) ──
+window.goToChat = async function(postId) {
+  try {
+    const postRef = doc(db, "posts", postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) return;
+
+    const post = postSnap.data();
+
+    if (!post.chatMembers || post.chatMembers.length === 0) {
+      const members = [{
+        uid: post.authorUid || "",
+        email: post.authorEmail || "",
+        name: post.author || "작성자",
+        role: "owner"
+      }];
+
+      (post.applications || []).forEach(app => {
+        if (app.status !== "approved") return;
+        const exists = members.some(m => m.uid === app.uid || m.email === app.email);
+        if (!exists) members.push({
+          uid: app.uid || "",
+          email: app.email || "",
+          name: app.name || "참여자",
+          role: "member"
+        });
+      });
+
+      await updateDoc(postRef, { chatMembers: members });
+    }
+
+    location.href = `study-chat.html?id=${postId}`;
+  } catch (e) {
+    console.error("채팅방 이동 오류:", e);
+    alert("채팅방 이동 중 오류가 발생했습니다.");
+  }
+};
 
 // ── 로그아웃 버튼 ──
 const logoutBtn = document.getElementById("logoutBtn");
