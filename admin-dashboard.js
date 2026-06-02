@@ -90,6 +90,10 @@ function listenToCafeInfo() {
         if (document.getElementById('f-name'))   document.getElementById('f-name').value   = data.cafeName      || '';
         if (document.getElementById('f-addr'))   document.getElementById('f-addr').value   = data.address       || '';
         if (document.getElementById('f-addr2'))  document.getElementById('f-addr2').value  = data.addressDetail || '';
+        if (document.getElementById('f-lat'))    document.getElementById('f-lat').value    = data.lat ?? '';
+        if (document.getElementById('f-lng'))    document.getElementById('f-lng').value    = data.lng ?? '';
+        if (document.getElementById('f-phone'))  document.getElementById('f-phone').value  = data.phone || '';
+        if (document.getElementById('f-hours'))  document.getElementById('f-hours').value  = data.openingHours || '';
         if (document.getElementById('f-biz'))    document.getElementById('f-biz').value    = data.bizNumber     || '';
         if (document.getElementById('f-total'))  document.getElementById('f-total').value  = totalSeats;
         if (document.getElementById('f-zone-a')) document.getElementById('f-zone-a').value = ZONE_A;
@@ -213,6 +217,10 @@ async function saveCafeInfo() {
         const nameVal   = document.getElementById('f-name')?.value  || '';
         const addrVal   = document.getElementById('f-addr')?.value  || '';
         const addr2Val  = document.getElementById('f-addr2')?.value || '';
+        const latVal    = parseFloat(document.getElementById('f-lat')?.value || '');
+        const lngVal    = parseFloat(document.getElementById('f-lng')?.value || '');
+        const phoneVal  = document.getElementById('f-phone')?.value.trim() || '';
+        const hoursVal  = document.getElementById('f-hours')?.value.trim() || '';
         const bizVal    = document.getElementById('f-biz')?.value   || '';
         const totalVal  = Number(document.getElementById('f-total')?.value   || 50);
         const seatsAVal = Number(document.getElementById('f-zone-a')?.value  || 30);
@@ -242,6 +250,9 @@ async function saveCafeInfo() {
         await updateDoc(cafeDocRef, {
             cafeName: nameVal, address: addrVal, addressDetail: addr2Val,
             bizNumber: bizVal, totalSeats: totalVal, seatsA: seatsAVal, seatsB: seatsBVal,
+            ...((!isNaN(latVal) && !isNaN(lngVal)) ? { lat: latVal, lng: lngVal } : {}),
+            phone: phoneVal,
+            openingHours: hoursVal,
             'price.daily': dailyPrice[0]?.price || 0,
             'price.weekly': periodPrice[0]?.price || 0,
             dailyPrice, periodPrice, fixedSeat, rooms, locker

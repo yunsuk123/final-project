@@ -10,7 +10,6 @@
     .box { width: 640px; background: #fff; padding: 42px 36px; border-radius: 18px; box-shadow: 0 16px 35px rgba(74,108,247,0.12); margin: auto; }
     h1 { text-align: center; color: #5968f2; font-size: 28px; margin-bottom: 6px; }
     .sub-title { text-align: center; color: #666; font-size: 14px; margin-bottom: 30px; }
-
     label { display: block; margin: 14px 0 6px; font-weight: 700; font-size: 13px; color: #333; }
     input[type="text"], input[type="number"] {
       width: 100%; height: 44px; border: 1px solid #d6ddff; border-radius: 10px;
@@ -18,40 +17,28 @@
     }
     input:focus { border-color: #5968f2; }
     input:read-only { background: #f4f6ff; color: #555; cursor: default; }
-
     .addr-row { display: flex; gap: 8px; }
     .addr-row input { flex: 1; }
     .addr-btn { height: 44px; padding: 0 16px; border: none; border-radius: 10px; background: #5968f2; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .addr-btn:hover { background: #4656e8; }
-
     .section-divider { margin: 28px 0 10px; font-size: 13px; font-weight: 700; color: #5968f2; border-bottom: 2px solid #e8eaff; padding-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-
-    /* 자유 행 테이블 */
     .free-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
     .free-table th { background: #f0f2ff; padding: 8px 10px; font-size: 12px; font-weight: 700; color: #5968f2; text-align: center; border: 1px solid #e0e4ff; }
     .free-table td { padding: 5px 7px; border: 1px solid #e8eaff; }
     .free-table td input { height: 36px; border: 1px solid #d6ddff; border-radius: 8px; padding: 0 8px; font-size: 13px; width: 100%; }
     .free-table td input:focus { border-color: #5968f2; outline: none; }
-    .free-table .label-col { background: #fafbff; font-size: 12px; font-weight: 600; color: #555; text-align: center; white-space: nowrap; }
-
     .add-btn { margin-top: 8px; padding: 7px 16px; background: #f0f2ff; color: #5968f2; border: 1.5px dashed #b0baff; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; }
     .add-btn:hover { background: #e0e4ff; }
     .del-btn { background: #fff0f0; border: 1px solid #ffb3b3; color: #e53935; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-weight: 700; width: 100%; }
     .del-btn:hover { background: #ffe0e0; }
-
-    /* 옵션 카드 (룸 등) */
     .opt-card { background: #f7f8ff; border: 1px solid #e0e4ff; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; position: relative; }
     .opt-card-del { position: absolute; top: 10px; right: 10px; background: #fff0f0; border: 1px solid #ffb3b3; color: #e53935; border-radius: 6px; padding: 3px 10px; font-size: 12px; cursor: pointer; font-weight: 700; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-
-    /* 토글 */
     .toggle-row { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; }
     .toggle-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #5968f2; cursor: pointer; }
     .toggle-row label { margin: 0; font-size: 13px; font-weight: 600; color: #444; cursor: pointer; }
-
     .hint { font-size: 11px; color: #aaa; margin: 4px 0 8px; line-height: 1.5; }
-
     .submit-btn { width: 100%; height: 52px; margin-top: 32px; border: none; border-radius: 10px; background: #5968f2; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer; }
     .submit-btn:hover { background: #4656e8; }
     .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -60,7 +47,6 @@
     .logout-link { display: block; text-align: center; margin-top: 18px; color: #888; font-size: 14px; cursor: pointer; }
     .logout-link:hover { color: #5968f2; }
     .seat-hint { margin-top: 6px; font-size: 12px; color: #888; }
-
     @media (max-width: 680px) {
       .box { width: 100%; padding: 24px 16px; }
       .grid-2, .grid-3 { grid-template-columns: 1fr; }
@@ -73,8 +59,6 @@
   <p class="sub-title" id="form-sub-title">업장 정보 등록</p>
 
   <form id="cafeForm">
-
-    <!-- 기본 정보 -->
     <div class="section-divider">📍 업장 기본 정보</div>
     <label>상호명</label>
     <input type="text" id="cafeName" placeholder="스터디카페 상호명" required />
@@ -88,25 +72,22 @@
     <label>사업자 등록번호</label>
     <input type="text" id="bizNumber" placeholder="000-00-00000" maxlength="12" required />
 
-    <!-- 자유석 당일권 -->
     <div class="section-divider">⏱️ 자유석 — 당일권 (시간별 가격)</div>
-    <p class="hint">업장마다 원하는 시간 단위를 자유롭게 추가하세요. (예: 1시간, 3시간, 5시간 등 홀수/짝수 무관)</p>
+    <p class="hint">업장마다 원하는 시간 단위를 자유롭게 추가하세요. (예: 1시간, 3시간, 5시간 등)</p>
     <table class="free-table">
       <thead><tr><th style="width:110px">이용 시간</th><th>가격 (원)</th><th style="width:56px">삭제</th></tr></thead>
       <tbody id="dailyTbody"></tbody>
     </table>
     <button type="button" class="add-btn" onclick="addRow('daily')">+ 시간 항목 추가</button>
 
-    <!-- 자유석 기간권 -->
     <div class="section-divider">📅 자유석 — 기간권</div>
-    <p class="hint">원하는 기간 단위를 직접 입력하세요. (예: 7일, 14일, 30일, 45일 등 업장별 자유 설정)</p>
+    <p class="hint">원하는 기간 단위를 직접 입력하세요. (예: 7일, 14일, 30일, 45일 등)</p>
     <table class="free-table">
       <thead><tr><th style="width:110px">이용 기간 (일)</th><th>가격 (원)</th><th style="width:56px">삭제</th></tr></thead>
       <tbody id="periodTbody"></tbody>
     </table>
     <button type="button" class="add-btn" onclick="addRow('period')">+ 기간 항목 추가</button>
 
-    <!-- 고정석 / 1인룸 -->
     <div class="section-divider">🪑 고정석 / 1인룸</div>
     <div class="toggle-row">
       <input type="checkbox" id="useFixed" onchange="toggleSec('fixedSec',this.checked)" />
@@ -124,7 +105,6 @@
       <button type="button" class="add-btn" onclick="addRow('fixed')">+ 기간 항목 추가</button>
     </div>
 
-    <!-- 그룹 스터디룸 -->
     <div class="section-divider">🏠 그룹 스터디룸</div>
     <div class="toggle-row">
       <input type="checkbox" id="useRoom" onchange="toggleSec('roomSec',this.checked)" />
@@ -136,7 +116,6 @@
       <button type="button" class="add-btn" onclick="addRoomCard()">+ 룸 유형 추가</button>
     </div>
 
-    <!-- 개인 사물함 -->
     <div class="section-divider">🔒 개인 사물함</div>
     <div class="toggle-row">
       <input type="checkbox" id="useLocker" onchange="toggleSec('lockerSec',this.checked)" />
@@ -154,7 +133,6 @@
       <button type="button" class="add-btn" onclick="addRow('locker')">+ 기간 항목 추가</button>
     </div>
 
-    <!-- 좌석 수 -->
     <div class="section-divider">🪑 좌석 수 설정</div>
     <div class="grid-3">
       <div><label>총 좌석 수</label><input type="number" id="totalSeats" placeholder="예: 50" min="1" required /></div>
@@ -171,25 +149,20 @@
 
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
-// ── 섹션 토글 ──
 function toggleSec(id, show) { document.getElementById(id).style.display = show ? 'block' : 'none'; }
 
-// ── 범용 자유 행 추가/삭제 ──
-// type: 'daily'(시간+가격) | 'period'/'fixed'/'locker'(일수+가격)
 const rowCounters = { daily:0, period:0, fixed:0, locker:0 };
 
 window.addRow = function(type, vals) {
-  const tbodyId = type + 'Tbody';
-  const tbody = document.getElementById(tbodyId);
+  const tbody = document.getElementById(type + 'Tbody');
   if (!tbody) return;
   const i = rowCounters[type]++;
   const isHour = (type === 'daily');
-  const col1Label = isHour ? '시간 (h)' : '기간 (일)';
-  const col1Ph    = isHour ? '예: 2' : '예: 14';
+  const col1Ph = isHour ? '예: 2' : '예: 14';
   tbody.insertAdjacentHTML('beforeend', `
     <tr id="${type}-row-${i}">
       <td><input type="number" id="${type}-a-${i}" placeholder="${col1Ph}" min="1" value="${vals ? vals[0] : ''}" /></td>
-      <td><input type="number" id="${type}-b-${i}" placeholder="가격 입력" min="0"  value="${vals ? vals[1] : ''}" /></td>
+      <td><input type="number" id="${type}-b-${i}" placeholder="가격 입력" min="0" value="${vals ? vals[1] : ''}" /></td>
       <td><button type="button" class="del-btn" onclick="delRow('${type}',${i})">삭제</button></td>
     </tr>
   `);
@@ -203,15 +176,14 @@ window.delRow = function(type, i) {
 function getRows(type) {
   const rows = [];
   document.querySelectorAll('#' + type + 'Tbody tr').forEach(tr => {
-    const i  = tr.id.replace(type + '-row-', '');
-    const a  = parseInt(document.getElementById(type + '-a-' + i)?.value);
-    const b  = parseInt(document.getElementById(type + '-b-' + i)?.value);
+    const i = tr.id.replace(type + '-row-', '');
+    const a = parseInt(document.getElementById(type + '-a-' + i)?.value);
+    const b = parseInt(document.getElementById(type + '-b-' + i)?.value);
     if (a > 0) rows.push({ key: a, price: b || 0 });
   });
   return rows;
 }
 
-// ── 룸 카드 ──
 let roomIdx = 0;
 window.addRoomCard = function(vals) {
   const i = roomIdx++;
@@ -223,7 +195,7 @@ window.addRoomCard = function(vals) {
         <div><label>룸 개수</label><input type="number" id="room-c-${i}" placeholder="예: 2" min="1" value="${vals?.count||''}" /></div>
         <div><label>1시간당 가격 (원)</label><input type="number" id="room-h-${i}" placeholder="예: 5000" min="0" value="${vals?.pricePerHour||''}" /></div>
       </div>
-      <p class="hint" style="margin-top:10px">이 룸 유형의 시간별 가격을 추가하세요. (시간별 차등 가격이 없으면 1시간 단가만 입력)</p>
+      <p class="hint" style="margin-top:10px">이 룸 유형의 시간별 가격을 추가하세요.</p>
       <table class="free-table">
         <thead><tr><th style="width:110px">최소 이용 시간</th><th>가격 (원)</th><th style="width:56px">삭제</th></tr></thead>
         <tbody id="room-t-${i}"></tbody>
@@ -256,10 +228,10 @@ function getRoomData() {
     const timeRows = [];
     card.querySelectorAll('tbody tr').forEach(tr => {
       const parts = tr.id.split('-');
-      const j = parts[parts.length - 1];
+      const j  = parts[parts.length - 1];
       const ri = parts[parts.length - 2];
-      const a = parseInt(document.getElementById('rt-a-' + ri + '-' + j)?.value);
-      const b = parseInt(document.getElementById('rt-b-' + ri + '-' + j)?.value);
+      const a  = parseInt(document.getElementById('rt-a-' + ri + '-' + j)?.value);
+      const b  = parseInt(document.getElementById('rt-b-' + ri + '-' + j)?.value);
       if (a > 0) timeRows.push({ hours: a, price: b || 0 });
     });
     if (persons > 0) rooms.push({ persons, count, pricePerHour: perHour, timePrice: timeRows });
@@ -275,7 +247,6 @@ function getRoomData() {
 
   let currentUser = null;
 
-  // ── 저장된 데이터로 폼 복원 ──
   function loadRows(type, data) {
     if (!data || data.length === 0) return;
     data.forEach(r => addRow(type, [r.key, r.price]));
@@ -288,18 +259,15 @@ function getRoomData() {
     if (role !== 'admin' && role !== 'superAdmin') { alert('접근 권한이 없습니다.'); location.href = 'index.html'; return; }
     currentUser = user;
 
-    // ownerUid로 업장 조회 (문서 ID가 uid와 다를 수 있음)
     const { collection: _col, query: _q, where: _wh, getDocs: _gd } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
     const cafeQ = _q(_col(db, 'cafes'), _wh('ownerUid', '==', user.uid));
     const cafeSnap = await _gd(cafeQ);
 
-    // 이미 업장이 등록돼 있으면 바로 대시보드로
-    if (!cafeSnap.empty) {
-      location.href = 'admin-dashboard.html';
-      return;
-    }
+    // ✅ 수정: 신규 등록이면 빈 폼 유지, 기존 데이터 있으면 폼에 채워서 수정 가능하게
+    if (cafeSnap.empty) return;
 
-    // 기본 정보
+    const d = cafeSnap.docs[0].data(); // ✅ 수정: d 변수 선언 추가
+
     document.getElementById('cafeName').value    = d.cafeName      || '';
     document.getElementById('addrMain').value    = d.address       || '';
     document.getElementById('addrDetail').value  = d.addressDetail || '';
@@ -310,13 +278,9 @@ function getRoomData() {
     document.getElementById('seatsA').value      = d.seatsA        || '';
     document.getElementById('seatsB').value      = d.seatsB        || '';
 
-    // 당일권 시간별
-    loadRows('daily', d.dailyPrice);
-
-    // 자유석 기간권
+    loadRows('daily',  d.dailyPrice);
     loadRows('period', d.periodPrice);
 
-    // 고정석
     if (d.fixedSeat?.enabled) {
       document.getElementById('useFixed').checked = true;
       toggleSec('fixedSec', true);
@@ -324,21 +288,18 @@ function getRoomData() {
       loadRows('fixed', d.fixedSeat.priceList);
     }
 
-    // 그룹 룸
     if (d.rooms?.enabled && d.rooms.list?.length > 0) {
       document.getElementById('useRoom').checked = true;
       toggleSec('roomSec', true);
       d.rooms.list.forEach(r => {
         addRoomCard(r);
-        // timePrice 복원
         const cards = document.querySelectorAll('#roomCards .opt-card');
-        const card = cards[cards.length - 1];
-        const ri = card.id.replace('room-', '');
+        const card  = cards[cards.length - 1];
+        const ri    = card.id.replace('room-', '');
         (r.timePrice || []).forEach(tp => addRoomTimeRow(parseInt(ri), [tp.hours, tp.price]));
       });
     }
 
-    // 사물함
     if (d.locker?.enabled) {
       document.getElementById('useLocker').checked = true;
       toggleSec('lockerSec', true);
@@ -368,20 +329,26 @@ function getRoomData() {
     const seatsB        = parseInt(document.getElementById('seatsB').value);
 
     if (!address) { msg.textContent = '주소를 검색해주세요.'; return; }
+
+    // ✅ 수정: lat/lng NaN 저장 방지
+    if (isNaN(lat) || isNaN(lng)) {
+      msg.textContent = '주소 검색을 다시 해주세요. (좌표를 불러오지 못했습니다.)';
+      return;
+    }
+
     if (seatsA + seatsB !== totalSeats) {
       msg.textContent = `A구역(${seatsA}) + B구역(${seatsB}) = ${seatsA+seatsB}석이 총 좌석 수(${totalSeats})와 다릅니다.`;
       return;
     }
 
-    // 데이터 수집
-    const dailyPrice  = getRows('daily');   // [{key:시간, price:원}, ...]
-    const periodPrice = getRows('period');  // [{key:일수, price:원}, ...]
+    const dailyPrice  = getRows('daily');
+    const periodPrice = getRows('period');
 
     const useFixed = document.getElementById('useFixed').checked;
     const fixedSeat = useFixed ? {
       enabled: true,
       count: parseInt(document.getElementById('fixedCount').value) || 0,
-      priceList: getRows('fixed')           // [{key:일수, price:원}, ...]
+      priceList: getRows('fixed')
     } : { enabled: false };
 
     const useRoom = document.getElementById('useRoom').checked;
@@ -393,7 +360,7 @@ function getRoomData() {
     const locker = useLocker ? {
       enabled: true,
       count: parseInt(document.getElementById('lockerCount').value) || 0,
-      priceList: getRows('locker')          // [{key:일수, price:원}, ...]
+      priceList: getRows('locker')
     } : { enabled: false };
 
     const submitBtn = document.getElementById('submitBtn');
@@ -406,8 +373,7 @@ function getRoomData() {
         cafeName, address, addressDetail, lat, lng, bizNumber,
         totalSeats, seatsA, seatsB,
         availableSeats: totalSeats,
-        status: 'pending' ,
-        // 기존 호환용 price 필드 (첫 번째 당일권/기간권 값)
+        status: 'pending',
         price: {
           daily:  dailyPrice[0]?.price  || 0,
           weekly: periodPrice[0]?.price || 0,

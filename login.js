@@ -49,12 +49,12 @@ loginForm.addEventListener("submit", async (e) => {
         emailVerified: user.emailVerified
       });
     } catch (updateError) {
-      console.error("emailVerified 업데이스 실패:", updateError);
+      console.error("emailVerified 업데이트 실패:", updateError);
     }
 
+    // 총 관리자
     if (user.email === SUPER_ADMIN_EMAIL) {
-      await setPersistence(auth, browserSessionPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
+      // ✅ 수정: 두 번째 signInWithEmailAndPassword 제거
       sessionStorage.setItem("isAdmin", "true");
       sessionStorage.setItem("adminEmail", user.email);
       alert("총 관리자 로그인 성공");
@@ -71,9 +71,9 @@ loginForm.addEventListener("submit", async (e) => {
     const userDoc = await getDoc(doc(db, "users", user.uid));
     const role = userDoc.exists() ? userDoc.data().role : "user";
 
+    // 업장 관리자
     if (role === "admin") {
-      await setPersistence(auth, browserSessionPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
+      // ✅ 수정: 두 번째 signInWithEmailAndPassword 제거
       sessionStorage.setItem("userRole", "admin");
       sessionStorage.setItem("userUid", user.uid);
       alert("관리자 로그인 성공");

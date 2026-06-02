@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>업장 상세 | Study Spot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Pretendard", "Malgun Gothic", sans-serif; }
+    body { background: #f7f8fc; color: #222; line-height: 1.6; }
+    a { text-decoration: none; color: inherit; }
+    button { border: none; cursor: pointer; font-family: inherit; }
+
+    .container { width: 90%; max-width: 1000px; margin: 0 auto; }
+
+    /* 헤더 */
+    header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.06); position: sticky; top: 0; z-index: 1000; }
+    .navbar { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; }
+    .logo { font-size: 26px; font-weight: 800; color: #4a6cf7; }
+    .nav-menu { display: flex; gap: 20px; align-items: center; list-style: none; }
+    .nav-btn { background: #4a6cf7; color: #fff !important; padding: 10px 18px; border-radius: 8px; font-weight: 700; }
+    #userName { font-weight: 700; color: #4a6cf7; }
+
+    /* 히어로 */
+    .detail-hero {
+      background: linear-gradient(135deg, #4a6cf7 0%, #6d8dff 100%);
+      padding: 48px 0 36px;
+      color: #fff;
+    }
+    .hero-inner { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; }
+    .hero-left h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .hero-left .address { font-size: 14px; opacity: 0.85; margin-bottom: 12px; }
+    .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero-badge { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); border-radius: 999px; padding: 5px 14px; font-size: 13px; font-weight: 600; }
+    .reserve-btn-hero { background: #fff; color: #4a6cf7; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 800; transition: 0.2s; white-space: nowrap; display: inline-block; }
+    .reserve-btn-hero:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+
+    /* 본문 */
+    .detail-body { padding: 36px 0 80px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+
+    /* 카드 공통 */
+    .card { background: #fff; border-radius: 20px; padding: 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    .card h2 { font-size: 18px; font-weight: 800; margin-bottom: 18px; color: #1a1f36; display: flex; align-items: center; gap: 8px; }
+
+    /* 가격표 */
+    .price-table { width: 100%; border-collapse: collapse; }
+    .price-table th { background: #f0f2ff; padding: 10px 14px; font-size: 12px; font-weight: 700; color: #4a6cf7; text-align: left; }
+    .price-table td { padding: 10px 14px; font-size: 14px; border-top: 1px solid #f0f2ff; }
+    .price-tag { font-weight: 800; color: #4a6cf7; }
+
+    /* 좌석 현황 */
+    .seat-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .seat-stat-box { background: #f7f8fc; border-radius: 14px; padding: 16px; text-align: center; border: 1px solid #eef1f5; }
+    .seat-stat-box h4 { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .seat-stat-box p { font-size: 24px; font-weight: 800; color: #4a6cf7; }
+    .seat-stat-box span { font-size: 12px; color: #aaa; }
+
+    /* 별점 요약 */
+    .rating-summary { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }
+    .rating-big { text-align: center; }
+    .rating-big .num { font-size: 52px; font-weight: 900; color: #4a6cf7; line-height: 1; }
+    .rating-big .stars { font-size: 20px; margin: 6px 0 4px; }
+    .rating-big .count { font-size: 12px; color: #aaa; }
+    .rating-bars { flex: 1; }
+    .rating-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #888; }
+    .rating-bar-wrap { flex: 1; height: 8px; background: #eef1f5; border-radius: 99px; overflow: hidden; }
+    .rating-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #f59e0b, #fbbf24); transition: width 0.5s ease; }
+    .divider { border: none; border-top: 1px solid #f0f2ff; margin: 20px 0; }
+
+    /* 리뷰 작성 */
+    .review-write-box { background: #f7f9ff; border: 1px solid #e5ebff; border-radius: 16px; padding: 20px; margin-bottom: 24px; }
+    .review-write-box h3 { font-size: 15px; font-weight: 800; margin-bottom: 14px; color: #1a1f36; }
+    .star-select { display: flex; gap: 6px; margin-bottom: 12px; }
+    .star-select span { font-size: 28px; cursor: pointer; transition: transform 0.15s; color: #ddd; }
+    .star-select span.active { color: #f59e0b; }
+    .star-select span:hover { transform: scale(1.2); }
+    .review-write-box textarea { width: 100%; min-height: 90px; border: 1px solid #d7def5; border-radius: 12px; padding: 12px; font-size: 14px; resize: vertical; outline: none; background: #fff; }
+    .review-write-box textarea:focus { border-color: #4a6cf7; }
+    .review-submit-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .review-submit-btn { background: linear-gradient(135deg, #4a6cf7, #6d8dff); color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; }
+    .review-submit-btn:hover { opacity: 0.9; }
+    .review-no-auth { background: #f7f9ff; border: 1px dashed #c5d0ff; border-radius: 14px; padding: 20px; text-align: center; color: #888; font-size: 14px; margin-bottom: 24px; }
+
+    /* 리뷰 목록 */
+    .review-item { background: #fff; border: 1px solid #eef1f6; border-radius: 16px; padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .review-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+    .review-author { font-size: 14px; font-weight: 800; color: #222; }
+    .review-stars { color: #f59e0b; font-size: 14px; }
+    .review-date { font-size: 12px; color: #aaa; }
+    .review-content { font-size: 14px; color: #444; line-height: 1.7; }
+    .review-empty { text-align: center; color: #aaa; padding: 32px; background: #f7f9ff; border-radius: 14px; border: 1px dashed #dde4f8; font-size: 14px; }
+
+    /* 사이드바 */
+    .sidebar-sticky { position: sticky; top: 90px; }
+    .sidebar-card { background: #fff; border-radius: 20px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .sidebar-card h3 { font-size: 15px; font-weight: 800; margin-bottom: 14px; color: #1a1f36; }
+    .reserve-btn-main { display: block; width: 100%; background: linear-gradient(135deg, #4a6cf7, #6d8dff); color: #fff; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 800; text-align: center; transition: 0.2s; }
+    .reserve-btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
+    .back-btn { display: block; width: 100%; background: #eef2ff; color: #4a6cf7; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; text-align: center; margin-top: 10px; }
+    .back-btn:hover { background: #dfe7ff; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2ff; font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #888; font-weight: 600; }
+    .info-val { font-weight: 700; color: #222; }
+
+    /* 로딩 */
+    .loading-box { text-align: center; padding: 80px 20px; color: #aaa; font-size: 15px; }
+
+    /* 토스트 */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1a1f36; color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 9999; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 820px) {
+      .detail-grid { grid-template-columns: 1fr; }
+      .sidebar-sticky { position: static; }
+      .hero-left h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container navbar">
+    <div class="logo">Study Spot</div>
+    <nav>
+      <ul class="nav-menu">
+        <li><a href="index.html">홈</a></li>
+        <li><a href="mypage.html">마이페이지</a></li>
+        <li><a href="community.html">커뮤니티</a></li>
+        <li><span id="userName"></span></li>
+        <li><a href="login.html" class="nav-btn" id="loginBtn">로그인</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div id="loadingBox" class="loading-box">업장 정보를 불러오는 중...</div>
+
+<div id="mainContent" style="display:none">
+  <!-- 히어로 -->
+  <section class="detail-hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-left">
+          <h1 id="heroCafeName">-</h1>
+          <div class="address" id="heroAddress">-</div>
+          <div class="hero-badges">
+            <span class="hero-badge" id="heroBadgeA">자유석 A구역</span>
+            <span class="hero-badge" id="heroBadgeB">고정석 B구역</span>
+            <span class="hero-badge" id="heroBadgeLocker" style="display:none">🔒 사물함</span>
+          </div>
+        </div>
+        <a id="heroReserveBtn" href="#" class="reserve-btn-hero">좌석 예약하기 →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 본문 -->
+  <section class="detail-body">
+    <div class="container">
+      <div class="detail-grid">
+
+        <!-- 왼쪽 메인 -->
+        <div>
+          <!-- 가격 정보 -->
+          <div class="card">
+            <h2>💰 이용 요금</h2>
+            <div id="priceSection"></div>
+          </div>
+
+          <!-- 리뷰 섹션 -->
+          <div class="card">
+            <h2>⭐ 이용 후기</h2>
+
+            <!-- 별점 요약 -->
+            <div class="rating-summary">
+              <div class="rating-big">
+                <div class="num" id="avgRating">0.0</div>
+                <div class="stars" id="avgStars">☆☆☆☆☆</div>
+                <div class="count" id="reviewCount">리뷰 0개</div>
+              </div>
+              <div class="rating-bars" id="ratingBars"></div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- 리뷰 작성 영역 -->
+            <div id="reviewWriteArea"></div>
+
+            <!-- 리뷰 목록 -->
+            <div id="reviewList"></div>
+          </div>
+        </div>
+
+        <!-- 오른쪽 사이드바 -->
+        <div class="sidebar-sticky">
+          <div class="sidebar-card">
+            <h3>📍 업장 정보</h3>
+            <div id="sideInfoRows"></div>
+          </div>
+          <div class="sidebar-card">
+            <a id="sideReserveBtn" href="#" class="reserve-btn-main">좌석 예약하기</a>
+            <a href="index.html" class="back-btn">← 홈으로 돌아가기</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db } from './firebase.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import {
+    doc, getDoc, collection, query, where, getDocs,
+    addDoc, serverTimestamp, orderBy
+  } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+  const params  = new URLSearchParams(location.search);
+  const cafeId  = params.get('cafeId');
+
+  if (!cafeId) { location.href = 'index.html'; }
+
+  let currentUser = null;
+  let cafeData    = null;
+  let selectedStar = 0;
+
+  // ── 토스트 ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── 별점 렌더 ──
+  function renderStars(rating, max = 5) {
+    const full  = Math.floor(rating);
+    const half  = rating - full >= 0.5 ? 1 : 0;
+    const empty = max - full - half;
+    return '⭐'.repeat(full) + (half ? '✨' : '') + '☆'.repeat(empty);
+  }
+
+  // ── 날짜 포맷 ──
+  function formatDate(ts) {
+    if (!ts) return '-';
+    const d = ts.toDate ? ts.toDate() : new Date(ts.seconds * 1000);
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // ── 업장 데이터 로드 ──
+  async function loadCafe() {
+    const snap = await getDoc(doc(db, 'cafes', cafeId));
+    if (!snap.exists()) { document.getElementById('loadingBox').textContent = '업장을 찾을 수 없습니다.'; return; }
+    cafeData = snap.data();
+    renderCafe();
+  }
+
+  function renderCafe() {
+    const d = cafeData;
+    document.title = `${d.cafeName} | Study Spot`;
+
+    // 히어로
+    document.getElementById('heroCafeName').textContent = d.cafeName || '-';
+    document.getElementById('heroAddress').textContent  = `📍 ${d.address || ''} ${d.addressDetail || ''}`;
+    document.getElementById('heroBadgeA').textContent   = `자유석 A구역 ${d.seatsA || 0}석`;
+    document.getElementById('heroBadgeB').textContent   = `고정석 B구역 ${d.seatsB || 0}석`;
+    if (d.locker?.enabled) document.getElementById('heroBadgeLocker').style.display = '';
+    document.getElementById('heroReserveBtn').href = `StudyCafe-reservation.html?cafeId=${cafeId}`;
+    document.getElementById('sideReserveBtn').href = `StudyCafe-reservation.html?cafeId=${cafeId}`;
+
+    // 사이드바 정보
+    const sideRows = [
+      { label: '총 좌석', val: `${d.totalSeats || 0}석` },
+      { label: 'A구역 (자유석)', val: `${d.seatsA || 0}석` },
+      { label: 'B구역 (고정석)', val: `${d.seatsB || 0}석` },
+      { label: '사물함', val: d.locker?.enabled ? `${d.locker.count || 0}개` : '미운영' },
+      { label: '전화번호', val: d.phone || '-' },
+      { label: '운영시간', val: d.openingHours || '-' },
+    ];
+    document.getElementById('sideInfoRows').innerHTML = sideRows.map(r =>
+      `<div class="info-row"><span class="info-label">${r.label}</span><span class="info-val">${r.val}</span></div>`
+    ).join('');
+
+    // 가격표
+    let priceHTML = '';
+
+    // 당일권
+    if (d.dailyPrice?.length > 0) {
+      priceHTML += `
+        <p style="font-size:13px;font-weight:700;color:#4a6cf7;margin-bottom:8px">⏱️ 자유석 당일권 (시간별)</p>
+        <table class="price-table" style="margin-bottom:20px">
+          <thead><tr><th>이용 시간</th><th>가격</th></tr></thead>
+          <tbody>${d.dailyPrice.map(r => `<tr><td>${r.key}시간</td><td class="price-tag">${(r.price||0).toLocaleString()}원</td></tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    // 기간권
+    if (d.periodPrice?.length > 0) {
+      priceHTML += `
+        <p style="font-size:13px;font-weight:700;color:#4a6cf7;margin-bottom:8px">📅 자유석 기간권</p>
+        <table class="price-table" style="margin-bottom:20px">
+          <thead><tr><th>이용 기간</th><th>가격</th></tr></thead>
+          <tbody>${d.periodPrice.map(r => `<tr><td>${r.key}일</td><td class="price-tag">${(r.price||0).toLocaleString()}원</td></tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    // 사물함
+    if (d.locker?.enabled && d.locker.priceList?.length > 0) {
+      priceHTML += `
+        <p style="font-size:13px;font-weight:700;color:#4a6cf7;margin-bottom:8px">🔒 개인 사물함</p>
+        <table class="price-table">
+          <thead><tr><th>이용 기간</th><th>가격</th></tr></thead>
+          <tbody>${d.locker.priceList.map(r => `<tr><td>${r.key}일</td><td class="price-tag">${(r.price||0).toLocaleString()}원</td></tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    document.getElementById('priceSection').innerHTML = priceHTML || '<p style="color:#aaa;font-size:14px">등록된 가격 정보가 없습니다.</p>';
+
+    document.getElementById('loadingBox').style.display  = 'none';
+    document.getElementById('mainContent').style.display = '';
+  }
+
+  // ── 리뷰 로드 ──
+  async function loadReviews() {
+    const snap = await getDocs(query(
+      collection(db, 'cafeReviews'),
+      where('cafeId', '==', cafeId),
+      orderBy('createdAt', 'desc')
+    ));
+
+    const reviews = [];
+    snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
+
+    // 별점 요약
+    const total = reviews.length;
+    const avg   = total > 0 ? reviews.reduce((s, r) => s + (r.rating || 0), 0) / total : 0;
+    document.getElementById('avgRating').textContent  = avg.toFixed(1);
+    document.getElementById('avgStars').textContent   = renderStars(avg);
+    document.getElementById('reviewCount').textContent = `리뷰 ${total}개`;
+
+    // 별점별 bar
+    const dist = [5,4,3,2,1].map(s => ({ star: s, count: reviews.filter(r => r.rating === s).length }));
+    document.getElementById('ratingBars').innerHTML = dist.map(({ star, count }) => {
+      const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+      return `
+        <div class="rating-bar-row">
+          <span style="width:20px;text-align:right">${star}★</span>
+          <div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:${pct}%"></div></div>
+          <span style="width:24px">${count}</span>
+        </div>`;
+    }).join('');
+
+    // 리뷰 목록
+    const listEl = document.getElementById('reviewList');
+    if (reviews.length === 0) {
+      listEl.innerHTML = '<div class="review-empty">아직 등록된 리뷰가 없어요.<br>첫 번째 리뷰를 남겨보세요!</div>';
+    } else {
+      listEl.innerHTML = reviews.map(r => `
+        <div class="review-item">
+          <div class="review-top">
+            <div>
+              <span class="review-author">${r.authorName || '익명'}</span>
+              <span class="review-stars" style="margin-left:8px">${'⭐'.repeat(r.rating || 0)}</span>
+            </div>
+            <span class="review-date">${formatDate(r.createdAt)}</span>
+          </div>
+          <div class="review-content">${r.content || ''}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // ── 리뷰 작성 UI ──
+  async function renderWriteArea(user) {
+    const area = document.getElementById('reviewWriteArea');
+
+    if (!user) {
+      area.innerHTML = `<div class="review-no-auth">로그인 후 이용했던 업장에 리뷰를 남길 수 있어요.<br><a href="login.html" style="color:#4a6cf7;font-weight:700">로그인하기</a></div>`;
+      return;
+    }
+
+    // 결제 내역 확인
+    const resSnap = await getDocs(query(
+      collection(db, 'reservations'),
+      where('uid', '==', user.uid),
+      where('cafeId', '==', cafeId),
+      where('status', 'in', ['confirmed', 'completed', 'active'])
+    ));
+
+    if (resSnap.empty) {
+      area.innerHTML = `<div class="review-no-auth">해당 업장을 이용한 내역이 있어야 리뷰를 작성할 수 있어요.</div>`;
+      return;
+    }
+
+    // 이미 작성했는지 확인
+    const myReviewSnap = await getDocs(query(
+      collection(db, 'cafeReviews'),
+      where('cafeId', '==', cafeId),
+      where('authorUid', '==', user.uid)
+    ));
+
+    if (!myReviewSnap.empty) {
+      area.innerHTML = `<div class="review-no-auth" style="color:#4a6cf7">✅ 이미 이 업장에 리뷰를 작성하셨어요.</div>`;
+      return;
+    }
+
+    // 작성 폼
+    area.innerHTML = `
+      <div class="review-write-box">
+        <h3>리뷰 작성</h3>
+        <div class="star-select" id="starSelect">
+          <span data-v="1">★</span><span data-v="2">★</span>
+          <span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+        </div>
+        <textarea id="reviewContent" placeholder="이용 후기를 자유롭게 작성해주세요."></textarea>
+        <div class="review-submit-row">
+          <button class="review-submit-btn" id="reviewSubmitBtn">리뷰 등록</button>
+        </div>
+        <p id="reviewMsg" style="font-size:13px;color:#e53935;margin-top:8px;text-align:center"></p>
+      </div>`;
+
+    // 별점 선택
+    document.querySelectorAll('#starSelect span').forEach(star => {
+      star.addEventListener('mouseenter', () => {
+        document.querySelectorAll('#starSelect span').forEach((s, i) => {
+          s.classList.toggle('active', i < parseInt(star.dataset.v));
+        });
+      });
+      star.addEventListener('click', () => {
+        selectedStar = parseInt(star.dataset.v);
+      });
+    });
+    document.getElementById('starSelect').addEventListener('mouseleave', () => {
+      document.querySelectorAll('#starSelect span').forEach((s, i) => {
+        s.classList.toggle('active', i < selectedStar);
+      });
+    });
+
+    // 제출
+    document.getElementById('reviewSubmitBtn').addEventListener('click', async () => {
+      const content = document.getElementById('reviewContent').value.trim();
+      const msgEl   = document.getElementById('reviewMsg');
+
+      if (!selectedStar) { msgEl.textContent = '별점을 선택해주세요.'; return; }
+      if (!content)      { msgEl.textContent = '리뷰 내용을 입력해주세요.'; return; }
+
+      document.getElementById('reviewSubmitBtn').disabled = true;
+      document.getElementById('reviewSubmitBtn').textContent = '등록 중...';
+
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const authorName = userDoc.exists()
+          ? (userDoc.data().name || userDoc.data().nickname || user.email?.split('@')[0])
+          : user.email?.split('@')[0];
+
+        await addDoc(collection(db, 'cafeReviews'), {
+          cafeId,
+          cafeName: cafeData.cafeName || '',
+          authorUid: user.uid,
+          authorEmail: user.email,
+          authorName,
+          rating: selectedStar,
+          content,
+          createdAt: serverTimestamp()
+        });
+
+        showToast('리뷰가 등록되었습니다 🎉');
+        await loadReviews();
+        area.innerHTML = `<div class="review-no-auth" style="color:#4a6cf7">✅ 리뷰가 등록되었습니다. 감사합니다!</div>`;
+      } catch (err) {
+        console.error(err);
+        msgEl.textContent = '등록 중 오류가 발생했습니다.';
+        document.getElementById('reviewSubmitBtn').disabled = false;
+        document.getElementById('reviewSubmitBtn').textContent = '리뷰 등록';
+      }
+    });
+  }
+
+  // ── 인증 상태 ──
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    if (user) {
+      document.getElementById('userName').textContent = user.displayName || user.email?.split('@')[0] + '님';
+      const loginBtn = document.getElementById('loginBtn');
+      loginBtn.textContent = '로그아웃';
+      loginBtn.href = '#';
+      loginBtn.onclick = async (e) => {
+        e.preventDefault();
+        const { signOut } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+        await signOut(auth);
+        location.reload();
+      };
+    }
+    await loadCafe();
+    await loadReviews();
+    await renderWriteArea(user);
+  });
+</script>
+</body>
+</html>
