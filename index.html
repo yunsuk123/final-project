@@ -4,14 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>스터디카페</title>
-
   <link rel="stylesheet" href="index.css">
-
   <script type="text/javascript"
     src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a6efaad6d59989fe5bb8adfe6f4039a3&libraries=services&autoload=false">
   </script>
 </head>
 <body>
+
+  <div class="bg-circle bc-1"></div>
+  <div class="bg-circle bc-2"></div>
 
   <header>
     <div class="container navbar">
@@ -22,23 +23,39 @@
           <li><a href="mypage.html">마이페이지</a></li>
           <li><a href="community.html">커뮤니티</a></li>
           <li><a href="login.html" class="nav-btn" id="authBtn">로그인</a></li>
-          <li><span id="welcomeText" style="font-weight:600; color:#4a6cf7;"></span></li>
+          <li><span id="welcomeText"></span></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <section class="hero" id="home">
-    <div class="container hero-wrap">
-      <div class="hero-text">
-        <h1>집중이 필요한 순간,<br>가장 편리한 스터디카페</h1>
-        <p>좌석 예약 및 결제, 스터디 그룹 참여, 매장 정보 확인까지 한 번에 이용 가능한 스터디카페 웹 서비스입니다.</p>
-        <div class="hero-buttons">
-          <a href="#groups" class="btn-secondary" onclick="document.getElementById('groups').scrollIntoView({behavior:'smooth'}); return false;">스터디 그룹 보기</a>
+  <div class="topbar" id="home">
+    <div class="container topbar-inner">
+      <div class="topbar-left">
+        <p class="topbar-sub" id="topGreeting">Study Spot에 오신 것을 환영합니다.</p>
+        <h2 class="topbar-title">오늘 어디서 공부할까요?</h2>
+      </div>
+      <div class="topbar-stats">
+        <div class="stat-pill">
+          <span class="stat-num" id="statCafes">-</span>
+          <span class="stat-lbl">등록 지점</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="statSeats">-</span>
+          <span class="stat-lbl">예약 가능 좌석</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="statGroups">-</span>
+          <span class="stat-lbl">모집 중 스터디</span>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="hero-info-card" id="info">
+  <main class="container dashboard">
+
+    <div class="map-panel" id="info">
+      <div class="map-panel-head">
         <h3>매장 서비스 및 위치</h3>
         <div class="hero-service-grid">
           <div class="hero-service-item"><span class="svc-icon">❄️</span><span class="svc-label">냉난방</span></div>
@@ -47,41 +64,42 @@
           <div class="hero-service-item"><span class="svc-icon">🛜</span><span class="svc-label">와이파이</span></div>
           <div class="hero-service-item"><span class="svc-icon">🔌</span><span class="svc-label">콘센트</span></div>
         </div>
-        <div style="display:flex; gap:16px; margin-bottom:8px; font-size:12px; font-weight:600; color:#555;">
-          <span>🔵 주변 스터디카페</span>
-          <span>🔴 등록 업장</span>
+        <div class="map-legend">
+          <span class="leg-item"><span class="leg-dot" style="background:#4a6cf7;"></span>주변 스터디카페</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#ef4444;"></span>등록 업장</span>
         </div>
-        <div id="hero-map"></div>
-        <div class="map-bottom-box">
-          <p class="hero-map-label" id="mapLabel">로그인 후 회원가입 지역 기준으로 주변 스터디카페가 표시됩니다.</p>
-          <a href="StudyCafe-reservation.html" class="map-reserve-btn">좌석 예약하기</a>
+      </div>
+      <div id="hero-map"></div>
+      <div class="map-bottom-box">
+        <p class="hero-map-label" id="mapLabel">로그인 후 회원가입 지역 기준으로 주변 스터디카페가 표시됩니다.</p>
+        <a href="StudyCafe-reservation.html" class="map-reserve-btn">좌석 예약하기</a>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="panel-block" id="seat-status">
+        <div class="panel-block-head">
+          <h3>실시간 좌석 현황</h3>
+          <span class="live-badge"><span class="live-dot"></span>실시간</span>
+        </div>
+        <div class="seat-status-grid" id="seatStatusGrid">
+          <p class="empty-study-message">좌석 현황을 불러오는 중...</p>
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- ✅ 실시간 좌석 현황 섹션 -->
-  <section id="seat-status">
-    <div class="container">
-      <div class="section-title">
-        <h2>실시간 좌석 현황</h2>
-        <p>오늘 현재 이용 가능한 좌석을 확인하세요.</p>
-      </div>
-      <div class="seat-status-grid" id="seatStatusGrid">
-        <p class="empty-study-message">좌석 현황을 불러오는 중...</p>
-      </div>
-    </div>
-  </section>
+  </main>
 
-  <section id="groups">
-    <div class="container">
-      <div class="section-title">
-        <h2>스터디 그룹 모집</h2>
+  <section class="container groups-section" id="groups">
+    <div class="groups-section-head">
+      <div>
+        <h3>스터디 그룹 모집</h3>
         <p>혼자 공부하기 어렵다면 관심 있는 스터디 그룹에 참여해보세요.</p>
       </div>
-      <div class="group-grid" id="mainStudyGroupList">
-        <p class="empty-study-message">스터디 모집 글을 불러오는 중입니다...</p>
-      </div>
+      <a href="community.html" class="more-link">전체보기 →</a>
+    </div>
+    <div class="group-grid" id="mainStudyGroupList">
+      <p class="empty-study-message">스터디 모집 글을 불러오는 중입니다...</p>
     </div>
   </section>
 
@@ -200,14 +218,16 @@
       onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapshot) => {
         mainStudyGroupList.innerHTML = "";
         let count = 0;
+        let openCount = 0;
         snapshot.forEach((docItem) => {
           const post = docItem.data();
           if (post.category !== "study" || !post.studyInfo) return;
-          count++;
-          if (count > 3) return;
           const si = post.studyInfo;
           const cur = si.currentMembers || 1;
           const max = si.maxMembers || 1;
+          if (cur < max && si.status !== "마감") openCount++;
+          count++;
+          if (count > 3) return;
           const isClosed = cur >= max || si.status === "마감";
           const isMyPost = checkMyPost(post, user);
           let btnHtml = isClosed
@@ -228,119 +248,92 @@
             </div>
           `);
         });
+        const el = document.getElementById("statGroups");
+        if (el) el.textContent = openCount;
         if (count === 0) mainStudyGroupList.innerHTML = `<p class="empty-study-message">등록된 스터디 모집 글이 없습니다.</p>`;
       });
     }
 
-    // ✅ 좌석 현황 로드
     async function loadSeatStatus() {
       const grid = document.getElementById("seatStatusGrid");
       if (!grid) return;
       try {
         const today = new Date().toISOString().split("T")[0];
         const todayLabel = new Date().toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-
         const cafeSnap = await getDocs(collection(db, "cafes"));
         const cafes = [];
         cafeSnap.forEach(d => cafes.push({ id: d.id, ...d.data() }));
-
-        if (cafes.length === 0) {
-          grid.innerHTML = `<p class="empty-study-message">등록된 지점이 없습니다.</p>`;
-          return;
-        }
-
-        const rSnap = await getDocs(
-          query(
-            collection(db, "reservations"),
-            where("date", "==", today),
-            where("status", "in", ["active", "confirmed"])
-          )
-        );
-
-        const now = Date.now(); // ✅ 추가
-
+        const elCafe = document.getElementById("statCafes");
+        if (elCafe) elCafe.textContent = cafes.length;
+        if (cafes.length === 0) { grid.innerHTML = `<p class="empty-study-message">등록된 지점이 없습니다.</p>`; return; }
+        const rSnap = await getDocs(query(collection(db, "reservations"), where("date", "==", today), where("status", "in", ["active", "confirmed"])));
+        const now = Date.now();
         const occupied = {};
         rSnap.forEach(d => {
           const r = d.data();
-
-  // ✅ 당일권 만료 체크
-          if (r.reservationType === "daily" && r.endTimestamp) {
-            if (r.endTimestamp < now) return;
-          }
-
+          if (r.reservationType === "daily" && r.endTimestamp && r.endTimestamp < now) return;
           if (!occupied[r.cafeId]) occupied[r.cafeId] = { A: new Set(), B: new Set() };
           if (r.zone === "A") occupied[r.cafeId].A.add(r.seatId);
           else occupied[r.cafeId].B.add(r.seatId);
         });
-
         function getStatus(avail, total) {
           if (total === 0) return { bar: "bar-green", tag: "tag-green", label: "정보없음", dot: "🟢" };
           const ratio = avail / total;
-          if (ratio > 0.5) return { bar: "bar-green",  tag: "tag-green",  label: "여유",   dot: "🟢" };
-          if (ratio > 0.2) return { bar: "bar-yellow", tag: "tag-yellow", label: "보통",   dot: "🟡" };
-          return              { bar: "bar-red",    tag: "tag-red",    label: "혼잡",   dot: "🔴" };
+          if (ratio > 0.5) return { bar: "bar-green", tag: "tag-green", label: "여유", dot: "🟢" };
+          if (ratio > 0.2) return { bar: "bar-yellow", tag: "tag-yellow", label: "보통", dot: "🟡" };
+          return { bar: "bar-red", tag: "tag-red", label: "혼잡", dot: "🔴" };
         }
-
         grid.innerHTML = "";
-
+        let totalAvail = 0;
         cafes.forEach(cafe => {
           const totalA = cafe.seatsA || 0;
           const totalB = cafe.seatsB || 0;
-          const usedA  = occupied[cafe.id]?.A.size || 0;
-          const usedB  = occupied[cafe.id]?.B.size || 0;
+          const usedA = occupied[cafe.id]?.A.size || 0;
+          const usedB = occupied[cafe.id]?.B.size || 0;
           const availA = totalA - usedA;
           const availB = totalB - usedB;
-          const stA    = getStatus(availA, totalA);
-          const stB    = getStatus(availB, totalB);
-          const pctA   = totalA > 0 ? Math.round((usedA / totalA) * 100) : 0;
-          const pctB   = totalB > 0 ? Math.round((usedB / totalB) * 100) : 0;
-
+          totalAvail += availA + availB;
+          const stA = getStatus(availA, totalA);
+          const stB = getStatus(availB, totalB);
+          const pctA = totalA > 0 ? Math.round((usedA / totalA) * 100) : 0;
+          const pctB = totalB > 0 ? Math.round((usedB / totalB) * 100) : 0;
           grid.innerHTML += `
             <div class="seat-status-card">
               <div class="seat-card-header">
                 <span class="seat-card-name">📍 ${escapeHtml(cafe.cafeName)}</span>
                 <span class="seat-card-today">오늘 ${todayLabel}</span>
               </div>
-
               <div class="seat-zone-block">
                 <div class="seat-zone-top">
                   <span class="seat-zone-name">A존 · 자유석 (당일권)</span>
                   <span class="seat-zone-count">${availA}<span> / ${totalA}석 남음</span></span>
                 </div>
-                <div class="seat-bar-wrap">
-                  <div class="seat-bar-fill ${stA.bar}" style="width:${pctA}%"></div>
-                </div>
+                <div class="seat-bar-wrap"><div class="seat-bar-fill ${stA.bar}" style="width:${pctA}%"></div></div>
                 <div class="seat-zone-bottom">
                   <span class="seat-zone-used">사용 중 ${usedA}석</span>
                   <span class="seat-status-tag ${stA.tag}">${stA.dot} ${stA.label}</span>
                 </div>
               </div>
-
               <div class="seat-zone-block">
                 <div class="seat-zone-top">
                   <span class="seat-zone-name">B존 · 고정석 (기간권)</span>
                   <span class="seat-zone-count">${availB}<span> / ${totalB}석 남음</span></span>
                 </div>
-                <div class="seat-bar-wrap">
-                  <div class="seat-bar-fill ${stB.bar}" style="width:${pctB}%"></div>
-                </div>
+                <div class="seat-bar-wrap"><div class="seat-bar-fill ${stB.bar}" style="width:${pctB}%"></div></div>
                 <div class="seat-zone-bottom">
                   <span class="seat-zone-used">사용 중 ${usedB}석</span>
                   <span class="seat-status-tag ${stB.tag}">${stB.dot} ${stB.label}</span>
                 </div>
               </div>
-
-              <a href="StudyCafe-reservation.html?cafeId=${cafe.id}" class="seat-reserve-btn">
-                이 지점 예약하기 →
-              </a>
+              <a href="StudyCafe-reservation.html?cafeId=${cafe.id}" class="seat-reserve-btn">이 지점 예약하기 →</a>
             </div>
           `;
         });
-
+        const elSeats = document.getElementById("statSeats");
+        if (elSeats) elSeats.textContent = totalAvail;
       } catch(e) {
         console.error("좌석 현황 로드 실패:", e);
-        document.getElementById("seatStatusGrid").innerHTML =
-          `<p class="empty-study-message">좌석 현황을 불러오지 못했습니다.</p>`;
+        document.getElementById("seatStatusGrid").innerHTML = `<p class="empty-study-message">좌석 현황을 불러오지 못했습니다.</p>`;
       }
     }
 
@@ -401,8 +394,7 @@
           if (activeInfoWindow) activeInfoWindow.close();
           iw.open(map, marker);
           activeInfoWindow = iw;
-          document.querySelector(".map-reserve-btn").href =
-            `StudyCafe-reservation.html?cafe=${encodeURIComponent(place.place_name)}`;
+          document.querySelector(".map-reserve-btn").href = `StudyCafe-reservation.html?cafe=${encodeURIComponent(place.place_name)}`;
         });
         bounds.extend(point);
       });
@@ -422,10 +414,7 @@
           const marker = new kakao.maps.Marker({
             map,
             position: new kakao.maps.LatLng(cafe.lat, cafe.lng),
-            image: new kakao.maps.MarkerImage(
-              "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
-              new kakao.maps.Size(24, 35)
-            ),
+            image: new kakao.maps.MarkerImage("https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png", new kakao.maps.Size(24, 35)),
             title: cafe.cafeName
           });
           firebaseMarkers.push(marker);
@@ -436,14 +425,8 @@
                 <div style="font-size:11px;color:#666;margin-bottom:6px;">${cafe.address} ${cafe.addressDetail || ""}</div>
                 <div style="font-size:12px;color:#333;margin-bottom:2px;">당일권: ${(cafe.price?.daily || 0).toLocaleString()}원</div>
                 <div style="font-size:12px;color:#333;margin-bottom:8px;">기간권: ${(cafe.price?.weekly || 0).toLocaleString()}원</div>
-                <a href="StudyCafe-review.html?cafeId=${docItem.id}"
-                   style="display:block;text-align:center;background:#fff;color:#4a6cf7;border:1.5px solid #4a6cf7;padding:7px 0;border-radius:8px;font-weight:700;font-size:12px;text-decoration:none;margin-bottom:6px;">
-                  업장 상세보기
-                </a>
-                <a href="StudyCafe-reservation.html?cafeId=${docItem.id}"
-                   style="display:block;text-align:center;background:#4a6cf7;color:#fff;padding:7px 0;border-radius:8px;font-weight:700;font-size:12px;text-decoration:none;">
-                  좌석 예약하기
-                </a>
+                <a href="StudyCafe-review.html?cafeId=${docItem.id}" style="display:block;text-align:center;background:#fff;color:#4a6cf7;border:1.5px solid #4a6cf7;padding:7px 0;border-radius:8px;font-weight:700;font-size:12px;text-decoration:none;margin-bottom:6px;">업장 상세보기</a>
+                <a href="StudyCafe-reservation.html?cafeId=${docItem.id}" style="display:block;text-align:center;background:#4a6cf7;color:#fff;padding:7px 0;border-radius:8px;font-weight:700;font-size:12px;text-decoration:none;">좌석 예약하기</a>
               </div>
             `
           });
@@ -475,6 +458,8 @@
       if (user) {
         const displayName = await getUserName(user);
         welcomeText.textContent = displayName + "님";
+        const greeting = document.getElementById("topGreeting");
+        if (greeting) greeting.textContent = `안녕하세요, ${displayName}님 👋`;
         authBtn.textContent = "로그아웃";
         authBtn.href = "#";
         authBtn.onclick = async (e) => {
@@ -486,8 +471,7 @@
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          const region = userData.region ||
-            `${userData.sido || ""} ${userData.sigungu || ""} ${userData.dong || ""}`.trim();
+          const region = userData.region || `${userData.sido || ""} ${userData.sigungu || ""} ${userData.dong || ""}`.trim();
           if (!region) {
             mapLabel.textContent = "지역 설정 후 주변 스터디카페가 표시됩니다.";
           } else if (region !== currentRegion) {
@@ -504,14 +488,11 @@
         mapLabel.textContent = "로그인 후 회원가입 지역 기준으로 주변 스터디카페가 표시됩니다.";
         if (map) loadFirebaseCafes();
       }
-
       renderMainStudyGroups(user);
       loadSeatStatus();
     });
 
-    window.addEventListener("load", () => {
-      startKakaoMap();
-    });
+    window.addEventListener("load", () => { startKakaoMap(); });
   </script>
 </body>
 </html>
