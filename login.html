@@ -13,127 +13,234 @@
     }
 
     body {
-      background: linear-gradient(135deg, #eef2ff, #f8fbff);
+      background: #eef1fb;
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 배경 블롭 */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 280px; height: 280px;
+      background: #c7d2f8;
+      border-radius: 50%;
+      top: -90px; left: -70px;
+      opacity: 0.6;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      width: 200px; height: 200px;
+      background: #bfcef6;
+      border-radius: 50%;
+      bottom: -60px; right: -50px;
+      opacity: 0.5;
+      z-index: 0;
     }
 
     .login-container {
       width: 100%;
-      max-width: 420px;
+      max-width: 400px;
       background: #fff;
-      padding: 40px 32px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(74, 108, 247, 0.12);
+      padding: 2.6rem 2.4rem 2.2rem;
+      border-radius: 22px;
+      border: 1px solid #dde3f7;
+      box-shadow: 0 8px 32px rgba(92, 110, 230, 0.10);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 로고 영역 */
+    .logo-area {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo-emblem {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 58px; height: 58px;
+      background: linear-gradient(145deg, #5c6ee6, #4a8af4);
+      border-radius: 16px;
+      margin-bottom: 1rem;
+      box-shadow: 0 6px 18px rgba(92, 110, 230, 0.30);
+    }
+    .logo-emblem svg {
+      width: 28px; height: 28px;
+      fill: none;
+      stroke: #fff;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .login-container h1 {
-      text-align: center;
-      margin-bottom: 10px;
-      color: #4a6cf7;
-      font-size: 32px;
-      font-weight: 800;
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e2a6e;
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
     }
-
-    .login-container p {
-      text-align: center;
-      color: #666;
-      margin-bottom: 28px;
-      font-size: 15px;
+    .login-container > p {
+      font-size: 13px;
+      color: #8a9ac5;
+      margin-bottom: 0;
     }
 
     .form-group {
-      margin-bottom: 18px;
+      margin-bottom: 1rem;
     }
-
     .form-group label {
       display: block;
-      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #4a5580;
+      margin-bottom: 7px;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrap svg {
+      position: absolute;
+      left: 13px;
+      width: 16px; height: 16px;
+      stroke: #a0aed8;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .input-wrap input {
+      width: 100%;
+      padding: 11px 12px 11px 39px;
+      border: 1.5px solid #dde3f7;
+      border-radius: 10px;
       font-size: 14px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 14px 14px;
-      border: 1px solid #d9dff5;
-      border-radius: 10px;
-      font-size: 15px;
+      background: #f7f8fd;
+      color: #1e2a6e;
       outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .input-wrap input:focus {
+      border-color: #5c6ee6;
+      background: #fff;
+    }
+    .input-wrap input::placeholder {
+      color: #b8c2de;
     }
 
-    .form-group input:focus {
-      border-color: #4a6cf7;
+    .login-btn {
+      width: 100%;
+      padding: 12.5px;
+      border: none;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #5c6ee6, #4a8af4);
+      color: #fff;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      box-shadow: 0 4px 14px rgba(92, 110, 230, 0.32);
+      transition: opacity 0.2s;
     }
+    .login-btn:hover { opacity: 0.92; }
 
-    .login-btn,
     .verify-btn {
       width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      background: #4a6cf7;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 700;
+      padding: 11px;
+      background: #f3f5fd;
+      border: 1.5px solid #dde3f7;
+      border-radius: 11px;
+      color: #5c6ee6;
+      font-size: 13.5px;
+      font-weight: 500;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s, border-color 0.2s;
     }
+    .verify-btn:hover { background: #eaedfa; border-color: #c0caef; }
 
-    .login-btn:hover,
-    .verify-btn:hover {
-      background: #3655d6;
+    .sep {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 1.4rem 0 1rem;
     }
+    .sep-line { flex: 1; height: 1px; background: #e6eaf7; }
+    .sep-text { font-size: 12px; color: #aab2d4; }
 
-    .verify-btn {
-      background: #6c7cff;
+    .find-link-wrap {
+      text-align: center;
+    }
+    .find-link-wrap a {
+      font-size: 12.5px;
+      color: #8a9ac5;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .find-link-wrap a:hover { color: #5c6ee6; }
+
+    .message {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.5;
+      min-height: 20px;
     }
 
     .bottom-links {
-      margin-top: 20px;
       text-align: center;
-      font-size: 14px;
-      color: #666;
+      margin-top: 1.4rem;
+      padding-top: 1.3rem;
+      border-top: 1px solid #edf0fb;
+      font-size: 13.5px;
+      color: #8a9ac5;
     }
-
     .bottom-links a {
-      color: #4a6cf7;
-      font-weight: 700;
+      color: #5c6ee6;
+      font-weight: 600;
       text-decoration: none;
       margin-left: 4px;
     }
+    .bottom-links a:hover { text-decoration: underline; }
 
     .home-link {
       display: block;
       text-align: center;
-      margin-top: 18px;
-      color: #888;
-      font-size: 14px;
+      margin-top: 0.9rem;
+      font-size: 12.5px;
+      color: #aab2d4;
       text-decoration: none;
+      transition: color 0.15s;
     }
+    .home-link:hover { color: #5c6ee6; }
 
-    .home-link:hover {
-      color: #4a6cf7;
-    }
-
-    .message {
-      margin-top: 16px;
-      text-align: center;
-      font-size: 14px;
-      color: #444;
-      line-height: 1.5;
-      min-height: 22px;
-    }
-
-    /* ── 추가: 모달 스타일 ── */
+    /* 모달 */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.45);
+      background: rgba(30, 42, 110, 0.35);
       z-index: 9999;
       justify-content: center;
       align-items: center;
@@ -141,115 +248,147 @@
     .modal-box {
       background: #fff;
       border-radius: 20px;
-      padding: 36px 32px;
+      padding: 2.2rem 2rem;
       width: 400px;
       max-width: 92vw;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+      border: 1px solid #dde3f7;
+      box-shadow: 0 16px 48px rgba(92, 110, 230, 0.18);
     }
     .modal-box h2 {
-      font-size: 20px;
-      font-weight: 800;
-      color: #222;
-      margin-bottom: 6px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e2a6e;
+      margin-bottom: 4px;
     }
     .modal-desc {
       font-size: 13px;
-      color: #888;
-      margin-bottom: 22px;
+      color: #8a9ac5;
+      margin-bottom: 1.4rem;
     }
     .tab-wrap {
       display: flex;
-      border-bottom: 2px solid #eef2ff;
-      margin-bottom: 24px;
+      border-bottom: 1.5px solid #eef2ff;
+      margin-bottom: 1.4rem;
     }
     .tab-btn {
       flex: 1;
       padding: 10px 0;
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 13.5px;
+      font-weight: 600;
       background: none;
       border: none;
       cursor: pointer;
-      color: #aaa;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
+      color: #aab2d4;
+      border-bottom: 2.5px solid transparent;
+      margin-bottom: -1.5px;
+      transition: color 0.15s;
     }
     .tab-btn.active {
-      color: #4a6cf7;
-      border-bottom-color: #4a6cf7;
+      color: #5c6ee6;
+      border-bottom-color: #5c6ee6;
     }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .modal-input {
       width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #d9dff5;
+      padding: 11px 13px;
+      border: 1.5px solid #dde3f7;
       border-radius: 10px;
       font-size: 14px;
+      background: #f7f8fd;
+      color: #1e2a6e;
       outline: none;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       box-sizing: border-box;
     }
-    .modal-input:focus { border-color: #4a6cf7; }
+    .modal-input:focus { border-color: #5c6ee6; background: #fff; }
     .modal-btn {
       width: 100%;
-      padding: 13px;
+      padding: 12px;
       border: none;
       border-radius: 10px;
-      background: #4a6cf7;
+      background: linear-gradient(135deg, #5c6ee6, #4a8af4);
       color: #fff;
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
       margin-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(92, 110, 230, 0.25);
+      transition: opacity 0.2s;
     }
-    .modal-btn:hover { background: #3655d6; }
+    .modal-btn:hover { opacity: 0.9; }
     .modal-cancel {
       width: 100%;
       padding: 11px;
-      border: none;
+      border: 1.5px solid #dde3f7;
       border-radius: 10px;
-      background: #f0f2f8;
-      color: #555;
+      background: #f3f5fd;
+      color: #8a9ac5;
       font-size: 14px;
       cursor: pointer;
+      transition: background 0.2s;
     }
-    .modal-cancel:hover { background: #e4e8f5; }
+    .modal-cancel:hover { background: #eaedfa; }
     .modal-msg {
       text-align: center;
       font-size: 13px;
       min-height: 20px;
       margin-top: 10px;
       line-height: 1.5;
+      color: #5c6ee6;
     }
   </style>
 </head>
 <body>
   <div class="login-container">
-    <h1>Study Spot</h1>
-    <p>스터디스팟 로그인</p>
+
+    <div class="logo-area">
+      <div class="logo-emblem">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 21h18M9 21V10M15 21V10M3 10l9-7 9 7"/>
+          <rect x="9" y="14" width="2" height="3" rx="0.5"/>
+          <rect x="13" y="14" width="2" height="3" rx="0.5"/>
+        </svg>
+      </div>
+      <h1>Study Spot</h1>
+      <p>스터디카페 예약 플랫폼</p>
+    </div>
 
     <form id="loginForm">
       <div class="form-group">
         <label for="email">이메일</label>
-        <input type="email" id="email" placeholder="이메일을 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+          <input type="email" id="email" placeholder="이메일을 입력하세요" required />
+        </div>
       </div>
 
       <div class="form-group">
         <label for="password">비밀번호</label>
-        <input type="password" id="password" placeholder="비밀번호를 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input type="password" id="password" placeholder="비밀번호를 입력하세요" required />
+        </div>
       </div>
 
-      <button type="submit" class="login-btn">로그인</button>
-      <button type="button" id="resendBtn" class="verify-btn">인증 메일 다시 보내기</button>
+      <button type="submit" class="login-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        로그인
+      </button>
+      <button type="button" id="resendBtn" class="verify-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5c6ee6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9l20-7z"/></svg>
+        인증 메일 다시 보내기
+      </button>
     </form>
 
-    <!-- 추가: 아이디/비밀번호 찾기 링크 -->
-    <div style="text-align:center; margin-top:14px;">
-      <a href="#" onclick="openFindModal(); return false;"
-         style="font-size:13px; color:#4a6cf7; text-decoration:none;">
-        아이디 · 비밀번호 찾기
-      </a>
+    <div class="sep">
+      <div class="sep-line"></div>
+      <span class="sep-text">또는</span>
+      <div class="sep-line"></div>
+    </div>
+
+    <div class="find-link-wrap">
+      <a href="#" onclick="openFindModal(); return false;">아이디 · 비밀번호 찾기</a>
     </div>
 
     <div id="message" class="message"></div>
@@ -259,10 +398,10 @@
       <a href="signup.html">회원가입</a>
     </div>
 
-    <a href="index.html" class="home-link">메인으로 돌아가기</a>
+    <a href="index.html" class="home-link">← 메인으로 돌아가기</a>
   </div>
 
-  <!-- 추가: 찾기 모달 -->
+  <!-- 찾기 모달 -->
   <div class="modal-overlay" id="findModal">
     <div class="modal-box">
       <h2>계정 찾기</h2>
@@ -273,7 +412,6 @@
         <button class="tab-btn" onclick="switchTab('pw')">비밀번호 찾기</button>
       </div>
 
-      <!-- 아이디 찾기 탭 -->
       <div class="tab-content active" id="tab-id">
         <input class="modal-input" id="findName" placeholder="이름 입력" />
         <input class="modal-input" id="findSido" placeholder="시/도 입력 (예: 서울특별시)" />
@@ -282,7 +420,6 @@
         <div class="modal-msg" id="idResult"></div>
       </div>
 
-      <!-- 비밀번호 찾기 탭 -->
       <div class="tab-content" id="tab-pw">
         <input class="modal-input" id="resetEmail" type="email" placeholder="가입한 이메일 입력" />
         <button class="modal-btn" onclick="sendReset()">재설정 링크 보내기</button>

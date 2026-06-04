@@ -3,123 +3,352 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>회원가입 | Study Cafe</title>
+  <title>회원가입 | Study Spot</title>
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
       font-family: "Pretendard", "Malgun Gothic", sans-serif;
     }
+
     body {
-      margin: 0;
+      background: #eef1fb;
       min-height: 100vh;
-      background: #eef3ff;
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 30px 0;
+      position: relative;
+      overflow: hidden;
     }
+
+    /* 배경 블롭 */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 280px; height: 280px;
+      background: #c7d2f8;
+      border-radius: 50%;
+      top: -90px; left: -70px;
+      opacity: 0.6;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      width: 200px; height: 200px;
+      background: #bfcef6;
+      border-radius: 50%;
+      bottom: -60px; right: -50px;
+      opacity: 0.5;
+      z-index: 0;
+    }
+
     .signup-box {
-      width: 460px;
+      width: 100%;
+      max-width: 420px;
       background: #fff;
-      padding: 42px 32px;
-      border-radius: 18px;
-      box-shadow: 0 16px 35px rgba(74, 108, 247, 0.12);
+      padding: 2.6rem 2.4rem 2.2rem;
+      border-radius: 22px;
+      border: 1px solid #dde3f7;
+      box-shadow: 0 8px 32px rgba(92, 110, 230, 0.10);
+      position: relative;
+      z-index: 1;
     }
-    h1 { text-align: center; color: #5968f2; margin-bottom: 8px; font-size: 32px; }
-    .sub-title { text-align: center; color: #666; margin-bottom: 24px; font-size: 15px; }
+
+    /* 로고 영역 */
+    .logo-area {
+      text-align: center;
+      margin-bottom: 1.8rem;
+    }
+    .logo-emblem {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 58px; height: 58px;
+      background: linear-gradient(145deg, #5c6ee6, #4a8af4);
+      border-radius: 16px;
+      margin-bottom: 1rem;
+      box-shadow: 0 6px 18px rgba(92, 110, 230, 0.30);
+    }
+    .logo-emblem svg {
+      width: 28px; height: 28px;
+      fill: none;
+      stroke: #fff;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .logo-area h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e2a6e;
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
+    }
+    .logo-area .sub-title {
+      font-size: 13px;
+      color: #8a9ac5;
+    }
 
     /* 탭 */
-    .role-tabs { display: flex; gap: 10px; margin-bottom: 28px; }
-    .role-tabs button {
-      flex: 1; height: 46px;
-      border: 2px solid #d6ddff; border-radius: 12px;
-      background: #fff; color: #888;
-      font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 0;
-      transition: all 0.2s;
+    .role-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.6rem;
+      background: #f3f5fd;
+      border-radius: 12px;
+      padding: 5px;
     }
-    .role-tabs button.active { background: #5968f2; border-color: #5968f2; color: #fff; }
-    .role-tabs button:hover:not(.active) { border-color: #5968f2; color: #5968f2; }
+    .role-tabs button {
+      flex: 1;
+      height: 40px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      color: #8a9ac5;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .role-tabs button.active {
+      background: #fff;
+      color: #5c6ee6;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(92, 110, 230, 0.15);
+    }
+    .role-tabs button:hover:not(.active) {
+      color: #5c6ee6;
+    }
 
     .form-section { display: none; }
     .form-section.active { display: block; }
 
-    label { display: block; margin: 16px 0 8px; font-weight: 700; font-size: 14px; color: #333; }
-    input, select {
-      width: 100%; height: 50px;
-      border: 1px solid #d6ddff; border-radius: 10px;
-      padding: 0 14px; font-size: 15px; outline: none; background: #fff;
+    /* 라벨 & 인풋 */
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #4a5580;
+      margin-bottom: 7px;
+      margin-top: 1rem;
     }
-    input:focus, select:focus { border-color: #5968f2; }
-    .region-help { margin-top: 8px; font-size: 12px; color: #777; line-height: 1.5; }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrap svg {
+      position: absolute;
+      left: 13px;
+      width: 16px; height: 16px;
+      stroke: #a0aed8;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .input-wrap input,
+    .input-wrap select {
+      width: 100%;
+      padding: 11px 12px 11px 39px;
+      border: 1.5px solid #dde3f7;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #f7f8fd;
+      color: #1e2a6e;
+      outline: none;
+      height: auto;
+      transition: border-color 0.2s, background 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .input-wrap input:focus,
+    .input-wrap select:focus {
+      border-color: #5c6ee6;
+      background: #fff;
+    }
+    .input-wrap input::placeholder { color: #b8c2de; }
+    .input-wrap select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* select 화살표 커스텀 */
+    .select-wrap {
+      position: relative;
+    }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid #a0aed8;
+      pointer-events: none;
+    }
+
+    .region-help {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #aab2d4;
+      line-height: 1.6;
+    }
+
+    /* 버튼 */
     .submit-btn {
-      width: 100%; height: 50px; margin-top: 28px;
-      border: none; border-radius: 10px;
-      background: #5968f2; color: #fff;
-      font-size: 16px; font-weight: 800; cursor: pointer; transition: background 0.2s;
+      width: 100%;
+      padding: 12.5px;
+      border: none;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #5c6ee6, #4a8af4);
+      color: #fff;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1.6rem;
+      box-shadow: 0 4px 14px rgba(92, 110, 230, 0.32);
+      transition: opacity 0.2s;
     }
-    .submit-btn:hover { background: #4656e8; }
-    .message { margin-top: 16px; text-align: center; font-size: 14px; min-height: 20px; color: #d93025; }
+    .submit-btn:hover { opacity: 0.92; }
+
+    .message {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 13px;
+      min-height: 20px;
+      color: #e74c3c;
+      line-height: 1.5;
+    }
     .message.success { color: #1a8a3c; }
-    .links { text-align: center; margin-top: 18px; font-size: 14px; color: #666; }
-    .links a { color: #4a6cf7; text-decoration: none; font-weight: 700; margin-left: 6px; }
-    .home-link { display: block; text-align: center; margin-top: 18px; color: #888; text-decoration: none; font-size: 14px; }
-    .home-link:hover { color: #5968f2; }
+
+    .links {
+      text-align: center;
+      margin-top: 1.4rem;
+      padding-top: 1.3rem;
+      border-top: 1px solid #edf0fb;
+      font-size: 13.5px;
+      color: #8a9ac5;
+    }
+    .links a {
+      color: #5c6ee6;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 4px;
+    }
+    .links a:hover { text-decoration: underline; }
+
+    .home-link {
+      display: block;
+      text-align: center;
+      margin-top: 0.9rem;
+      font-size: 12.5px;
+      color: #aab2d4;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .home-link:hover { color: #5c6ee6; }
   </style>
 </head>
 <body>
   <div class="signup-box">
-    <h1>Study Cafe</h1>
-    <p class="sub-title" id="subTitle">스터디카페 회원가입</p>
+
+    <div class="logo-area">
+      <div class="logo-emblem">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 21h18M9 21V10M15 21V10M3 10l9-7 9 7"/>
+          <rect x="9" y="14" width="2" height="3" rx="0.5"/>
+          <rect x="13" y="14" width="2" height="3" rx="0.5"/>
+        </svg>
+      </div>
+      <h1>Study Spot</h1>
+      <p class="sub-title" id="subTitle">스터디카페 회원가입</p>
+    </div>
 
     <div class="role-tabs">
-      <button id="tabUser" class="active" onclick="switchTab('user')">👤 일반 사용자</button>
-      <button id="tabAdmin" onclick="switchTab('admin')">🏢 관리자</button>
+      <button id="tabUser" class="active" onclick="switchTab('user')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        일반 사용자
+      </button>
+      <button id="tabAdmin" onclick="switchTab('admin')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        관리자
+      </button>
     </div>
 
     <!-- 일반 사용자 폼 -->
     <div id="userSection" class="form-section active">
       <form id="userSignupForm">
         <label for="userName">이름</label>
-        <input type="text" id="userName" placeholder="이름을 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <input type="text" id="userName" placeholder="이름을 입력하세요" required />
+        </div>
 
         <label for="userEmail">이메일</label>
-        <input type="email" id="userEmail" placeholder="이메일을 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+          <input type="email" id="userEmail" placeholder="이메일을 입력하세요" required />
+        </div>
 
         <label for="userPassword">비밀번호</label>
-        <input type="password" id="userPassword" placeholder="비밀번호를 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input type="password" id="userPassword" placeholder="비밀번호를 입력하세요" required />
+        </div>
 
         <label for="userConfirmPassword">비밀번호 확인</label>
-        <input type="password" id="userConfirmPassword" placeholder="비밀번호를 다시 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input type="password" id="userConfirmPassword" placeholder="비밀번호를 다시 입력하세요" required />
+        </div>
 
         <label for="sido">시/도</label>
-        <select id="sido" required>
-          <option value="">시/도 선택</option>
-          <option value="서울특별시">서울특별시</option>
-          <option value="부산광역시">부산광역시</option>
-          <option value="대구광역시">대구광역시</option>
-          <option value="인천광역시">인천광역시</option>
-          <option value="광주광역시">광주광역시</option>
-          <option value="대전광역시">대전광역시</option>
-          <option value="울산광역시">울산광역시</option>
-          <option value="세종특별자치시">세종특별자치시</option>
-          <option value="경기도">경기도</option>
-          <option value="강원특별자치도">강원특별자치도</option>
-          <option value="충청북도">충청북도</option>
-          <option value="충청남도">충청남도</option>
-          <option value="전북특별자치도">전북특별자치도</option>
-          <option value="전라남도">전라남도</option>
-          <option value="경상북도">경상북도</option>
-          <option value="경상남도">경상남도</option>
-          <option value="제주특별자치도">제주특별자치도</option>
-        </select>
+        <div class="input-wrap select-wrap">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <select id="sido" required>
+            <option value="">시/도 선택</option>
+            <option value="서울특별시">서울특별시</option>
+            <option value="부산광역시">부산광역시</option>
+            <option value="대구광역시">대구광역시</option>
+            <option value="인천광역시">인천광역시</option>
+            <option value="광주광역시">광주광역시</option>
+            <option value="대전광역시">대전광역시</option>
+            <option value="울산광역시">울산광역시</option>
+            <option value="세종특별자치시">세종특별자치시</option>
+            <option value="경기도">경기도</option>
+            <option value="강원특별자치도">강원특별자치도</option>
+            <option value="충청북도">충청북도</option>
+            <option value="충청남도">충청남도</option>
+            <option value="전북특별자치도">전북특별자치도</option>
+            <option value="전라남도">전라남도</option>
+            <option value="경상북도">경상북도</option>
+            <option value="경상남도">경상남도</option>
+            <option value="제주특별자치도">제주특별자치도</option>
+          </select>
+        </div>
 
         <label for="sigungu">시/군/구</label>
-        <select id="sigungu" required disabled>
-          <option value="">시/군/구 선택</option>
-        </select>
+        <div class="input-wrap select-wrap">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <select id="sigungu" required disabled>
+            <option value="">시/군/구 선택</option>
+          </select>
+        </div>
 
         <label for="dong">동/읍/면</label>
-        <input type="text" id="dong" placeholder="예: 고읍동, 정릉동, 역삼동" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <input type="text" id="dong" placeholder="예: 고읍동, 정릉동, 역삼동" required />
+        </div>
         <p class="region-help">
           입력한 지역을 기준으로 주변 스터디카페가 자동 검색됩니다.<br>
           예: 경기도 / 양주시 / 고읍동
@@ -134,16 +363,28 @@
     <div id="adminSection" class="form-section">
       <form id="adminSignupForm">
         <label for="adminName">이름</label>
-        <input type="text" id="adminName" placeholder="이름을 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <input type="text" id="adminName" placeholder="이름을 입력하세요" required />
+        </div>
 
         <label for="adminEmail">이메일</label>
-        <input type="email" id="adminEmail" placeholder="이메일을 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+          <input type="email" id="adminEmail" placeholder="이메일을 입력하세요" required />
+        </div>
 
         <label for="adminPassword">비밀번호</label>
-        <input type="password" id="adminPassword" placeholder="비밀번호를 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input type="password" id="adminPassword" placeholder="비밀번호를 입력하세요" required />
+        </div>
 
         <label for="adminConfirmPassword">비밀번호 확인</label>
-        <input type="password" id="adminConfirmPassword" placeholder="비밀번호를 다시 입력하세요" required />
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input type="password" id="adminConfirmPassword" placeholder="비밀번호를 다시 입력하세요" required />
+        </div>
 
         <button type="submit" class="submit-btn">관리자 가입</button>
         <p id="adminMessage" class="message"></p>
@@ -151,7 +392,7 @@
     </div>
 
     <div class="links">이미 계정이 있으신가요? <a href="login.html">로그인</a></div>
-    <a class="home-link" href="index.html">메인으로 돌아가기</a>
+    <a class="home-link" href="index.html">← 메인으로 돌아가기</a>
   </div>
 
   <script>
