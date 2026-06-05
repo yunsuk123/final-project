@@ -288,7 +288,6 @@
     // 가격표
     let priceHTML = '';
 
-    // 당일권
     if (d.dailyPrice?.length > 0) {
       priceHTML += `
         <p style="font-size:13px;font-weight:700;color:#4a6cf7;margin-bottom:8px">⏱️ 자유석 당일권 (시간별)</p>
@@ -298,7 +297,6 @@
         </table>`;
     }
 
-    // 기간권
     if (d.periodPrice?.length > 0) {
       priceHTML += `
         <p style="font-size:13px;font-weight:700;color:#4a6cf7;margin-bottom:8px">📅 자유석 기간권</p>
@@ -308,7 +306,6 @@
         </table>`;
     }
 
-    // 사물함
     if (d.locker?.enabled && d.locker.priceList?.length > 0) {
       priceHTML += `
         <p style="font-size:13px;font-weight:700;color:#4a6cf7;margin-bottom:8px">🔒 개인 사물함</p>
@@ -335,14 +332,12 @@
     const reviews = [];
     snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
 
-    // 별점 요약
     const total = reviews.length;
     const avg   = total > 0 ? reviews.reduce((s, r) => s + (r.rating || 0), 0) / total : 0;
-    document.getElementById('avgRating').textContent  = avg.toFixed(1);
-    document.getElementById('avgStars').textContent   = renderStars(avg);
+    document.getElementById('avgRating').textContent   = avg.toFixed(1);
+    document.getElementById('avgStars').textContent    = renderStars(avg);
     document.getElementById('reviewCount').textContent = `리뷰 ${total}개`;
 
-    // 별점별 bar
     const dist = [5,4,3,2,1].map(s => ({ star: s, count: reviews.filter(r => r.rating === s).length }));
     document.getElementById('ratingBars').innerHTML = dist.map(({ star, count }) => {
       const pct = total > 0 ? Math.round((count / total) * 100) : 0;
@@ -354,7 +349,6 @@
         </div>`;
     }).join('');
 
-    // 리뷰 목록
     const listEl = document.getElementById('reviewList');
     if (reviews.length === 0) {
       listEl.innerHTML = '<div class="review-empty">아직 등록된 리뷰가 없어요.<br>첫 번째 리뷰를 남겨보세요!</div>';
@@ -375,24 +369,12 @@
   }
 
   // ── 리뷰 작성 UI ──
+  // ✅ 결제 내역 체크 제거 — 로그인만 하면 리뷰 작성 가능
   async function renderWriteArea(user) {
     const area = document.getElementById('reviewWriteArea');
 
     if (!user) {
-      area.innerHTML = `<div class="review-no-auth">로그인 후 이용했던 업장에 리뷰를 남길 수 있어요.<br><a href="login.html" style="color:#4a6cf7;font-weight:700">로그인하기</a></div>`;
-      return;
-    }
-
-    // 결제 내역 확인
-    const resSnap = await getDocs(query(
-      collection(db, 'reservations'),
-      where('uid', '==', user.uid),
-      where('cafeId', '==', cafeId),
-      where('status', 'in', ['confirmed', 'completed', 'active'])
-    ));
-
-    if (resSnap.empty) {
-      area.innerHTML = `<div class="review-no-auth">해당 업장을 이용한 내역이 있어야 리뷰를 작성할 수 있어요.</div>`;
+      area.innerHTML = `<div class="review-no-auth">로그인 후 리뷰를 남길 수 있어요.<br><a href="login.html" style="color:#4a6cf7;font-weight:700">로그인하기</a></div>`;
       return;
     }
 
@@ -423,7 +405,6 @@
         <p id="reviewMsg" style="font-size:13px;color:#e53935;margin-top:8px;text-align:center"></p>
       </div>`;
 
-    // 별점 선택
     document.querySelectorAll('#starSelect span').forEach(star => {
       star.addEventListener('mouseenter', () => {
         document.querySelectorAll('#starSelect span').forEach((s, i) => {
@@ -440,7 +421,6 @@
       });
     });
 
-    // 제출
     document.getElementById('reviewSubmitBtn').addEventListener('click', async () => {
       const content = document.getElementById('reviewContent').value.trim();
       const msgEl   = document.getElementById('reviewMsg');

@@ -77,6 +77,7 @@ onAuthStateChanged(auth, async (user) => {
 async function loadAll(user) {
   await loadProfile(user);
   await loadPosts(user);
+  await loadReviews(user);  // ✅ 리뷰 로드 추가
   await loadReservations(user);
   await loadPayments(user);
   await loadStudyGroups(user);
@@ -92,10 +93,10 @@ async function loadProfile(user) {
     document.getElementById("userCreatedAt").textContent = formatDate(data.createdAt) || "-";
     const verifiedEl = document.getElementById("userVerified");
     if (user.emailVerified) {
-      verifiedEl.textContent = "인증 완료 ✅";
+      verifiedEl.textContent = "인증 완료";
       verifiedEl.style.color = "#1db954";
     } else {
-      verifiedEl.textContent = "미인증 ❌";
+      verifiedEl.textContent = "미인증";
       verifiedEl.style.color = "#ff4d4f";
     }
     const region = data.region || (data.sido ? `${data.sido} ${data.sigungu||""} ${data.dong||""}`.trim() : "");
@@ -198,6 +199,45 @@ async function loadPosts(user) {
   } catch (e) {
     console.error("게시글 로드 실패:", e);
     list.innerHTML = "<p style='color:#aaa;padding:16px;'>게시글을 불러오지 못했습니다.</p>";
+  }
+}
+
+// ✅ 내가 쓴 리뷰 로드
+async function loadReviews(user) {
+  const list  = document.getElementById("myReviewList");
+  const empty = document.getElementById("emptyReviewMessage");
+  try {
+    const q = query(
+      collection(db, "cafeReviews"),
+      where("authorUid", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      list.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    list.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      const stars = "⭐".repeat(r.rating || 0);
+      return `
+        <div class="review-card">
+          <div class="review-card-top">
+            <div>
+              <span class="review-cafe">${escapeHtml(r.cafeName || "업장명 없음")}</span>
+              <span class="review-stars" style="margin-left:8px;">${stars}</span>
+            </div>
+            <span class="review-date">${formatDate(r.createdAt)}</span>
+          </div>
+          <div class="review-text">${escapeHtml(r.content || "")}</div>
+        </div>`;
+    }).join("");
+  } catch (e) {
+    console.error("리뷰 로드 실패:", e);
+    list.innerHTML = "<p style='color:#aaa;padding:16px;'>리뷰를 불러오지 못했습니다.</p>";
   }
 }
 
@@ -360,7 +400,7 @@ async function loadStudyGroups(user) {
   }
 }
 
-// ── 채팅방 이동 (chatMembers 초기화 후 이동) ──
+// ── 채팅방 이동 ──
 window.goToChat = async function(postId) {
   try {
     const postRef = doc(db, "posts", postId);

@@ -66,7 +66,7 @@
         </div>
         <div class="map-legend">
           <span class="leg-item"><span class="leg-dot" style="background:#4a6cf7;"></span>주변 스터디카페</span>
-          <span class="leg-item"><span class="leg-dot" style="background:#ef4444;"></span>등록 업장</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#e4ef44;"></span>등록 업장</span>
         </div>
       </div>
       <div id="hero-map"></div>
@@ -459,7 +459,7 @@
         const displayName = await getUserName(user);
         welcomeText.textContent = displayName + "님";
         const greeting = document.getElementById("topGreeting");
-        if (greeting) greeting.textContent = `안녕하세요, ${displayName}님 👋`;
+        if (greeting) greeting.textContent = `안녕하세요, ${displayName}님`;
         authBtn.textContent = "로그아웃";
         authBtn.href = "#";
         authBtn.onclick = async (e) => {

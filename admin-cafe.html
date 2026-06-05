@@ -263,10 +263,9 @@ function getRoomData() {
     const cafeQ = _q(_col(db, 'cafes'), _wh('ownerUid', '==', user.uid));
     const cafeSnap = await _gd(cafeQ);
 
-    // ✅ 수정: 신규 등록이면 빈 폼 유지, 기존 데이터 있으면 폼에 채워서 수정 가능하게
     if (cafeSnap.empty) return;
 
-    const d = cafeSnap.docs[0].data(); // ✅ 수정: d 변수 선언 추가
+    const d = cafeSnap.docs[0].data();
 
     document.getElementById('cafeName').value    = d.cafeName      || '';
     document.getElementById('addrMain').value    = d.address       || '';
@@ -330,7 +329,6 @@ function getRoomData() {
 
     if (!address) { msg.textContent = '주소를 검색해주세요.'; return; }
 
-    // ✅ 수정: lat/lng NaN 저장 방지
     if (isNaN(lat) || isNaN(lng)) {
       msg.textContent = '주소 검색을 다시 해주세요. (좌표를 불러오지 못했습니다.)';
       return;
@@ -368,12 +366,17 @@ function getRoomData() {
     submitBtn.textContent = '저장 중...';
 
     try {
-      await setDoc(doc(db, 'cafes', currentUser.uid), {
+      // ✅ 기존 status 유지: 신규 등록이면 pending, 수정이면 현재 값 그대로
+      const cafeRef = doc(db, 'cafes', currentUser.uid);
+      const existingSnap = await getDoc(cafeRef);
+      const currentStatus = existingSnap.exists() ? existingSnap.data().status : 'pending';
+
+      await setDoc(cafeRef, {
         ownerUid: currentUser.uid,
         cafeName, address, addressDetail, lat, lng, bizNumber,
         totalSeats, seatsA, seatsB,
         availableSeats: totalSeats,
-        status: 'pending',
+        status: currentStatus,
         price: {
           daily:  dailyPrice[0]?.price  || 0,
           weekly: periodPrice[0]?.price || 0,
