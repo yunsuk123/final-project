@@ -47,6 +47,9 @@
     .btn-delete  { background: #fff0f0; color: #e53935; border: 1px solid #ffb3b3; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
     .btn-delete:hover  { background: #ffe0e0; }
 
+    .review-content-cell { max-width: 300px; }
+    .review-content-full { font-size: 13px; color: #444; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+
     .empty { text-align: center; padding: 60px; color: #aaa; font-size: 15px; }
 
     @media (max-width: 900px) {
@@ -98,7 +101,7 @@
       <table>
         <thead>
           <tr>
-            <th>업장명</th><th>작성자</th><th>별점</th><th>내용</th><th>작성일</th><th>삭제</th>
+            <th>업장명</th><th>작성자</th><th>별점</th><th>리뷰 내용</th><th>작성일</th><th>삭제</th>
           </tr>
         </thead>
         <tbody id="reviewTbody">
@@ -109,16 +112,18 @@
   </main>
 </div>
 
+<script src="./modal.js"></script>
 <script type="module">
-  import { db } from './firebase.js';
+  import { auth, db } from './firebase.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
   import {
-    collection, getDocs, doc, updateDoc, deleteDoc,
+    collection, getDocs, doc, getDoc, updateDoc, deleteDoc,
     query, orderBy
   } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-  // ── 권한 체크 (sessionStorage 방식) ──
+  // ── 권한 체크 ──
   if (sessionStorage.getItem("isAdmin") !== "true") {
-    alert("관리자만 접근할 수 있습니다.");
+    window.showAlert("관리자만 접근할 수 있습니다.", "error");
     location.href = "login.html";
   } else {
     loadCafes();
@@ -168,33 +173,37 @@
 
   window.updateStatus = async function(cafeId, newStatus) {
     const label = newStatus === 'approved' ? '승인' : '거절';
-    if (!confirm(`이 업장을 ${label} 처리하시겠습니까?`)) return;
+    if (!await window.showConfirm(`이 업장을 ${label} 처리하시겠습니까?`)) return;
     try {
       await updateDoc(doc(db, 'cafes', cafeId), { status: newStatus });
-      alert(`${label} 처리되었습니다.`);
+      await window.showAlert(`${label} 처리되었습니다.`, "success");
       loadCafes();
     } catch (e) {
-      alert('처리 실패: ' + e.message);
+      await window.showAlert("처리 실패: " + e.message, "error");
     }
   };
 
+  // ── 리뷰 로드 (cafeReviews 컬렉션) ──
   async function loadReviews() {
     const tbody = document.getElementById('reviewTbody');
     try {
-      const snap = await getDocs(query(collection(db, 'reviews'), orderBy('createdAt', 'desc')));
+      const snap = await getDocs(query(collection(db, 'cafeReviews'), orderBy('createdAt', 'desc')));
       if (snap.empty) { tbody.innerHTML = '<tr><td colspan="6" class="empty">등록된 리뷰가 없습니다.</td></tr>'; return; }
       tbody.innerHTML = '';
       snap.forEach(docSnap => {
         const d = docSnap.data();
         const date = d.createdAt?.toDate().toLocaleDateString('ko-KR') || '-';
-        const stars = '⭐'.repeat(d.rating || 0);
+        const stars = '⭐'.repeat(d.rating || 0) + ` (${d.rating || 0}점)`;
+        const content = (d.content || '-').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         tbody.insertAdjacentHTML('beforeend', `
           <tr id="review-row-${docSnap.id}">
-            <td>${d.cafeName || '-'}</td>
+            <td><strong>${d.cafeName || '-'}</strong></td>
             <td>${d.authorName || d.authorEmail || '-'}</td>
-            <td>${stars} (${d.rating || 0})</td>
-            <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.content || '-'}</td>
-            <td>${date}</td>
+            <td style="white-space:nowrap">${stars}</td>
+            <td class="review-content-cell">
+              <div class="review-content-full">${content}</div>
+            </td>
+            <td style="white-space:nowrap">${date}</td>
             <td><button class="btn-delete" onclick="deleteReview('${docSnap.id}')">삭제</button></td>
           </tr>
         `);
@@ -205,19 +214,23 @@
   }
 
   window.deleteReview = async function(reviewId) {
-    if (!confirm('이 리뷰를 삭제하시겠습니까?')) return;
+    if (!await window.showConfirm("이 리뷰를 삭제하시겠습니까?", true)) return;
     try {
-      await deleteDoc(doc(db, 'reviews', reviewId));
+      await deleteDoc(doc(db, 'cafeReviews', reviewId));
       document.getElementById('review-row-' + reviewId)?.remove();
-      alert('삭제되었습니다.');
+      const tbody = document.getElementById('reviewTbody');
+      if (tbody.children.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">등록된 리뷰가 없습니다.</td></tr>';
+      }
+      await window.showAlert("삭제되었습니다.", "success");
     } catch (e) {
-      alert('삭제 실패: ' + e.message);
+      await window.showAlert("삭제 실패: " + e.message, "error");
     }
   };
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
     sessionStorage.removeItem("isAdmin");
-    alert("관리자 로그아웃 되었습니다.");
+    await window.showAlert("관리자 로그아웃 되었습니다.", "success");
     location.href = 'login.html';
   });
 </script>

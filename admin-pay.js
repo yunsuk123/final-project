@@ -313,7 +313,7 @@ window.loadData = async function () {
     buildCafeTable(filtered);
   } catch (e) {
     console.error("데이터 로드 실패:", e);
-    alert("데이터를 불러오는 데 실패했습니다.\n" + e.message);
+    await window.showAlert("데이터를 불러오는 데 실패했습니다.\n" + e.message, "error");
   } finally {
     btn.disabled = false;
     btn.textContent = "🔄 새로고침";
@@ -328,7 +328,7 @@ onAuthStateChanged(auth, async user => {
   const userDoc = await getDoc(doc(db, "users", user.uid));
   const role = userDoc.exists() ? userDoc.data().role : null;
   if (role !== "admin" && role !== "superAdmin") {
-    alert("접근 권한이 없습니다.");
+    await window.showAlert("접근 권한이 없습니다.", "error");
     location.href = "index.html";
     return;
   }

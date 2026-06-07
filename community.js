@@ -8,7 +8,10 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
-  arrayUnion
+  arrayUnion,
+  addDoc,
+  where,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -165,11 +168,11 @@ window.deletePost = async function (postId) {
   const user = auth.currentUser;
 
   if (!user) {
-    alert("로그인 후 삭제할 수 있습니다.");
+    await window.showAlert("로그인 후 삭제할 수 있습니다.", "warning");
     return;
   }
 
-  const ok = confirm("정말 이 게시글을 삭제하시겠습니까?");
+  const ok = await window.showConfirm("정말 이 게시글을 삭제하시겠습니까?", true);
   if (!ok) return;
 
   try {
@@ -177,23 +180,23 @@ window.deletePost = async function (postId) {
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
-      alert("이미 삭제되었거나 존재하지 않는 게시글입니다.");
+      await window.showAlert("이미 삭제되었거나 존재하지 않는 게시글입니다.", "error");
       return;
     }
 
     const post = postSnap.data();
 
     if (!checkMyPost(post, user)) {
-      alert("본인이 작성한 글만 삭제할 수 있습니다.");
+      await window.showAlert("본인이 작성한 글만 삭제할 수 있습니다.", "warning");
       return;
     }
 
     await deleteDoc(postRef);
 
-    alert("게시글이 삭제되었습니다.");
+    await window.showAlert("게시글이 삭제되었습니다.", "success");
   } catch (error) {
     console.error("게시글 삭제 오류:", error);
-    alert("게시글 삭제 중 오류가 발생했습니다.");
+    await window.showAlert("게시글 삭제 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -201,7 +204,7 @@ window.reportPost = async function (postId) {
   const user = auth.currentUser;
 
   if (!user) {
-    alert("로그인 후 신고할 수 있습니다.");
+    await window.showAlert("로그인 후 신고할 수 있습니다.", "warning");
     return;
   }
 
@@ -214,7 +217,7 @@ window.reportPost = async function (postId) {
   const trimmedReason = reason.trim();
 
   if (!trimmedReason) {
-    alert("신고 사유를 입력해야 합니다.");
+    await window.showAlert("신고 사유를 입력해야 합니다.", "warning");
     return;
   }
 
@@ -223,7 +226,7 @@ window.reportPost = async function (postId) {
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
-      alert("게시글이 존재하지 않습니다.");
+      await window.showAlert("게시글이 존재하지 않습니다.", "error");
       return;
     }
 
@@ -231,49 +234,51 @@ window.reportPost = async function (postId) {
     const authorUid = getPostAuthorUid(post);
 
     if (!authorUid) {
-      alert("작성자 정보를 찾을 수 없어 신고할 수 없습니다.");
+      await window.showAlert("작성자 정보를 찾을 수 없어 신고할 수 없습니다.", "error");
       return;
     }
 
     if (checkMyPost(post, user)) {
-      alert("본인이 작성한 글은 신고할 수 없습니다.");
+      await window.showAlert("본인이 작성한 글은 신고할 수 없습니다.", "warning");
       return;
     }
 
-    const reportKey = `${user.uid}_${postId}`;
     const authorRef = doc(db, "users", authorUid);
     const authorSnap = await getDoc(authorRef);
 
     if (!authorSnap.exists()) {
-      alert("작성자 회원 정보를 찾을 수 없습니다.");
+      await window.showAlert("작성자 회원 정보를 찾을 수 없습니다.", "error");
+      return;
+    }
+
+    // 이미 신고했는지 — reports 서브컬렉션에서 확인 (Firestore에서 지우면 실제로 초기화됨)
+    const reportsRef = collection(db, "posts", postId, "reports");
+    const dupQ = query(reportsRef, where("reporterUid", "==", user.uid));
+    const dupSnap = await getDocs(dupQ);
+
+    if (!dupSnap.empty) {
+      await window.showAlert("이미 신고한 게시글입니다.", "warning");
       return;
     }
 
     const authorData = authorSnap.data();
-    const reportedPosts = authorData.reportedPosts || [];
-
-    if (reportedPosts.includes(reportKey)) {
-      alert("이미 신고한 게시글입니다.");
-      return;
-    }
-
     const newReportCount = (authorData.reportCount || 0) + 1;
     const suspendedUntil = makeSuspendedDate(newReportCount);
 
-    const reportLog = {
+    // reports 서브컬렉션에 신고 저장
+    await addDoc(reportsRef, {
       postId: postId,
       postTitle: post.title || "",
       reporterUid: user.uid,
       reporterEmail: user.email || "",
       reason: trimmedReason,
       reportedAt: new Date()
-    };
+    });
 
+    // 작성자 reportCount 증가
     const updateData = {
       reportCount: newReportCount,
-      reportedPosts: arrayUnion(reportKey),
-      reportedBy: arrayUnion(user.uid),
-      reportLogs: arrayUnion(reportLog)
+      reportedBy: arrayUnion(user.uid)
     };
 
     if (suspendedUntil) {
@@ -282,10 +287,10 @@ window.reportPost = async function (postId) {
 
     await updateDoc(authorRef, updateData);
 
-    alert("신고가 접수되었습니다.\n관리자 검토 후 처리됩니다.");
+    await window.showAlert("신고가 접수되었습니다.\n관리자 검토 후 처리됩니다.", "success");
   } catch (error) {
     console.error("신고 처리 오류:", error);
-    alert("신고 처리 중 오류가 발생했습니다.");
+    await window.showAlert("신고 처리 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -293,7 +298,7 @@ window.joinStudy = async function (postId) {
   const user = auth.currentUser;
 
   if (!user) {
-    alert("로그인 후 신청할 수 있습니다.");
+    await window.showAlert("로그인 후 신청할 수 있습니다.", "warning");
     return;
   }
 
@@ -301,7 +306,7 @@ window.joinStudy = async function (postId) {
     const suspended = await checkSuspendedUser(user);
 
     if (suspended) {
-      alert("정지된 계정은 스터디에 신청할 수 없습니다.");
+      await window.showAlert("정지된 계정은 스터디에 신청할 수 없습니다.", "error");
       return;
     }
 
@@ -309,14 +314,14 @@ window.joinStudy = async function (postId) {
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
-      alert("게시글이 존재하지 않습니다.");
+      await window.showAlert("게시글이 존재하지 않습니다.", "error");
       return;
     }
 
     const post = postSnap.data();
 
     if (checkMyPost(post, user)) {
-      alert("본인이 작성한 글에는 신청할 수 없습니다.");
+      await window.showAlert("본인이 작성한 글에는 신청할 수 없습니다.", "warning");
       return;
     }
 
@@ -328,7 +333,7 @@ window.joinStudy = async function (postId) {
     );
 
     if (alreadyApplied) {
-      alert("이미 신청한 글입니다.");
+      await window.showAlert("이미 신청한 글입니다.", "warning");
       return;
     }
 
@@ -358,10 +363,10 @@ window.joinStudy = async function (postId) {
       applications: applications
     });
 
-    alert("참여 신청되었습니다.");
+    await window.showAlert("참여 신청되었습니다.", "success");
   } catch (error) {
     console.error("참여 신청 오류:", error);
-    alert("참여 신청 중 오류가 발생했습니다.");
+    await window.showAlert("참여 신청 중 오류가 발생했습니다.", "error");
   }
 };
 

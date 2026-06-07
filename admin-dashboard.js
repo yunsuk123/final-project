@@ -13,16 +13,16 @@ let seatUnsubscribe = null;
 let cafeUnsubscribe = null;
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) { if (_isLoggingOut) return; alert("로그인이 필요합니다."); location.href = "login.html"; return; }
+    if (!user) { if (_isLoggingOut) return; window.showAlert("로그인이 필요합니다.", "warning"); location.href = "login.html"; return; }
     try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const role = userDoc.exists() ? userDoc.data().role : null;
         if (role !== "admin" && role !== "superAdmin") {
-            alert("접근 권한이 없습니다."); location.href = "index.html"; return;
+            window.showAlert("접근 권한이 없습니다.", "error"); location.href = "index.html"; return;
         }
     } catch (e) {
         console.error("권한 확인 실패:", e);
-        alert("권한 확인 중 오류가 발생했습니다."); location.href = "login.html"; return;
+        window.showAlert("권한 확인 중 오류가 발생했습니다.", "error"); location.href = "login.html"; return;
     }
 
     // cafes 문서 ID가 uid와 다를 수 있으므로 ownerUid로 쿼리
@@ -49,13 +49,13 @@ onAuthStateChanged(auth, async (user) => {
 
     const logoutBtn = document.getElementById('btn-logout');
     if (logoutBtn) {
+        // ✅ 수정 1: .then() 체인 제거하고 async/await로 통일
         logoutBtn.addEventListener('click', async () => {
             _isLoggingOut = true;
-            import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js")
-                .then(({ signOut }) => signOut(auth).then(() => {
-                    alert("로그아웃 되었습니다.");
-                    location.href = "login.html";
-                }));
+            const { signOut } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+            await signOut(auth);
+            await window.showAlert("로그아웃 되었습니다.", "success");
+            location.href = "login.html";
         });
     }
 });
@@ -227,7 +227,7 @@ async function saveCafeInfo() {
         const seatsBVal = Number(document.getElementById('f-zone-b')?.value  || 20);
 
         if (seatsAVal + seatsBVal !== totalVal) {
-            alert(`⚠️ A구역(${seatsAVal}) + B구역(${seatsBVal}) = ${seatsAVal + seatsBVal}석이\n총 좌석 수(${totalVal})와 일치하지 않습니다.`);
+            await window.showAlert(`A구역(${seatsAVal}) + B구역(${seatsBVal}) = ${seatsAVal + seatsBVal}석이\n총 좌석 수(${totalVal})와 일치하지 않습니다.`, "warning");
             return;
         }
         const dailyPrice  = dGetRows('daily');
@@ -372,10 +372,11 @@ function updateStats() {
     if (document.getElementById('stat-rev'))  document.getElementById('stat-rev').textContent  = revenue.toLocaleString();
 }
 
-function clickSeat(id) {
+// ✅ 수정 2: async 추가
+async function clickSeat(id) {
     const s = seats[id];
     if (s && s.status !== 'empty') {
-        if (confirm(`⚠️ [${id}석] (${s.name} 사용자)을 강제 퇴실 처리하시겠습니까?`)) {
+        if (await window.showConfirm(`[${id}석] (${s.name} 사용자)을 강제 퇴실 처리하시겠습니까?`, true)) {
             updateFirebaseSeat(id, { status: 'empty', name: '', type: '', endTime: null, userId: '' });
             addLog(`${id}석 관리자 강제 퇴실`);
             forceEvictReservation(id);
@@ -420,16 +421,16 @@ async function updateFirebaseSeat(seatId, data) {
     } catch (e) { console.error("Firebase 데이터 동기화 실패:", e); }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const manualBtn = document.getElementById('btn-manual-issue');
     if (manualBtn) {
         manualBtn.addEventListener('click', async () => {
-            if (!cafeDocRef) { alert("로그인 후 사용하세요."); return; }
+            if (!cafeDocRef) { await window.showAlert("로그인 후 사용하세요.", "warning"); return; }
             const seatId   = document.getElementById('m-seat-id')?.value.trim().toUpperCase();
             const userName = document.getElementById('m-user-name')?.value.trim();
             const type     = document.getElementById('m-type')?.value;
             const hours    = Number(document.getElementById('m-hours')?.value || 8);
-            if (!seatId || !userName) { alert("좌석 번호와 사용자 성함을 입력해주세요."); return; }
+            if (!seatId || !userName) { await window.showAlert("좌석 번호와 사용자 성함을 입력해주세요.", "warning"); return; }
             const endTime = type === 'day' ? Date.now() + hours * 3600 * 1000 : null;
             await updateFirebaseSeat(seatId, { status: 'occupied', name: userName, type: type === 'day' ? '당일권' : '기간권', endTime, userId: 'manual' });
             showToast('success', `${seatId}석 발권 완료`, `${userName} (${type === 'day' ? '당일권' : '기간권'})`);
@@ -602,7 +603,6 @@ function renderUserStatus(data, tab) {
             // 당일권
             if (type === 'daily') {
                 if (tab !== 'all' && tab !== 'period' && tab !== 'locker') return;
-                // 사물함 탭에서는 당일권 뱃지는 숨기고 아래 lockerAddon만 표시
                 if (tab === 'locker') { /* 당일권 뱃지 스킵, lockerAddon 처리로 넘어감 */ }
                 else {
                 const hrs = r.hours || 0;
@@ -612,7 +612,7 @@ function renderUserStatus(data, tab) {
                 const timeLeft = minsLeft <= 0 ? '시간 만료' : minsLeft < 60 ? minsLeft + '분 남음' : Math.floor(minsLeft/60) + '시간 ' + (minsLeft%60) + '분 남음';
                 const cls = minsLeft <= 0 ? 'expired' : minsLeft <= 15 ? 'expiring' : 'period';
                 badges.push('<span class="usc-badge ' + cls + '">⏱️ 당일권 ' + (r.seatId||'') + ' ' + timeLeft + '</span>');
-                } // end else (tab !== locker)
+                }
             // 기간권
             } else if (type === 'period' && (r.days || r.weeks)) {
                 if (tab !== 'all' && tab !== 'period') return;
@@ -796,7 +796,7 @@ window.dGetRoomData = function() {
 };
 
 // ==========================================
-// ✅ 매출 현황 (신규 추가)
+// ✅ 매출 현황
 // ==========================================
 const _revTypeLabels = {
     daily: '당일권', period: '기간권', fixed: '고정석',
@@ -817,10 +817,10 @@ window.loadRevenue = async function() {
 
     try {
         const q = query(
-    collection(db, 'reservations'),
-    where('cafeId', '==', cafeId),
-    where('status', 'in', ['confirmed', 'active', 'completed'])
-);
+            collection(db, 'reservations'),
+            where('cafeId', '==', cafeId),
+            where('status', 'in', ['confirmed', 'active', 'completed'])
+        );
         const snap = await getDocs(q);
 
         let todayRev = 0, weekRev = 0, monthRev = 0;

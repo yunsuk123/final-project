@@ -57,7 +57,7 @@ loginForm.addEventListener("submit", async (e) => {
       // ✅ 수정: 두 번째 signInWithEmailAndPassword 제거
       sessionStorage.setItem("isAdmin", "true");
       sessionStorage.setItem("adminEmail", user.email);
-      alert("총 관리자 로그인 성공");
+      await window.showAlert("총 관리자 로그인 성공", "success");
       location.href = "admin.html";
       return;
     }
@@ -76,7 +76,7 @@ loginForm.addEventListener("submit", async (e) => {
       // ✅ 수정: 두 번째 signInWithEmailAndPassword 제거
       sessionStorage.setItem("userRole", "admin");
       sessionStorage.setItem("userUid", user.uid);
-      alert("관리자 로그인 성공");
+      await window.showAlert("관리자 로그인 성공", "success");
       location.href = "admin-cafe.html";
       return;
     }
@@ -84,7 +84,7 @@ loginForm.addEventListener("submit", async (e) => {
     sessionStorage.removeItem("isAdmin");
     sessionStorage.setItem("userRole", "user");
     showMessage("로그인 성공", "green");
-    alert("로그인 성공");
+    await window.showAlert("로그인 성공", "success");
     location.href = "index.html";
 
   } catch (error) {

@@ -110,6 +110,7 @@
     </div>
   </footer>
 
+  <script src="./modal.js"></script>
   <script type="module">
     import { auth, db } from "./firebase.js";
     import {
@@ -183,20 +184,20 @@
 
     window.joinMainStudy = async function (postId) {
       const user = auth.currentUser;
-      if (!user) { alert("로그인 후 신청할 수 있습니다."); location.href = "login.html"; return; }
+      if (!user) { await window.showAlert("로그인 후 신청할 수 있습니다.", "warning"); location.href = "login.html"; return; }
       try {
         const postRef = doc(db, "posts", postId);
         const postSnap = await getDoc(postRef);
-        if (!postSnap.exists()) { alert("게시글이 존재하지 않습니다."); return; }
+        if (!postSnap.exists()) { await window.showAlert("게시글이 존재하지 않습니다.", "error"); return; }
         const post = postSnap.data();
-        if (checkMyPost(post, user)) { alert("본인이 작성한 글에는 신청할 수 없습니다."); return; }
+        if (checkMyPost(post, user)) { await window.showAlert("본인이 작성한 글에는 신청할 수 없습니다.", "warning"); return; }
         const studyInfo = post.studyInfo || {};
         const currentMembers = studyInfo.currentMembers || 1;
         const maxMembers = studyInfo.maxMembers || 1;
-        if (currentMembers >= maxMembers || studyInfo.status === "마감") { alert("이미 모집 마감된 스터디입니다."); return; }
+        if (currentMembers >= maxMembers || studyInfo.status === "마감") { await window.showAlert("이미 모집 마감된 스터디입니다.", "warning"); return; }
         const applications = post.applications || [];
         if (applications.some(app => (app.uid && app.uid === user.uid) || (app.email && app.email === user.email))) {
-          alert("이미 신청한 글입니다."); return;
+          await window.showAlert("이미 신청한 글입니다.", "warning"); return;
         }
         let applicantName = user.email ? user.email.split("@")[0] : "사용자";
         const userSnap = await getDoc(doc(db, "users", user.uid));
@@ -206,10 +207,10 @@
         }
         applications.push({ uid: user.uid, email: user.email, name: applicantName, status: "pending" });
         await updateDoc(postRef, { applications });
-        alert("참여 신청되었습니다.");
+        await window.showAlert("참여 신청되었습니다.", "success");
       } catch (error) {
         console.error("스터디 참여 신청 오류:", error);
-        alert("참여 신청 중 오류가 발생했습니다.");
+        await window.showAlert("참여 신청 중 오류가 발생했습니다.", "error");
       }
     };
 
@@ -465,7 +466,7 @@
         authBtn.onclick = async (e) => {
           e.preventDefault();
           await signOut(auth);
-          alert("로그아웃 되었습니다.");
+          await window.showAlert("로그아웃 되었습니다.", "success");
           location.reload();
         };
         const userDoc = await getDoc(doc(db, "users", user.uid));

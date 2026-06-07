@@ -59,7 +59,7 @@ async function loadPostForEdit(user) {
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
-      alert("존재하지 않는 게시글입니다.");
+      await window.showAlert("존재하지 않는 게시글입니다.", "error");
       location.href = "mypage.html";
       return;
     }
@@ -73,7 +73,7 @@ async function loadPostForEdit(user) {
       (post.email && post.email === user.email);
 
     if (!isMyPost) {
-      alert("본인이 작성한 글만 수정할 수 있습니다.");
+      await window.showAlert("본인이 작성한 글만 수정할 수 있습니다.", "warning");
       location.href = "mypage.html";
       return;
     }
@@ -98,14 +98,14 @@ async function loadPostForEdit(user) {
     document.title = "게시글 수정";
   } catch (error) {
     console.error("수정할 게시글 불러오기 오류:", error);
-    alert("게시글 정보를 불러오는 중 오류가 발생했습니다.");
+    await window.showAlert("게시글 정보를 불러오는 중 오류가 발생했습니다.", "error");
     location.href = "mypage.html";
   }
 }
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    alert("로그인 후 글쓰기가 가능합니다.");
+    await window.showAlert("로그인 후 글쓰기가 가능합니다.", "warning");
     location.href = "login.html";
     return;
   }

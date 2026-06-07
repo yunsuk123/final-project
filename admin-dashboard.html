@@ -220,6 +220,7 @@
   <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6ce8a915000c6718bf65ac51e6e0c214&libraries=services"></script>
 </head>
 <body>
+<script src="./modal.js"></script>
 
   <div class="app-container">
     <aside class="sidebar">
@@ -318,35 +319,6 @@
           </div>
 
           <div class="sidebar-cards">
-            <div class="section-card">
-              <div class="section-header">
-                <h4><i class="ti ti-edit"></i> 수동 현장 예약 발권</h4>
-              </div>
-              <div class="form-control" style="gap:12px">
-                <div>
-                  <label style="font-size:12px;margin-bottom:4px;display:block">대상 배정 좌석 선택</label>
-                  <input type="text" id="m-seat-id" placeholder="예: A12, B5" style="padding:10px;font-size:13px;width:100%">
-                </div>
-                <div>
-                  <label style="font-size:12px;margin-bottom:4px;display:block">사용자 성함</label>
-                  <input type="text" id="m-user-name" placeholder="실명 입력" style="padding:10px;font-size:13px;width:100%">
-                </div>
-                <div>
-                  <label style="font-size:12px;margin-bottom:4px;display:block">이용권 유형 선택</label>
-                  <select id="m-type" style="padding:10px;font-size:13px;width:100%;border-radius:8px;border:1px solid var(--gray-300)">
-                    <option value="day">당일권 (시간제 자유석)</option>
-                    <option value="week">기간권 (주간 고정석)</option>
-                  </select>
-                </div>
-                <div>
-                  <label id="m-hours-label" style="font-size:12px;margin-bottom:4px;display:block">이용 시간 (당일권 기본 8시간)</label>
-                  <input type="number" id="m-hours" value="8" disabled style="padding:10px;font-size:13px;width:100%">
-                </div>
-                <button class="btn btn-primary" id="btn-manual-issue" style="width:100%;justify-content:center;padding:10px;margin-top:6px">
-                  <i class="ti ti-ticket"></i> 관리자 강제 발권 승인
-                </button>
-              </div>
-            </div>
             <div class="section-card">
               <div class="section-header">
                 <h4><i class="ti ti-device-analytics"></i> 실시간 출입 기록 로그</h4>
@@ -642,18 +614,6 @@
       }).open();
     }
 
-    document.getElementById('m-type')?.addEventListener('change', function() {
-      const lbl = document.getElementById('m-hours-label');
-      const inp = document.getElementById('m-hours');
-      if (!lbl || !inp) return;
-      if (this.value === 'day') {
-        lbl.textContent = '이용 시간 (당일권 기본 8시간)';
-        inp.value = 8; inp.disabled = true;
-      } else if (this.value === 'week') {
-        lbl.textContent = '이용 기간 (일)';
-        inp.value = 7; inp.disabled = false;
-      }
-    });
   </script>
 </body>
 </html>

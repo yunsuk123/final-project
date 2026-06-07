@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>스터디카페 좌석 예약</title>
   <link rel="stylesheet" href="index.css">
+  <script src="./modal.js"></script>
   <script src="https://js.tosspayments.com/v1/payment"></script>
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a6efaad6d59989fe5bb8adfe6f4039a3&libraries=services&autoload=false"></script>
   <style>
@@ -806,8 +807,8 @@
 
   // ── 결제 ──
   window.doPay = async function() {
-    if (!window._rsv.payMethod) return alert("결제 수단을 선택하세요.");
-    if (!document.getElementById("agreeCheck").checked) return alert("동의가 필요합니다.");
+    if (!window._rsv.payMethod) return await window.showAlert("결제 수단을 선택하세요.", "warning");
+    if (!document.getElementById("agreeCheck").checked) return await window.showAlert("동의가 필요합니다.", "warning");
 
     const r = window._rsv;
     const payBtn = document.getElementById("payBtn");
@@ -826,7 +827,7 @@
         );
         const dupSnap = await getDocs(dupQ);
         if (!dupSnap.empty) {
-          alert("이미 예약된 좌석입니다. 다른 좌석을 선택해주세요.");
+          await window.showAlert("이미 예약된 좌석입니다. 다른 좌석을 선택해주세요.", "warning");
           payBtn.disabled = false;
           payBtn.textContent = "결제 완료하기";
           goToStep2();
@@ -871,7 +872,7 @@
       });
     } catch(e) {
       console.error(e);
-      if (e.code !== "USER_CANCEL") alert("결제 중 오류: " + e.message);
+      if (e.code !== "USER_CANCEL") await window.showAlert("결제 중 오류: " + e.message, "error");
       payBtn.disabled = false;
       payBtn.textContent = "결제 완료하기";
     }
@@ -879,7 +880,7 @@
 
   // ── 인증 & 카페 목록 ──
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { alert("로그인 후 이용 가능합니다."); location.href = "login.html"; return; }
+    if (!user) { await window.showAlert("로그인 후 이용 가능합니다.", "warning"); location.href = "login.html"; return; }
     window._rsv.user = user;
 
     const userDoc = await getDoc(doc(db, "users", user.uid));

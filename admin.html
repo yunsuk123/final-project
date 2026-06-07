@@ -210,15 +210,16 @@
     </main>
   </div>
 
+  <script src="./modal.js"></script>
   <script>
     if (sessionStorage.getItem("isAdmin") !== "true") {
-      alert("관리자만 접근할 수 있습니다.");
+      window.showAlert("관리자만 접근할 수 있습니다.", "error");
       location.href = "login.html";
     }
 
-    document.getElementById("adminLogoutBtn").addEventListener("click", () => {
+    document.getElementById("adminLogoutBtn").addEventListener("click", async () => {
       sessionStorage.removeItem("isAdmin");
-      alert("관리자 로그아웃 되었습니다.");
+      await window.showAlert("관리자 로그아웃 되었습니다.", "success");
       location.href = "login.html";
     });
   </script>

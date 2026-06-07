@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 if (sessionStorage.getItem("isAdmin") !== "true") {
-  alert("관리자만 접근할 수 있습니다.");
+  window.showAlert("관리자만 접근할 수 있습니다.", "error");
   location.href = "login.html";
 }
 
@@ -109,7 +109,7 @@ async function loadUsers() {
 
 async function deleteUserDoc(uid, name, email) {
   if (!uid) {
-    alert("삭제할 회원 ID를 찾지 못했습니다.");
+    await window.showAlert("삭제할 회원 ID를 찾지 못했습니다.", "error");
     return;
   }
 
@@ -118,7 +118,7 @@ async function deleteUserDoc(uid, name, email) {
     const userSnap = await getDoc(userRef);
 
     if (!userSnap.exists()) {
-      alert("회원 정보를 찾을 수 없습니다.");
+      await window.showAlert("회원 정보를 찾을 수 없습니다.", "error");
       return;
     }
 
@@ -126,11 +126,11 @@ async function deleteUserDoc(uid, name, email) {
     const reportCount = userData.reportCount || 0;
 
     if (reportCount < 30) {
-      alert("신고 횟수가 30회 이상인 회원만 삭제할 수 있습니다.");
+      await window.showAlert("신고 횟수가 30회 이상인 회원만 삭제할 수 있습니다.", "warning");
       return;
     }
 
-    const ok = confirm(`${name || "해당 회원"} 삭제하시겠습니까?`);
+    const ok = await window.showConfirm(`${name || "해당 회원"} 삭제하시겠습니까?`, true);
     if (!ok) return;
 
     if (email) {
@@ -145,12 +145,12 @@ async function deleteUserDoc(uid, name, email) {
     }
 
     await deleteDoc(doc(db, "users", uid));
-    alert("삭제되었습니다.");
+    await window.showAlert("삭제되었습니다.", "success");
     await loadUsers();
 
   } catch (error) {
     console.error("회원 삭제 실패:", error);
-    alert("삭제에 실패했습니다.\n" + error.message);
+    await window.showAlert("삭제에 실패했습니다.\n" + error.message, "error");
   }
 }
 
@@ -167,7 +167,7 @@ document.addEventListener("click", async (e) => {
 if (adminLogoutBtn) {
   adminLogoutBtn.addEventListener("click", () => {
     sessionStorage.removeItem("isAdmin");
-    alert("관리자 로그아웃 되었습니다.");
+    window.showAlert("관리자 로그아웃 되었습니다.", "success");
     location.href = "login.html";
   });
 }

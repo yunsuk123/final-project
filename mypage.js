@@ -45,7 +45,7 @@ let currentUser = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    alert("로그인 후 이용 가능합니다.");
+    await window.showAlert("로그인 후 이용 가능합니다.", "warning");
     location.href = "login.html";
     return;
   }
@@ -114,18 +114,18 @@ window.updateRegion = async function() {
   const sido    = document.getElementById("sido").value.trim();
   const sigungu = document.getElementById("sigungu").value.trim();
   const dong    = document.getElementById("dong").value.trim();
-  if (!sido) { alert("시/도를 선택해주세요."); return; }
-  if (!sigungu) { alert("시/군/구를 입력해주세요."); return; }
+  if (!sido) { await window.showAlert("시/도를 선택해주세요.", "warning"); return; }
+  if (!sigungu) { await window.showAlert("시/군/구를 입력해주세요.", "warning"); return; }
   try {
     await updateDoc(doc(db, "users", currentUser.uid), {
       sido, sigungu, dong,
       region: `${sido} ${sigungu} ${dong}`.trim()
     });
     document.getElementById("userRegion").textContent = `${sido} ${sigungu} ${dong}`.trim();
-    alert("지역이 저장되었습니다.");
+    await window.showAlert("지역이 저장되었습니다.", "success");
   } catch (e) {
     console.error("지역 저장 실패:", e);
-    alert("저장 중 오류가 발생했습니다.");
+    await window.showAlert("저장 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -135,23 +135,23 @@ window.changePassword = async function(e) {
   const current = document.getElementById("currentPassword").value;
   const newPw   = document.getElementById("newPassword").value;
   const confirm = document.getElementById("confirmPassword").value;
-  if (!current || !newPw || !confirm) { alert("모든 항목을 입력해주세요."); return; }
-  if (newPw !== confirm) { alert("새 비밀번호가 일치하지 않습니다."); return; }
-  if (newPw.length < 6) { alert("비밀번호는 6자 이상이어야 합니다."); return; }
+  if (!current || !newPw || !confirm) { await window.showAlert("모든 항목을 입력해주세요.", "warning"); return; }
+  if (newPw !== confirm) { await window.showAlert("새 비밀번호가 일치하지 않습니다.", "warning"); return; }
+  if (newPw.length < 6) { await window.showAlert("비밀번호는 6자 이상이어야 합니다.", "warning"); return; }
   try {
     const credential = EmailAuthProvider.credential(currentUser.email, current);
     await reauthenticateWithCredential(currentUser, credential);
     await updatePassword(currentUser, newPw);
-    alert("비밀번호가 변경되었습니다.");
+    await window.showAlert("비밀번호가 변경되었습니다.", "success");
     document.getElementById("currentPassword").value = "";
     document.getElementById("newPassword").value = "";
     document.getElementById("confirmPassword").value = "";
   } catch (err) {
     console.error("비밀번호 변경 실패:", err);
     if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
-      alert("현재 비밀번호가 올바르지 않습니다.");
+      await window.showAlert("현재 비밀번호가 올바르지 않습니다.", "error");
     } else {
-      alert("비밀번호 변경 중 오류가 발생했습니다.");
+      await window.showAlert("비밀번호 변경 중 오류가 발생했습니다.", "error");
     }
   }
 };
@@ -298,14 +298,14 @@ async function loadReservations(user) {
 }
 
 window.cancelReservation = async function(resId) {
-  if (!confirm("예약을 취소하시겠습니까?")) return;
+  if (!await window.showConfirm("예약을 취소하시겠습니까?", true)) return;
   try {
     await updateDoc(doc(db, "reservations", resId), { status: "cancelled" });
-    alert("예약이 취소되었습니다.");
+    await window.showAlert("예약이 취소되었습니다.", "success");
     await loadReservations(currentUser);
   } catch (e) {
     console.error("취소 실패:", e);
-    alert("취소 중 오류가 발생했습니다.");
+    await window.showAlert("취소 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -434,7 +434,7 @@ window.goToChat = async function(postId) {
     location.href = `study-chat.html?id=${postId}`;
   } catch (e) {
     console.error("채팅방 이동 오류:", e);
-    alert("채팅방 이동 중 오류가 발생했습니다.");
+    await window.showAlert("채팅방 이동 중 오류가 발생했습니다.", "error");
   }
 };
 

@@ -15,7 +15,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 if (sessionStorage.getItem("isAdmin") !== "true") {
-  alert("관리자만 접근할 수 있습니다.");
+  window.showAlert("관리자만 접근할 수 있습니다.", "error");
   location.href = "login.html";
 }
 
@@ -110,13 +110,13 @@ async function createNotice() {
   const content = noticeContent.value.trim();
 
   if (!title) {
-    alert("공지 제목을 입력하세요.");
+    await window.showAlert("공지 제목을 입력하세요.", "warning");
     noticeTitle.focus();
     return;
   }
 
   if (!content) {
-    alert("공지 내용을 입력하세요.");
+    await window.showAlert("공지 내용을 입력하세요.", "warning");
     noticeContent.focus();
     return;
   }
@@ -136,7 +136,7 @@ async function createNotice() {
       createdAt: serverTimestamp()
     });
 
-    alert("공지사항이 등록되었습니다.");
+    await window.showAlert("공지사항이 등록되었습니다.", "success");
 
     noticeTitle.value = "";
     noticeContent.value = "";
@@ -144,7 +144,7 @@ async function createNotice() {
     await loadPosts();
   } catch (error) {
     console.error("공지사항 등록 실패:", error);
-    alert("공지사항 등록 중 오류가 발생했습니다.");
+    await window.showAlert("공지사항 등록 중 오류가 발생했습니다.", "error");
   } finally {
     createNoticeBtn.disabled = false;
     createNoticeBtn.textContent = "공지 등록";
@@ -223,16 +223,16 @@ async function loadPosts() {
 }
 
 async function deletePost(postId, title) {
-  const ok = confirm(`"${title}" 글을 삭제하시겠습니까?`);
+  const ok = await window.showConfirm(`"${title}" 글을 삭제하시겠습니까?`, true);
   if (!ok) return;
 
   try {
     await deleteDoc(doc(db, "posts", postId));
-    alert("게시글이 삭제되었습니다.");
+    await window.showAlert("게시글이 삭제되었습니다.", "success");
     await loadPosts();
   } catch (error) {
     console.error("게시글 삭제 실패:", error);
-    alert("삭제 실패: " + error.message);
+    await window.showAlert("삭제 실패: " + error.message, "error");
   }
 }
 
@@ -262,11 +262,11 @@ adminLogoutBtn.addEventListener("click", async () => {
     sessionStorage.removeItem("isAdmin");
     sessionStorage.removeItem("adminEmail");
     await signOut(auth);
-    alert("관리자 로그아웃 되었습니다.");
+    await window.showAlert("관리자 로그아웃 되었습니다.", "success");
     location.href = "login.html";
   } catch (error) {
     console.error("로그아웃 실패:", error);
-    alert("로그아웃 중 오류가 발생했습니다.");
+    await window.showAlert("로그아웃 중 오류가 발생했습니다.", "error");
   }
 });
 

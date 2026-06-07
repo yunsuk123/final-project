@@ -298,12 +298,12 @@ function loadMessages() {
 
 async function reportChatMessage(button) {
   if (!currentUser) {
-    alert("로그인 후 신고할 수 있습니다.");
+    await window.showAlert("로그인 후 신고할 수 있습니다.", "warning");
     return;
   }
 
   if (!currentPost) {
-    alert("채팅방 정보를 찾을 수 없습니다.");
+    await window.showAlert("채팅방 정보를 찾을 수 없습니다.", "error");
     return;
   }
 
@@ -313,16 +313,16 @@ async function reportChatMessage(button) {
   const targetName = button.dataset.targetName || "사용자";
 
   if (!messageId) {
-    alert("신고할 메시지 정보를 찾을 수 없습니다.");
+    await window.showAlert("신고할 메시지 정보를 찾을 수 없습니다.", "error");
     return;
   }
 
   if (targetUid && targetUid === currentUser.uid) {
-    alert("본인 메시지는 신고할 수 없습니다.");
+    await window.showAlert("본인 메시지는 신고할 수 없습니다.", "warning");
     return;
   }
 
-  const ok = confirm(`${targetName}님의 메시지를 신고하시겠습니까?`);
+  const ok = await window.showConfirm(`${targetName}님의 메시지를 신고하시겠습니까?`);
 
   if (!ok) return;
 
@@ -363,42 +363,47 @@ async function reportChatMessage(button) {
       });
     }
 
-    alert("신고가 접수되었습니다.");
+    button.disabled = true;
+    button.textContent = "신고됨";
+    button.style.opacity = "0.5";
+    button.style.cursor = "default";
+
+    await window.showAlert("신고가 접수되었습니다.", "success");
   } catch (error) {
     console.error("채팅 신고 오류:", error);
-    alert("이미 신고된 메세지 입니다.");
+    await window.showAlert("신고 처리 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.", "error");
   }
 }
 
 async function kickMember(targetUid, targetEmail, targetName) {
   if (!currentUser) {
-    alert("로그인 후 이용할 수 있습니다.");
+    await window.showAlert("로그인 후 이용할 수 있습니다.", "warning");
     return;
   }
 
   if (!currentPost) {
-    alert("채팅방 정보를 찾을 수 없습니다.");
+    await window.showAlert("채팅방 정보를 찾을 수 없습니다.", "error");
     return;
   }
 
   const isOwner = checkIsOwner(currentPost, currentUser);
 
   if (!isOwner) {
-    alert("방장만 멤버를 강퇴할 수 있습니다.");
+    await window.showAlert("방장만 멤버를 강퇴할 수 있습니다.", "warning");
     return;
   }
 
   if (!targetUid && !targetEmail) {
-    alert("강퇴할 멤버 정보를 찾을 수 없습니다.");
+    await window.showAlert("강퇴할 멤버 정보를 찾을 수 없습니다.", "error");
     return;
   }
 
   if (targetUid === currentUser.uid || targetEmail === currentUser.email) {
-    alert("본인은 강퇴할 수 없습니다.");
+    await window.showAlert("본인은 강퇴할 수 없습니다.", "warning");
     return;
   }
 
-  const ok = confirm(`${targetName}님을 채팅방에서 강퇴하시겠습니까?`);
+  const ok = await window.showConfirm(`${targetName}님을 채팅방에서 강퇴하시겠습니까?`, true);
 
   if (!ok) return;
 
@@ -420,10 +425,10 @@ async function kickMember(targetUid, targetEmail, targetName) {
 
     renderStudyInfo(currentPost);
 
-    alert("강퇴되었습니다.");
+    await window.showAlert("강퇴되었습니다.", "success");
   } catch (error) {
     console.error("강퇴 오류:", error);
-    alert("강퇴 중 오류가 발생했습니다.");
+    await window.showAlert("강퇴 중 오류가 발생했습니다.", "error");
   }
 }
 
@@ -454,12 +459,12 @@ async function getCurrentUserDisplayName(user) {
 
 async function sendMessage() {
   if (!currentUser) {
-    alert("로그인 후 이용할 수 있습니다.");
+    await window.showAlert("로그인 후 이용할 수 있습니다.", "warning");
     return;
   }
 
   if (!currentPost) {
-    alert("채팅방 정보를 찾을 수 없습니다.");
+    await window.showAlert("채팅방 정보를 찾을 수 없습니다.", "error");
     return;
   }
 
@@ -471,7 +476,7 @@ async function sendMessage() {
   }
 
   if (!isChatMember(currentPost, currentUser)) {
-    alert("이 채팅방에 메시지를 보낼 권한이 없습니다.");
+    await window.showAlert("이 채팅방에 메시지를 보낼 권한이 없습니다.", "warning");
     return;
   }
 
@@ -490,7 +495,7 @@ async function sendMessage() {
     chatInput.focus();
   } catch (error) {
     console.error("메시지 전송 오류:", error);
-    alert("메시지 전송 중 오류가 발생했습니다.");
+    await window.showAlert("메시지 전송 중 오류가 발생했습니다.", "error");
   }
 }
 

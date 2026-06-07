@@ -289,12 +289,12 @@ window.reportPostDetail = async function () {
   const user = auth.currentUser;
 
   if (!user) {
-    alert("로그인 후 신고할 수 있습니다.");
+    await window.showAlert("로그인 후 신고할 수 있습니다.", "warning");
     return;
   }
 
   if (!postId) {
-    alert("잘못된 접근입니다.");
+    await window.showAlert("잘못된 접근입니다.", "error");
     return;
   }
 
@@ -303,7 +303,7 @@ window.reportPostDetail = async function () {
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
-      alert("게시글이 존재하지 않습니다.");
+      await window.showAlert("게시글이 존재하지 않습니다.", "error");
       return;
     }
 
@@ -311,12 +311,12 @@ window.reportPostDetail = async function () {
     const authorUid = getPostAuthorUid(post);
 
     if (!authorUid) {
-      alert("작성자 정보를 찾을 수 없어 신고할 수 없습니다.");
+      await window.showAlert("작성자 정보를 찾을 수 없어 신고할 수 없습니다.", "error");
       return;
     }
 
     if (isMyPost(post, user)) {
-      alert("본인이 작성한 글은 신고할 수 없습니다.");
+      await window.showAlert("본인이 작성한 글은 신고할 수 없습니다.", "warning");
       return;
     }
 
@@ -325,7 +325,7 @@ window.reportPostDetail = async function () {
     const authorSnap = await getDoc(authorRef);
 
     if (!authorSnap.exists()) {
-      alert("작성자 회원 정보를 찾을 수 없습니다.");
+      await window.showAlert("작성자 회원 정보를 찾을 수 없습니다.", "error");
       return;
     }
 
@@ -333,7 +333,7 @@ window.reportPostDetail = async function () {
     const reportedPosts = authorData.reportedPosts || [];
 
     if (reportedPosts.includes(reportKey)) {
-      alert("이미 신고한 게시글입니다.");
+      await window.showAlert("이미 신고한 게시글입니다.", "warning");
       return;
     }
 
@@ -352,10 +352,10 @@ window.reportPostDetail = async function () {
 
     await updateDoc(authorRef, updateData);
 
-     alert("신고가 접수되었습니다.\n관리자 검토 후 처리됩니다.");
+     await window.showAlert("신고가 접수되었습니다.\n관리자 검토 후 처리됩니다.", "success");
   } catch (error) {
     console.error("신고 처리 오류:", error);
-    alert("신고 처리 중 오류가 발생했습니다.");
+    await window.showAlert("신고 처리 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -448,24 +448,24 @@ async function submitComment() {
   const user = auth.currentUser;
 
   if (!user) {
-    alert("로그인 후 댓글을 작성할 수 있습니다.");
+    await window.showAlert("로그인 후 댓글을 작성할 수 있습니다.", "warning");
     return;
   }
 
   if (!postId) {
-    alert("잘못된 접근입니다.");
+    await window.showAlert("잘못된 접근입니다.", "error");
     return;
   }
 
   if (!commentInput) {
-    alert("댓글 입력창을 찾을 수 없습니다.");
+    await window.showAlert("댓글 입력창을 찾을 수 없습니다.", "error");
     return;
   }
 
   const content = commentInput.value.trim();
 
   if (!content) {
-    alert("댓글 내용을 입력해주세요.");
+    await window.showAlert("댓글 내용을 입력해주세요.", "warning");
     commentInput.focus();
     return;
   }
@@ -474,7 +474,7 @@ async function submitComment() {
     const suspended = await checkSuspendedUser(user);
 
     if (suspended) {
-      alert("정지된 계정은 댓글을 작성할 수 없습니다.");
+      await window.showAlert("정지된 계정은 댓글을 작성할 수 없습니다.", "error");
       return;
     }
 
@@ -495,7 +495,7 @@ async function submitComment() {
     commentInput.value = "";
   } catch (error) {
     console.error("댓글 등록 오류:", error);
-    alert("댓글 등록 중 오류가 발생했습니다.");
+    await window.showAlert("댓글 등록 중 오류가 발생했습니다.", "error");
   }
 }
 
@@ -503,7 +503,7 @@ window.editComment = async function (commentId) {
   const user = auth.currentUser;
 
   if (!user) {
-    alert("로그인 후 이용할 수 있습니다.");
+    await window.showAlert("로그인 후 이용할 수 있습니다.", "warning");
     return;
   }
 
@@ -511,7 +511,7 @@ window.editComment = async function (commentId) {
     const suspended = await checkSuspendedUser(user);
 
     if (suspended) {
-      alert("정지된 계정은 댓글을 수정할 수 없습니다.");
+      await window.showAlert("정지된 계정은 댓글을 수정할 수 없습니다.", "error");
       return;
     }
 
@@ -519,7 +519,7 @@ window.editComment = async function (commentId) {
     const commentSnap = await getDoc(commentRef);
 
     if (!commentSnap.exists()) {
-      alert("댓글을 찾을 수 없습니다.");
+      await window.showAlert("댓글을 찾을 수 없습니다.", "error");
       return;
     }
 
@@ -530,7 +530,7 @@ window.editComment = async function (commentId) {
       (comment.authorEmail && comment.authorEmail === user.email);
 
     if (!isMyComment) {
-      alert("본인이 작성한 댓글만 수정할 수 있습니다.");
+      await window.showAlert("본인이 작성한 댓글만 수정할 수 있습니다.", "warning");
       return;
     }
 
@@ -541,7 +541,7 @@ window.editComment = async function (commentId) {
     const trimmedContent = newContent.trim();
 
     if (!trimmedContent) {
-      alert("댓글 내용을 입력해주세요.");
+      await window.showAlert("댓글 내용을 입력해주세요.", "warning");
       return;
     }
 
@@ -550,10 +550,10 @@ window.editComment = async function (commentId) {
       updatedAt: serverTimestamp()
     });
 
-    alert("댓글이 수정되었습니다.");
+    await window.showAlert("댓글이 수정되었습니다.", "success");
   } catch (error) {
     console.error("댓글 수정 오류:", error);
-    alert("댓글 수정 중 오류가 발생했습니다.");
+    await window.showAlert("댓글 수정 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -561,11 +561,11 @@ window.deleteComment = async function (commentId) {
   const user = auth.currentUser;
 
   if (!user) {
-    alert("로그인 후 이용할 수 있습니다.");
+    await window.showAlert("로그인 후 이용할 수 있습니다.", "warning");
     return;
   }
 
-  const ok = confirm("이 댓글을 삭제하시겠습니까?");
+  const ok = await window.showConfirm("이 댓글을 삭제하시겠습니까?", true);
   if (!ok) return;
 
   try {
@@ -573,7 +573,7 @@ window.deleteComment = async function (commentId) {
     const commentSnap = await getDoc(commentRef);
 
     if (!commentSnap.exists()) {
-      alert("댓글을 찾을 수 없습니다.");
+      await window.showAlert("댓글을 찾을 수 없습니다.", "error");
       return;
     }
 
@@ -584,7 +584,7 @@ window.deleteComment = async function (commentId) {
       (comment.authorEmail && comment.authorEmail === user.email);
 
     if (!isMyComment) {
-      alert("본인이 작성한 댓글만 삭제할 수 있습니다.");
+      await window.showAlert("본인이 작성한 댓글만 삭제할 수 있습니다.", "warning");
       return;
     }
 
@@ -594,10 +594,10 @@ window.deleteComment = async function (commentId) {
       commentCount: increment(-1)
     });
 
-    alert("댓글이 삭제되었습니다.");
+    await window.showAlert("댓글이 삭제되었습니다.", "success");
   } catch (error) {
     console.error("댓글 삭제 오류:", error);
-    alert("댓글 삭제 중 오류가 발생했습니다.");
+    await window.showAlert("댓글 삭제 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -607,7 +607,7 @@ window.approveApplication = async function (postId, index) {
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
-      alert("게시글이 존재하지 않습니다.");
+      await window.showAlert("게시글이 존재하지 않습니다.", "error");
       return;
     }
 
@@ -616,12 +616,12 @@ window.approveApplication = async function (postId, index) {
     const studyInfo = post.studyInfo || {};
 
     if (!applications[index]) {
-      alert("신청자 정보를 찾을 수 없습니다.");
+      await window.showAlert("신청자 정보를 찾을 수 없습니다.", "error");
       return;
     }
 
     if (applications[index].status !== "pending") {
-      alert("이미 처리된 신청입니다.");
+      await window.showAlert("이미 처리된 신청입니다.", "warning");
       return;
     }
 
@@ -629,7 +629,7 @@ window.approveApplication = async function (postId, index) {
     const maxMembers = studyInfo.maxMembers || 1;
 
     if (currentMembers >= maxMembers) {
-      alert("이미 모집이 마감되었습니다.");
+      await window.showAlert("이미 모집이 마감되었습니다.", "warning");
       return;
     }
 
@@ -657,11 +657,11 @@ window.approveApplication = async function (postId, index) {
       chatMembers: chatMembers
     });
 
-    alert("신청을 수락했습니다.");
+    await window.showAlert("신청을 수락했습니다.", "success");
     location.reload();
   } catch (error) {
     console.error("신청 수락 오류:", error);
-    alert("신청 수락 중 오류가 발생했습니다.");
+    await window.showAlert("신청 수락 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -671,7 +671,7 @@ window.rejectApplication = async function (postId, index) {
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
-      alert("게시글이 존재하지 않습니다.");
+      await window.showAlert("게시글이 존재하지 않습니다.", "error");
       return;
     }
 
@@ -679,12 +679,12 @@ window.rejectApplication = async function (postId, index) {
     const applications = [...(post.applications || [])];
 
     if (!applications[index]) {
-      alert("신청자 정보를 찾을 수 없습니다.");
+      await window.showAlert("신청자 정보를 찾을 수 없습니다.", "error");
       return;
     }
 
     if (applications[index].status !== "pending") {
-      alert("이미 처리된 신청입니다.");
+      await window.showAlert("이미 처리된 신청입니다.", "warning");
       return;
     }
 
@@ -702,11 +702,11 @@ window.rejectApplication = async function (postId, index) {
       chatMembers: chatMembers
     });
 
-    alert("신청을 거절했습니다.");
+    await window.showAlert("신청을 거절했습니다.", "success");
     location.reload();
   } catch (error) {
     console.error("신청 거절 오류:", error);
-    alert("신청 거절 중 오류가 발생했습니다.");
+    await window.showAlert("신청 거절 중 오류가 발생했습니다.", "error");
   }
 };
 
@@ -883,16 +883,16 @@ async function loadPost(user) {
       };
 
       deleteBtn.onclick = async function () {
-        const ok = confirm("정말 이 게시글을 삭제하시겠습니까?");
+        const ok = await window.showConfirm("정말 이 게시글을 삭제하시겠습니까?", true);
         if (!ok) return;
 
         try {
           await deleteDoc(doc(db, "posts", postId));
-          alert("게시글이 삭제되었습니다.");
+          await window.showAlert("게시글이 삭제되었습니다.", "success");
           location.href = "community.html";
         } catch (error) {
           console.error("게시글 삭제 오류:", error);
-          alert("게시글 삭제 중 오류가 발생했습니다.");
+          await window.showAlert("게시글 삭제 중 오류가 발생했습니다.", "error");
         }
       };
     } else {

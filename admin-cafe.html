@@ -148,6 +148,7 @@
 </div>
 
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="./modal.js"></script>
 <script>
 function toggleSec(id, show) { document.getElementById(id).style.display = show ? 'block' : 'none'; }
 
@@ -253,10 +254,10 @@ function getRoomData() {
   }
 
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { alert('로그인이 필요합니다.'); location.href = 'login.html'; return; }
+    if (!user) { await window.showAlert('로그인이 필요합니다.', 'warning'); location.href = 'login.html'; return; }
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const role = userDoc.exists() ? userDoc.data().role : 'user';
-    if (role !== 'admin' && role !== 'superAdmin') { alert('접근 권한이 없습니다.'); location.href = 'index.html'; return; }
+    if (role !== 'admin' && role !== 'superAdmin') { await window.showAlert('접근 권한이 없습니다.', 'error'); location.href = 'index.html'; return; }
     currentUser = user;
 
     const { collection: _col, query: _q, where: _wh, getDocs: _gd } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
@@ -307,12 +308,12 @@ function getRoomData() {
     }
 
     document.getElementById('form-sub-title').textContent = '업장 정보 수정';
-    document.getElementById('submitBtn').textContent = '업장 정보 수정 완료';
+    document.getElementById('submitBtn').textContent = '업장 정보 등록 완료';
   });
 
   document.getElementById('cafeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!currentUser) { alert('로그인 상태를 확인 중입니다.'); return; }
+    if (!currentUser) { await window.showAlert('로그인 상태를 확인 중입니다.', 'warning'); return; }
 
     const msg = document.getElementById('cafeMessage');
     msg.className = 'message';
